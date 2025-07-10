@@ -295,7 +295,7 @@ const blogPosts = [
       <h2>Mark Your Calendars: August 1st</h2>
       <p>The re-release of 'Pedofilia' will be available on <strong>August 1st, 2025</strong> across all digital platforms — including Spotify, Apple Music, YouTube, and more. Distributed via DistroKid, the album aims to reach global audiences with its message of awareness and cultural pride.</p>
 
-      <p><img src="/mnt/data/8808BD10-9B9E-4948-8A77-C0564CF19242.jpeg" alt="João Rodolfo - Pedofilia Album Cover" style="width:100%; max-width:700px; border-radius:12px; margin-top:20px;" /></p>
+      <p><img src="/joaorodolfo/camera.PNG" alt="João Rodolfo - Pedofilia Album Cover" style="width:100%; max-width:700px; border-radius:12px; margin-top:20px;" /></p>
 
       <h2>Looking Ahead</h2>
       <p>João Rodolfo continues to pave the way for conscious music in Lusophone Africa. As he builds his legacy, his aspirations include reaching broader audiences, creating space for dialogue, and collaborating with other artists who share a mission to tell the truth through art.</p>
