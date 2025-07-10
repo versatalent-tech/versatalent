@@ -159,9 +159,6 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
               </div>
             </motion.div>
 
-            <div className="mt-8">
-                <ShareButtons title={post.title} />
-            </div>
 
             {/* Related Posts */}
             {relatedPosts.length > 0 && (
@@ -276,6 +273,11 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
           </div>
         </div>
       </div>
+
+        {/* Share buttons at the bottom */}
+        <div className="container mx-auto px-4 mt-12">
+          <ShareButtons title={post.title} />
+        </div>
     </article>
   );
 }
