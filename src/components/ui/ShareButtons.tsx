@@ -11,7 +11,7 @@ import {
   LinkedinIcon,
   WhatsappIcon,
 } from "react-share";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ShareButtonsProps {
@@ -20,17 +20,25 @@ interface ShareButtonsProps {
 
 export function ShareButtons({ title }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
-
-  // Get the current URL
-  const url = typeof window !== 'undefined' ? window.location.href : '';
-
+  
+  const url = typeof window !== "undefined" ? window.location.href : "";
+  
+  const shareToInstagram = () => {
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.open("instagram://", "_blank");
+    } else {
+      window.open("https://www.instagram.com/", "_blank");
+    }
+  };
+  
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy: ', err);
+      console.error("Failed to copy: ", err);
     }
   };
 
@@ -41,19 +49,27 @@ export function ShareButtons({ title }: ShareButtonsProps) {
         <FacebookShareButton url={url} hashtag="#VersaTalent">
           <FacebookIcon size={40} round />
         </FacebookShareButton>
-
+        
         <TwitterShareButton url={url} title={title} hashtags={["VersaTalent", "Talent"]}>
           <TwitterIcon size={40} round />
         </TwitterShareButton>
-
+        
         <LinkedinShareButton url={url} title={title}>
           <LinkedinIcon size={40} round />
         </LinkedinShareButton>
-
+        
         <WhatsappShareButton url={url} title={title}>
           <WhatsappIcon size={40} round />
         </WhatsappShareButton>
-
+        
+        <button
+          onClick={shareToInstagram}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 hover:opacity-80 transition-opacity"
+          title="Share on Instagram"
+        >
+          <Instagram className="h-5 w-5 text-white" />
+        </button>
+        
         <Button
           variant="outline"
           size="sm"
