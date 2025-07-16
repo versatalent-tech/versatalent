@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Filter, Grid, List, Star } from "lucide-react";
+import { Grid, List, Star } from "lucide-react";
 import type { PortfolioItem } from "@/lib/data/talents";
 
 interface FilterTabsProps {
@@ -34,8 +33,8 @@ export function FilterTabs({
 
   const filters = [
     { id: 'all', label: 'All', count: portfolioItems.length },
-    { id: 'featured', label: 'Featured', count: featuredCount, icon: Star },
-    { id: 'professional', label: 'Professional', count: professionalCount, icon: Badge },
+    { id: 'featured', label: 'Featured', count: featuredCount },
+    { id: 'professional', label: 'Professional', count: professionalCount },
     ...Object.entries(categories).map(([category, count]) => ({
       id: category.toLowerCase(),
       label: category,
@@ -47,29 +46,22 @@ export function FilterTabs({
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2">
-        {filters.map((filter, index) => {
+        {filters.map((filter) => {
           const isActive = activeFilter === filter.id;
-          const Icon = filter.icon;
 
           return (
-            <motion.button
+            <button
               key={filter.id}
               onClick={() => onFilterChange(filter.id)}
               className={`
-                relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+                px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
                 ${isActive
                   ? 'bg-gold text-black shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }
               `}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: index * 0.05 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
               <div className="flex items-center gap-2">
-                {Icon && <Icon className="w-3 h-3" />}
                 <span>{filter.label}</span>
                 <span className={`
                   text-xs px-1.5 py-0.5 rounded-full
@@ -78,16 +70,7 @@ export function FilterTabs({
                   {filter.count}
                 </span>
               </div>
-
-              {isActive && (
-                <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-black/30"
-                  layoutId="activeFilter"
-                  initial={false}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-            </motion.button>
+            </button>
           );
         })}
       </div>
