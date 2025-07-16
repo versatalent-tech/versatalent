@@ -1,8 +1,7 @@
-[images]
-  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*", "https://thehanovertheatre.org/.*"]
 
 [build]
-  command = "bun run build"
+  command = "bun install && bun run build"
+  functions = ".netlify/functions-internal"
   publish = ".next"
 
 [build.environment]
@@ -10,12 +9,15 @@
   NEXT_TELEMETRY_DISABLED = "1"
   BUN_VERSION = "1.2.8"
 
-# Form handling configurations
+[images]
+  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*", "https://thehanovertheatre.org/.*"]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 [forms]
-  # Main contact form
   [forms.contact]
     name = "Contact Form"
-
-  # Newsletter subscription form
   [forms.newsletter]
     name = "Newsletter Subscription"
+
