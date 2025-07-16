@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalyticsDashboard } from "@/components/dashboard/AnalyticsDashboard";
 import {
   BarChart3,
   Upload,
@@ -18,7 +19,11 @@ import {
   LogOut,
   Menu,
   Grid,
-  List
+  List,
+  TrendingUp,
+  MessageCircle,
+  Award,
+  DollarSign
 } from "lucide-react";
 
 interface AuthUser {
@@ -183,7 +188,7 @@ export default function DashboardPage() {
           {/* Navigation Tabs */}
           <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-lg">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'overview', label: 'Analytics', icon: BarChart3 },
               { id: 'portfolio', label: 'Portfolio', icon: Grid },
               { id: 'upload', label: 'Upload', icon: Upload },
               { id: 'profile', label: 'Profile', icon: User },
@@ -213,72 +218,11 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="space-y-6"
             >
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <Eye className="h-8 w-8 text-blue-600" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Profile Views</p>
-                        <p className="text-2xl font-bold text-gray-900">1,234</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <Heart className="h-8 w-8 text-red-600" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Portfolio Likes</p>
-                        <p className="text-2xl font-bold text-gray-900">856</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <Star className="h-8 w-8 text-gold" />
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Featured Items</p>
-                        <p className="text-2xl font-bold text-gray-900">12</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm">New portfolio item uploaded: "Summer Campaign 2025"</span>
-                      <Badge variant="outline">2h ago</Badge>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">Profile viewed by casting director</span>
-                      <Badge variant="outline">5h ago</Badge>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-gold rounded-full"></div>
-                      <span className="text-sm">Portfolio item marked as featured</span>
-                      <Badge variant="outline">1d ago</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <AnalyticsDashboard
+                talentId={user.talentId}
+                talentName={user.name}
+              />
             </motion.div>
           )}
 
