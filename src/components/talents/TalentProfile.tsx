@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import type { Talent } from "@/lib/data/talents";
 import { PortfolioSection } from "./PortfolioSection";
+import { HeroSection } from "./HeroSection";
 
 interface TalentProfileProps {
   talent: Talent;
@@ -15,7 +17,7 @@ interface TalentProfileProps {
 export function TalentProfile({ talent }: TalentProfileProps) {
   return (
     <div className="bg-white py-10 md:py-16">
-      <div className="container px-4 mx-auto">
+        <div className="container px-4 mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Talent Image and Quick Stats */}
           <motion.div

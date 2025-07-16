@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getTalentById, talents } from "@/lib/data/talents";
 import { TalentProfile } from "@/components/talents/TalentProfile";
+import { HeroSection } from "@/components/talents/HeroSection";
 
 // Types for the page props
 type TalentPageProps = {

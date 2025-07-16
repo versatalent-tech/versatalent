@@ -9,6 +9,21 @@ export interface PortfolioItem {
   url: string;  // For images: direct image URL, for videos: YouTube/Vimeo embed URL
   date?: string;
   category?: string; // e.g., "Commercial", "Film", "Print", "Performance"
+  // Enhanced metadata
+  photographer?: string;
+  location?: string;
+  client?: string;
+  year?: number;
+  featured?: boolean;
+  professional?: boolean; // Agency-shot vs self-submitted
+  tags?: string[];
+  downloadUrl?: string; // For authorized downloads
+  metadata?: {
+    camera?: string;
+    lens?: string;
+    iso?: string;
+    aperture?: string;
+  };
 }
 
 export interface Talent {
@@ -72,7 +87,14 @@ export const talents: Talent[] = [
         type: 'image',
         url: '/deejaywg/IMG_8976.jpg',
         date: '2024',
-        category: 'Performance'
+        category: 'Performance',
+        photographer: 'Festival Media Team',
+        location: 'Lisbon, Portugal',
+        client: 'Lisbon Electronic Festival',
+        year: 2024,
+        featured: true,
+        professional: true,
+        tags: ['festival', 'performance', 'headliner', 'electronic']
       },
       {
         id: 'dj3',
@@ -233,9 +255,9 @@ export const talents: Talent[] = [
     ageGroup: 'adult',
     profession: 'football player',
     location: 'Leeds, UK',
-    bio: 'Antonio Monteiro is a semi-professional footballer whose calm presence, work ethic, and fast tactical understanding set him apart. With natural composure and a sharp footballing mind, he seamlessly adapts to multiple roles across the pitch, always focused on contributing to the team’s success. Primarily playing as a central midfielder (CM) and defensive midfielder (CDM), Antonio is also highly effective at left back (LB) and right back (RB). Though not his preferred role, he can also step into a centre-back (CB) position when needed, demonstrating reliability and positional awareness. Known for his humility, dedication, and consistency, Antonio is the kind of player who leads through action, not noise — a true asset to any squad.',
+    bio: "Antonio Monteiro is a semi-professional footballer whose calm presence, work ethic, and fast tactical understanding set him apart. With natural composure and a sharp footballing mind, he seamlessly adapts to multiple roles across the pitch, always focused on contributing to the team's success. Primarily playing as a central midfielder (CM) and defensive midfielder (CDM), Antonio is also highly effective at left back (LB) and right back (RB). Though not his preferred role, he can also step into a centre-back (CB) position when needed, demonstrating reliability and positional awareness. Known for his humility, dedication, and consistency, Antonio is the kind of player who leads through action, not noise — a true asset to any squad.",
     tagline: 'Smart on the ball. Solid in every role.',
-    skills: ['Ball Distribution', 'Tempo Control', 'Defensive Awareness', 'Overlapping Runs', 'Positioning', 'Interceptions', 'Calm Under Pressure', ],
+    skills: ['Ball Distribution', 'Tempo Control', 'Defensive Awareness', 'Overlapping Runs', 'Positioning', 'Interceptions', 'Calm Under Pressure'],
     imageSrc: '/antoniomonteiro/Tonecas_1.jpg',
     featured: true,
     socialLinks: {
