@@ -315,6 +315,36 @@ const blogPosts = [
     image: "/joaorodolfo/Joao_Rodolfo_-_Album_Cover.png",
     relatedPosts: ["7", "3"]
   },
+  {
+    id: "13",
+    title: "Antonio Monteiro Joins Semi-Pro South Leeds FC!",
+    excerpt: "Antonio Monteiro takes the next step in his football journey by signing with South Leeds FC—a growing semi-professional club in the Northern Counties East League.",
+    content: `
+     <p>We’re thrilled to share that <strong>Antonio Monteiro</strong> has officially signed with <strong>South Leeds FC</strong>, a rising semi-professional club competing in Division One of the <strong>Northern Counties East Football League</strong> (Step 10, level 10 of the English football pyramid).
+     Founded in 2017 as Middleton FC, they progressed rapidly—from Sunday league roots to the Northern Counties East League in just seven years South Leeds Life. The club was renamed South Leeds FC in 2024 following a merger with a local youth side, marking its formal entry into the semi-professional ranks.
+     South Leeds FC plays its home matches at the South Leeds Stadium (John Charles Centre for Sport), a vibrant sports hub with a 3,450-capacity main stand.
+     Their recent run—finishing 9th in their first season at this level—showcases ambition and growth.</p>
+
+    <h2>Antonio’s Ambition & Role</h2>
+    <p>Antonio is eager to embrace this new chapter. As a versatile midfielder, he’s committed to helping the club in every way possible. </p>
+    <p>For Antonio, this is more than just a new club — it’s a <strong>fresh chapter</strong>. Known for his composure on the pitch, tactical intelligence, and commitment to team cohesion, he’s entering this opportunity with gratitude and a clear vision: to contribute positively in every way he can.</p>
+
+    <p>“I’m proud to join South Leeds FC,” Antonio shared. “It’s a team with heart and ambition, and I’m ready to work hard, stay consistent, and help us meet our goals together.”</p>
+
+    <p>We look forward to watching Antonio thrive in this new environment and we have no doubt that he’ll play an impactful role throughout the season.</p>
+
+    <p><em>✨ Unleash your potential ✨</em></p>
+
+    <p><strong>Stay tuned for more updates on Antonio Monteiro’s journey with South Leeds FC.</strong></p>
+    `,
+    date: "July 19, 2025",
+    author: "VersaTalent Team",
+    authorRole: "Editorial",
+    authorImage: "/images/versatalent-new-logo.png",
+    category: "Sports",
+    image: "/antoniomonteiro/Tonecas_4.jpg",
+    relatedPosts: ["10", "8"]
+  },
 ];
 
 // Generate static paths for all blog posts
