@@ -331,6 +331,16 @@ const blogPosts = [
 
     <p>“I’m proud to join South Leeds FC,” Antonio shared. “It’s a team with heart and ambition, and I’m ready to work hard, stay consistent, and help us meet our goals together.”</p>
 
+    <h2>What This Means for Antonio</h2>
+
+    <p>
+      <ul>
+        <li><strong>Next Level Football</strong> - He’s ready to test himself at Step 10 semi-pro level.</li>
+        <li><strong>Team Ambition</strong> - South Leeds is building strongly; Antonio is here to add stability and quality.</li>
+        <li><strong>Community & Growth</strong> - As a deeply disciplined and adaptable player, he’s keen to make a positive impact on teammates and supporters.</li>
+      </ul>
+    </p>
+
     <p>We look forward to watching Antonio thrive in this new environment and we have no doubt that he’ll play an impactful role throughout the season.</p>
 
     <p><em>✨ Unleash your potential ✨</em></p>
