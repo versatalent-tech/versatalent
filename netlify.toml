@@ -1,21 +1,12 @@
-[images]
-  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*", "https://thehanovertheatre.org/.*"]
-
 [build]
-  command = "bun run build"
-  publish = ".next"
+  command = "cd versatalent && bun install && bun run build"
+  functions = "versatalent/.netlify/functions-internal"  
+  publish = "versatalent/.next"
 
 [build.environment]
   NODE_VERSION = "20"
   NEXT_TELEMETRY_DISABLED = "1"
   BUN_VERSION = "1.2.8"
 
-# Form handling configurations
-[forms]
-  # Main contact form
-  [forms.contact]
-    name = "Contact Form"
-
-  # Newsletter subscription form
-  [forms.newsletter]
-    name = "Newsletter Subscription"
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
