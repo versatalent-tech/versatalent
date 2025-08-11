@@ -46,7 +46,8 @@ import {
   Calendar,
   FileDown,
   Activity,
-  Zap
+  Zap,
+  BarChart3
 } from "lucide-react";
 import { RealtimeAnalyticsDashboard } from './RealtimeAnalyticsDashboard';
 
