@@ -4,6 +4,7 @@ import { AnalyticsService } from '@/lib/services/analytics-service';
 import { AnalyticsDatabase } from '@/lib/services/analytics-database';
 
 // Disable static export for this route since it requires real-time functionality
+// Dynamic export only for non-static builds
 export const dynamic = 'force-dynamic';
 
 // POST /api/analytics/events - Track new analytics event

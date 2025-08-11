@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  distDir: 'out',
+  // Conditional configuration: use static export for production builds when STATIC_EXPORT=true
+  ...(process.env.STATIC_EXPORT === 'true'
+    ? {
+        output: 'export',
+        distDir: 'out'
+      }
+    : {}
+  ),
   images: {
     unoptimized: true,
     remotePatterns: [

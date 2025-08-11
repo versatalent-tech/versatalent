@@ -35,10 +35,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Enable experimental features for real-time analytics
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+
 };
 
 module.exports = nextConfig;

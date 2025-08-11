@@ -10,15 +10,6 @@ import { motion } from "framer-motion";
 // Sample blog posts data
 const blogPosts = [
   {
-    id: "13",
-    title: "Antonio Monteiro Joins Semi-Pro South Leeds FC!",
-    excerpt: "Antonio Monteiro takes the next step in his football journey by signing with South Leeds FC—a growing semi-professional club in the Northern Counties East League.",
-    date: "July 19, 2025",
-    author: "VersaTalent Team",
-    category: "Sports",
-    image: "/antoniomonteiro/Tonecas_4.jpg",
-  },
-  {
     id: "12",
     title: "João Rodolfo Returns with Re-Release of Impactful Album 'Pedofilia'",
     excerpt: "Singer João Rodolfo is back with a bold re-release of his powerful album 'Pedofilia', available August 1st on all platforms.",
@@ -71,6 +62,15 @@ const blogPosts = [
     author: "VersaTalent Team",
     category: "Music",
     image: "/joaorodolfo/JROD_2.jpg",
+  },
+  {
+    id: "1",
+    title: "Behind the Scenes: Fashion Week with Our Models",
+    excerpt: "Go backstage with VersaTalent's models as they navigate the glamorous chaos of New York Fashion Week.",
+    date: "April 12, 2025",
+    author: "Emma Richards",
+    category: "Modeling",
+    image: "https://images.unsplash.com/photo-1520228504846-3762f4240df8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
   },
 ];
 
