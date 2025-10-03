@@ -27,6 +27,7 @@ export default function TalentPage({ params }: TalentPageProps) {
 
   return (
     <MainLayout>
+      <HeroSection talent={talent} />
       <TalentProfile talent={talent} />
     </MainLayout>
   );

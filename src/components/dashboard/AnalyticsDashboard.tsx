@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useAnalyticsData, useRealTimeAnalytics } from "@/lib/hooks/useAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,91 +43,15 @@ import {
   Award,
   Filter,
   Calendar,
-  FileDown,
-  Activity,
-  Zap,
-  BarChart3
+  FileDown
 } from "lucide-react";
-import { RealtimeAnalyticsDashboard } from './RealtimeAnalyticsDashboard';
 
 interface AnalyticsDashboardProps {
   talentId: string;
   talentName: string;
 }
 
-// Transform API data to chart format
-const transformApiDataToChartData = (analyticsData: any, realTimeData: any) => {
-  const current = analyticsData.current;
-  const trends = analyticsData.trends || {};
-
-  return {
-    timeSeriesData: current.timeSeries || [],
-    funnelData: [
-      { name: 'Profile Views', value: current.metrics.profileViews, fill: '#8884d8' },
-      { name: 'Portfolio Clicks', value: Math.floor(current.metrics.profileViews * 0.65), fill: '#82ca9d' },
-      { name: 'Contact Inquiries', value: current.metrics.inquiries, fill: '#ffc658' },
-      { name: 'Bookings', value: current.metrics.bookings, fill: '#D4AF37' }
-    ],
-    demographicsData: current.demographics?.ageGroups || [
-      { name: '18-24', value: 15, fill: '#8884d8' },
-      { name: '25-34', value: 35, fill: '#82ca9d' },
-      { name: '35-44', value: 28, fill: '#ffc658' },
-      { name: '45-54', value: 15, fill: '#ff7300' },
-      { name: '55+', value: 7, fill: '#D4AF37' }
-    ],
-    deviceData: current.demographics?.deviceTypes?.map((device: any) => ({
-      name: device.device.charAt(0).toUpperCase() + device.device.slice(1),
-      value: device.percentage,
-      fill: device.device === 'mobile' ? '#8884d8' : device.device === 'desktop' ? '#82ca9d' : '#ffc658'
-    })) || [
-      { name: 'Mobile', value: 65, fill: '#8884d8' },
-      { name: 'Desktop', value: 28, fill: '#82ca9d' },
-      { name: 'Tablet', value: 7, fill: '#ffc658' }
-    ],
-    geoData: current.demographics?.topCountries || [
-      { country: 'United Kingdom', views: Math.floor(current.metrics.profileViews * 0.4), percentage: 40 },
-      { country: 'United States', views: Math.floor(current.metrics.profileViews * 0.25), percentage: 25 },
-      { country: 'Germany', views: Math.floor(current.metrics.profileViews * 0.12), percentage: 12 },
-      { country: 'France', views: Math.floor(current.metrics.profileViews * 0.1), percentage: 10 },
-      { country: 'Others', views: Math.floor(current.metrics.profileViews * 0.13), percentage: 13 }
-    ],
-    popularContent: current.contentPerformance || [
-      { title: 'Summer Campaign 2024', views: Math.floor(current.metrics.profileViews * 0.2), engagement: 89, type: 'Image' },
-      { title: 'Behind the Scenes Video', views: Math.floor(current.metrics.profileViews * 0.18), engagement: 94, type: 'Video' }
-    ],
-    trafficSources: current.trafficSources?.sources?.map((source: any) => ({
-      source: source.source.charAt(0).toUpperCase() + source.source.slice(1),
-      visits: source.visits,
-      percentage: source.percentage
-    })) || [
-      { source: 'Direct', visits: Math.floor(current.metrics.profileViews * 0.35), percentage: 35 },
-      { source: 'Social Media', visits: Math.floor(current.metrics.profileViews * 0.28), percentage: 28 },
-      { source: 'Search Engines', visits: Math.floor(current.metrics.profileViews * 0.22), percentage: 22 },
-      { source: 'Referrals', visits: Math.floor(current.metrics.profileViews * 0.15), percentage: 15 }
-    ],
-    totals: {
-      profileViews: current.metrics.profileViews,
-      portfolioViews: current.metrics.portfolioViews,
-      inquiries: current.metrics.inquiries,
-      bookings: current.metrics.bookings,
-      revenue: current.metrics.bookings * 250, // $250 avg booking
-      conversionRate: current.metrics.conversionRate
-    },
-    trends: {
-      profileViewsChange: trends.profileViewsChange || 0,
-      inquiriesChange: trends.inquiriesChange || 0,
-      bookingsChange: trends.bookingsChange || 0,
-      conversionRateChange: trends.conversionRateChange || 0
-    },
-    realTime: realTimeData || {
-      activeVisitors: 0,
-      viewsToday: 0,
-      inquiriesToday: 0
-    }
-  };
-};
-
-// Mock data generation (fallback)
+// Mock data generation
 const generateMockData = (talentId: string) => {
   const baseViews = parseInt(talentId) * 300 + 1000;
 
@@ -214,67 +137,8 @@ const generateMockData = (talentId: string) => {
 export function AnalyticsDashboard({ talentId, talentName }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeMetric, setActiveMetric] = useState('profileViews');
-  const [viewMode, setViewMode] = useState<'regular' | 'realtime'>('regular');
 
-  // Calculate date range based on selection
-  const dateRange = useMemo(() => {
-    const endDate = new Date();
-    const startDate = new Date();
-
-    switch (timeRange) {
-      case '7d':
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case '90d':
-        startDate.setDate(startDate.getDate() - 90);
-        break;
-      case '1y':
-        startDate.setFullYear(startDate.getFullYear() - 1);
-        break;
-      default: // 30d
-        startDate.setDate(startDate.getDate() - 30);
-    }
-
-    return { startDate, endDate };
-  }, [timeRange]);
-
-  // Fetch real analytics data
-  const { data: analyticsData, loading, error, refetch } = useAnalyticsData(talentId, { dateRange });
-  const { data: realTimeData } = useRealTimeAnalytics(talentId, 30000); // Update every 30 seconds
-
-  // Use real data or fallback to mock data for demo
-  const data = useMemo(() => {
-    if (analyticsData?.current) {
-      return transformApiDataToChartData(analyticsData, realTimeData);
-    }
-    // Fallback to mock data for demo purposes
-    return generateMockData(talentId);
-  }, [analyticsData, realTimeData, talentId]);
-
-  // Show loading state
-  if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load analytics</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <button
-          onClick={refetch}
-          className="px-4 py-2 bg-gold text-white rounded-md hover:bg-gold-80"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const data = useMemo(() => generateMockData(talentId), [talentId]);
 
   const MetricCard = ({ title, value, trend, icon: Icon, color }: {
     title: string;
@@ -315,42 +179,17 @@ export function AnalyticsDashboard({ talentId, talentName }: AnalyticsDashboardP
           <p className="text-gray-600">Comprehensive insights for {talentName}</p>
         </div>
         <div className="flex items-center space-x-2">
-          {/* View Mode Switcher */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <Button
-              variant={viewMode === 'regular' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('regular')}
-              className="flex items-center gap-2"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Historical
-            </Button>
-            <Button
-              variant={viewMode === 'realtime' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('realtime')}
-              className="flex items-center gap-2"
-            >
-              <Activity className="h-4 w-4" />
-              Real-time
-            </Button>
-          </div>
-
-          {viewMode === 'regular' && (
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="90d">Last 3 months</SelectItem>
-                <SelectItem value="1y">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 3 months</SelectItem>
+              <SelectItem value="1y">Last year</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" size="sm">
             <FileDown className="h-4 w-4 mr-2" />
             Export
@@ -358,42 +197,37 @@ export function AnalyticsDashboard({ talentId, talentName }: AnalyticsDashboardP
         </div>
       </div>
 
-      {/* Dashboard Content - Conditional Rendering */}
-      {viewMode === 'realtime' ? (
-        <RealtimeAnalyticsDashboard talentId={talentId} />
-      ) : (
-        <>
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
-              title="Profile Views"
-              value={data.totals.profileViews.toLocaleString()}
-              trend={12.5}
-              icon={Eye}
-              color="text-blue-600"
-            />
-            <MetricCard
-              title="Inquiries"
-              value={data.totals.inquiries.toLocaleString()}
-              trend={8.3}
-              icon={MessageCircle}
-              color="text-green-600"
-            />
-            <MetricCard
-              title="Bookings"
-              value={data.totals.bookings.toLocaleString()}
-              trend={15.7}
-              icon={Award}
-              color="text-gold"
-            />
-            <MetricCard
-              title="Revenue"
-              value={`${data.totals.revenue.toLocaleString()}`}
-              trend={22.1}
-              icon={DollarSign}
-              color="text-purple-600"
-            />
-          </div>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <MetricCard
+          title="Profile Views"
+          value={data.totals.profileViews.toLocaleString()}
+          trend={12.5}
+          icon={Eye}
+          color="text-blue-600"
+        />
+        <MetricCard
+          title="Inquiries"
+          value={data.totals.inquiries.toLocaleString()}
+          trend={8.3}
+          icon={MessageCircle}
+          color="text-green-600"
+        />
+        <MetricCard
+          title="Bookings"
+          value={data.totals.bookings.toLocaleString()}
+          trend={15.7}
+          icon={Award}
+          color="text-gold"
+        />
+        <MetricCard
+          title="Revenue"
+          value={`$${data.totals.revenue.toLocaleString()}`}
+          trend={22.1}
+          icon={DollarSign}
+          color="text-purple-600"
+        />
+      </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
@@ -787,8 +621,6 @@ export function AnalyticsDashboard({ talentId, talentName }: AnalyticsDashboardP
           </Card>
         </TabsContent>
       </Tabs>
-        </>
-      )}
     </div>
   );
 }
