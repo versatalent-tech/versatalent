@@ -111,7 +111,6 @@ export function NewsletterForm({
               method="POST"
               data-netlify="true"
               netlify-honeypot="bot-field"
-              netlify
             >
               <input type="hidden" name="form-name" value="newsletter" />
               <input type="hidden" name="subject" value="VersaTalent Newsletter Subscription" />

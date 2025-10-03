@@ -1,173 +1,176 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PortfolioItem } from "@/lib/data/talents";
-import { ThumbnailCarousel } from "@/components/ui/ThumbnailCarousel";
-import { useAnalytics } from "@/lib/hooks/useAnalytics";
+import { FilterTabs } from "./FilterTabs";
+import { MasonryGrid } from "./MasonryGrid";
+import { EnhancedLightbox } from "./EnhancedLightbox";
+import { GridSkeleton, MasonrySkeleton } from "@/components/ui/image-skeleton";
 
 interface PortfolioSectionProps {
   portfolioItems: PortfolioItem[];
-  talentId?: string;
 }
 
-export function PortfolioSection({ portfolioItems, talentId }: PortfolioSectionProps) {
-  const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
-  const analytics = useAnalytics(talentId);
+export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('masonry');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Track portfolio view
+  // Simulate initial loading
   useEffect(() => {
-    if (portfolioItems.length > 0) {
-      analytics.trackPortfolioView();
-    }
-  }, [portfolioItems.length, analytics]);
+    const timer = setTimeout(() => setIsLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Handle portfolio item click with tracking
-  const handleItemClick = (item: PortfolioItem) => {
-    analytics.trackPortfolioItemClick(item.id, item.title);
-    setSelectedItem(item);
+  // Filter items based on active filter
+  const filteredItems = useMemo(() => {
+    if (activeFilter === 'all') {
+      return portfolioItems;
+    }
+
+    if (activeFilter === 'featured') {
+      return portfolioItems.filter(item => item.featured);
+    }
+
+    if (activeFilter === 'professional') {
+      return portfolioItems.filter(item => item.professional);
+    }
+
+    // Filter by category
+    return portfolioItems.filter(item =>
+      item.category?.toLowerCase() === activeFilter.toLowerCase()
+    );
+  }, [portfolioItems, activeFilter]);
+
+  const handleItemClick = (index: number) => {
+    setSelectedIndex(index);
   };
 
-  const imageItems = portfolioItems.filter(item => item.type === 'image');
-  const videoItems = portfolioItems.filter(item => item.type === 'video');
+  const handleLightboxClose = () => {
+    setSelectedIndex(null);
+  };
 
-  const categories = [...new Set(portfolioItems.map(item => item.category))].filter(Boolean) as string[];
+  const handleLightboxNext = () => {
+    if (selectedIndex !== null) {
+      setSelectedIndex((selectedIndex + 1) % filteredItems.length);
+    }
+  };
+
+  const handleLightboxPrevious = () => {
+    if (selectedIndex !== null) {
+      setSelectedIndex((selectedIndex - 1 + filteredItems.length) % filteredItems.length);
+    }
+  };
 
   return (
-    <motion.div
-      className="mt-10"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
+    <motion.section
+      className="py-12"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-semibold text-foreground mb-6">Portfolio</h2>
+      <div className="container mx-auto px-4">
+        {/* Section Header */}
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            Portfolio Gallery
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Explore a curated collection of professional work showcasing creativity and expertise
+          </p>
+        </motion.div>
 
-      {categories.length > 0 && (
-        <Tabs defaultValue="all" className="mb-6">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            {categories.map(category => (
-              <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-            ))}
-          </TabsList>
+        {/* Filter Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <FilterTabs
+            portfolioItems={portfolioItems}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+        </motion.div>
 
-          <TabsContent value="all" className="mt-0">
-            <ThumbnailCarousel
-              items={portfolioItems.filter(i=>i.type==='image').map(i=>({src:i.url,alt:i.title}))}
-              onSelect={(idx)=>{
-                const imageItems = portfolioItems.filter(i=>i.type==='image');
-                if (imageItems[idx]) handleItemClick(imageItems[idx]);
-              }}
+        {/* Portfolio Grid/Masonry */}
+        <motion.div
+          className="mt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {isLoading ? (
+            viewMode === 'grid' ? (
+              <GridSkeleton count={8} />
+            ) : (
+              <MasonrySkeleton count={8} />
+            )
+          ) : (
+            <MasonryGrid
+              items={filteredItems}
+              onItemClick={handleItemClick}
+              viewMode={viewMode}
             />
-          </TabsContent>
+          )}
+        </motion.div>
 
-          {categories.map(category => (
-            <TabsContent key={category} value={category} className="mt-0">
-              <ThumbnailCarousel
-                items={portfolioItems.filter(item=>item.category===category && item.type==='image').map(i=>({src:i.url,alt:i.title}))}
-                onSelect={(idx)=>{
-                  const catItems=portfolioItems.filter(item=>item.category===category && item.type==='image');
-                  if (catItems[idx]) {
-                    analytics.trackPortfolioFilter('category', category);
-                    handleItemClick(catItems[idx]);
-                  }
-                }}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
-      )}
+        {/* Stats Section */}
+        {!isLoading && (
+          <motion.div
+            className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-foreground">
+                {portfolioItems.length}
+              </div>
+              <div className="text-sm text-gray-600">Total Works</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-amber-500">
+                {portfolioItems.filter(i => i.featured).length}
+              </div>
+              <div className="text-sm text-gray-600">Featured</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-500">
+                {portfolioItems.filter(i => i.professional).length}
+              </div>
+              <div className="text-sm text-gray-600">Professional</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-foreground">
+                {[...new Set(portfolioItems.map(i => i.category))].filter(Boolean).length}
+              </div>
+              <div className="text-sm text-gray-600">Categories</div>
+            </div>
+          </motion.div>
+        )}
+      </div>
 
-      {categories.length === 0 && (
-        <ThumbnailCarousel
-          items={portfolioItems.filter(i=>i.type==='image').map(i=>({src:i.url,alt:i.title}))}
-          onSelect={(idx)=>{
-            const imageItems = portfolioItems.filter(i=>i.type==='image');
-            if (imageItems[idx]) handleItemClick(imageItems[idx]);
-          }}
+      {/* Enhanced Lightbox */}
+      {selectedIndex !== null && (
+        <EnhancedLightbox
+          items={filteredItems}
+          currentIndex={selectedIndex}
+          isOpen={selectedIndex !== null}
+          onClose={handleLightboxClose}
+          onNext={handleLightboxNext}
+          onPrevious={handleLightboxPrevious}
         />
       )}
-
-      {/* Enhanced Modal for selected item */}
-      {selectedItem && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
-          onClick={() => setSelectedItem(null)}
-        >
-          <div
-            className="bg-white rounded-lg p-4 max-w-4xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="text-xl font-semibold">{selectedItem.title}</h3>
-                <p className="text-gray-600 text-sm">
-                  {selectedItem.date && `${selectedItem.date} • `}
-                  {selectedItem.category && (
-                    <Badge variant="outline" className="ml-1 text-gold border-gold-20">
-                      {selectedItem.category}
-                    </Badge>
-                  )}
-                </p>
-                {selectedItem.featured && (
-                  <Badge className="mt-2 bg-gold text-black text-xs">Featured</Badge>
-                )}
-                {selectedItem.professional && (
-                  <Badge className="mt-2 ml-1 bg-blue-500 text-white text-xs">Professional</Badge>
-                )}
-              </div>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-2xl text-gray-500 hover:text-gray-800"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="my-4">
-              {selectedItem.type === 'image' ? (
-                <div className="relative h-[60vh] w-full">
-                  <Image
-                    src={selectedItem.url}
-                    alt={selectedItem.title}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 768px) 90vw, (max-width: 1200px) 75vw, 800px"
-                  />
-                </div>
-              ) : (
-                <div className="relative aspect-video w-full">
-                  <iframe
-                    src={selectedItem.url}
-                    title={selectedItem.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full"
-                  />
-                </div>
-              )}
-            </div>
-
-            <p className="text-gray-700 my-2">{selectedItem.description}</p>
-
-            {/* Additional metadata */}
-            {(selectedItem.photographer || selectedItem.location || selectedItem.client) && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="font-medium mb-2 text-sm text-gray-800">Details</h4>
-                <div className="text-sm text-gray-600 space-y-1">
-                  {selectedItem.photographer && <div>Photographer: {selectedItem.photographer}</div>}
-                  {selectedItem.location && <div>Location: {selectedItem.location}</div>}
-                  {selectedItem.client && <div>Client: {selectedItem.client}</div>}
-                  {selectedItem.year && <div>Year: {selectedItem.year}</div>}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </motion.div>
+    </motion.section>
   );
 }
