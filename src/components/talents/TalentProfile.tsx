@@ -8,32 +8,16 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import type { Talent } from "@/lib/data/talents";
 import { PortfolioSection } from "./PortfolioSection";
-import { usePageTracking, useAnalytics } from "@/lib/hooks/useAnalytics";
 import { HeroSection } from "./HeroSection";
-import { PreviousClubsTable } from "./PreviousClubsTable";
 
 interface TalentProfileProps {
   talent: Talent;
 }
 
 export function TalentProfile({ talent }: TalentProfileProps) {
-  // Track page views and user interactions
-  usePageTracking(talent.id, 'profile');
-  const analytics = useAnalytics(talent.id);
-
-  // Handle social link clicks
-  const handleSocialClick = (platform: string, url: string) => {
-    analytics.trackSocialShare(platform, url);
-  };
-
-  // Handle contact button click
-  const handleContactClick = () => {
-    analytics.trackContactInquiry();
-  };
-
   return (
     <div className="bg-white py-10 md:py-16">
-      <div className="container px-4 mx-auto">
+        <div className="container px-4 mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Talent Image and Quick Stats */}
           <motion.div
@@ -111,7 +95,6 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
                       whileHover={{ scale: 1.1, y: -3 }}
-                      onClick={() => handleSocialClick('Instagram', talent.socialLinks.instagram!)}
                     >
                       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M17 2H7C4.23858 2 2 4.23858 2 7V17C2 19.7614 4.23858 22 7 22H17C19.7614 22 22 19.7614 22 17V7C22 4.23858 19.7614 2 17 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -127,7 +110,6 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
                       whileHover={{ scale: 1.1, y: -3 }}
-                      onClick={() => handleSocialClick('Twitter', talent.socialLinks.twitter!)}
                     >
                       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M23 3C22.0424 3.67548 20.9821 4.19211 19.86 4.53C19.2577 3.83751 18.4573 3.34669 17.567 3.12393C16.6767 2.90116 15.7395 2.9572 14.8821 3.28445C14.0247 3.61171 13.2884 4.1944 12.773 4.95372C12.2575 5.71303 11.9877 6.61234 12 7.53V8.53C10.2426 8.57557 8.50127 8.18581 6.93101 7.39545C5.36074 6.60508 4.01032 5.43864 3 4C3 4 -1 13 8 17C5.94053 18.398 3.48716 19.0989 1 19C10 24 21 19 21 7.5C20.9991 7.22145 20.9723 6.94359 20.92 6.67C21.9406 5.66349 22.6608 4.39271 23 3V3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -141,7 +123,6 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
                       whileHover={{ scale: 1.1, y: -3 }}
-                      onClick={() => handleSocialClick('YouTube', talent.socialLinks.youtube!)}
                     >
                       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.5401 6.42C22.4213 5.94541 22.1794 5.51057 21.8387 5.15941C21.4979 4.80824 21.0708 4.55318 20.6001 4.42C18.8801 4 12.0001 4 12.0001 4C12.0001 4 5.12008 4 3.40008 4.46C2.92933 4.59318 2.50225 4.84824 2.16151 5.19941C1.82078 5.55057 1.57886 5.98541 1.46008 6.46C1.14577 8.20556 0.991568 9.97631 1.00008 11.75C0.988741 13.537 1.14295 15.3213 1.46008 17.08C1.59104 17.5398 1.83839 17.9581 2.17823 18.2945C2.51806 18.6308 2.9389 18.8738 3.40008 19C5.12008 19.46 12.0001 19.46 12.0001 19.46C12.0001 19.46 18.8801 19.46 20.6001 19C21.0708 18.8668 21.4979 18.6118 21.8387 18.2606C22.1794 17.9094 22.4213 17.4746 22.5401 17C22.8524 15.2676 23.0064 13.5103 23.0001 11.75C23.0114 9.96295 22.8572 8.17862 22.5401 6.42V6.42Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -256,22 +237,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
               </div>
             </motion.div>
 
-            {/* Previous Clubs Table if data exists */}
-            {Array.isArray(talent.previousClubs) && talent.previousClubs.length > 0 && (
-              <motion.div
-                className="mb-8"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.25 }}
-              >
-                <h2 className="text-xl font-semibold text-foreground mb-4">Career</h2>
-                <PreviousClubsTable records={talent.previousClubs} />
-              </motion.div>
-            )}
-
             {/* Portfolio Section */}
             {talent.portfolio && talent.portfolio.length > 0 && (
-              <PortfolioSection portfolioItems={talent.portfolio} talentId={talent.id} />
+              <PortfolioSection portfolioItems={talent.portfolio} />
             )}
 
             <motion.div
@@ -293,7 +261,7 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                 whileTap={{ scale: 0.97 }}
               >
                 <Button asChild className="bg-gold hover:bg-gold-80 text-white w-full">
-                  <Link href="/contact" onClick={handleContactClick}>
+                  <Link href="/contact">
                     Get in Touch
                   </Link>
                 </Button>

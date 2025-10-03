@@ -1,0 +1,18 @@
+{
+  "notifications": {
+    "forms-notifications": {
+      "contact": [
+        {
+          "email": "versatalent.management@gmail.com",
+          "type": "email"
+        }
+      ],
+      "newsletter": [
+        {
+          "email": "versatalent.management@gmail.com",
+          "type": "email"
+        }
+      ]
+    }
+  }
+}

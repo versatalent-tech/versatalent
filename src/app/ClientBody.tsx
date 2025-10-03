@@ -15,7 +15,7 @@ export default function ClientBody({
 
   return (
     <body className="antialiased" suppressHydrationWarning>
-        {children}
+      {children}
     </body>
   );
 }
