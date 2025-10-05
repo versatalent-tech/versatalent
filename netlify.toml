@@ -10,44 +10,35 @@
   NEXT_TELEMETRY_DISABLED = "1"
   BUN_VERSION = "1.2.8"
 
-# Form handling configurations with email notifications
-[forms]
-  # Main contact form
-  [forms.contact]
-    name = "Contact Form"
-    # Email notifications
-    [[forms.contact.notifications]]
-      type = "email"
-      to = ["versatalent.management@gmail.com"]
-      subject = "New Contact Form Submission - VersaTalent"
-      template = "contact-form"
+# Netlify Forms configuration
+[[forms]]
+  name = "versatalent-contact"
 
-  # Newsletter subscription form
-  [forms.newsletter]
-    name = "Newsletter Subscription"
-    # Email notifications
-    [[forms.newsletter.notifications]]
-      type = "email"
-      to = ["versatalent.management@gmail.com"]
-      subject = "New Newsletter Subscription - VersaTalent"
-      template = "newsletter-form"
+  [[forms.notifications]]
+    type = "email"
+    to = ["versatalent.management@gmail.com"]
+    subject = "New Contact Form Submission - VersaTalent"
 
-  # Talent application form
-  [forms.talent-application]
-    name = "Talent Application Form"
-    # Email notifications
-    [[forms.talent-application.notifications]]
-      type = "email"
-      to = ["versatalent.management@gmail.com"]
-      subject = "New Talent Application - VersaTalent"
-      template = "talent-application-form"
+[[forms]]
+  name = "versatalent-talent"
 
-  # Brand partnership form
-  [forms.brand-partnership]
-    name = "Brand Partnership Form"
-    # Email notifications
-    [[forms.brand-partnership.notifications]]
-      type = "email"
-      to = ["versatalent.management@gmail.com"]
-      subject = "New Brand Partnership Inquiry - VersaTalent"
-      template = "brand-partnership-form"
+  [[forms.notifications]]
+    type = "email"
+    to = ["versatalent.management@gmail.com"]
+    subject = "New Talent Application - VersaTalent"
+
+[[forms]]
+  name = "versatalent-brand"
+
+  [[forms.notifications]]
+    type = "email"
+    to = ["versatalent.management@gmail.com"]
+    subject = "New Brand Partnership Inquiry - VersaTalent"
+
+[[forms]]
+  name = "versatalent-newsletter"
+
+  [[forms.notifications]]
+    type = "email"
+    to = ["versatalent.management@gmail.com"]
+    subject = "New Newsletter Subscription - VersaTalent"
