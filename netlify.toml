@@ -1,0 +1,53 @@
+[images]
+  remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*", "https://thehanovertheatre.org/.*"]
+
+[build]
+  command = "bun run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
+  BUN_VERSION = "1.2.8"
+
+# Form handling configurations with email notifications
+[forms]
+  # Main contact form
+  [forms."versatalent-contact"]
+    name = "versatalent-contact"
+    # Email notifications
+    [[forms."versatalent-contact".notifications]]
+      type = "email"
+      to = ["versatalent.management@gmail.com"]
+      subject = "New Contact Form Submission - VersaTalent"
+      template = "contact-form"
+
+  # Newsletter subscription form
+  [forms."versatalent-newsletter"]
+    name = "versatalent-newsletter"
+    # Email notifications
+    [[forms."versatalent-newsletter".notifications]]
+      type = "email"
+      to = ["versatalent.management@gmail.com"]
+      subject = "New Newsletter Subscription - VersaTalent"
+      template = "newsletter-form"
+
+  # Talent application form
+  [forms."versatalent-talent"]
+    name = "versatalent-talent"
+    # Email notifications
+    [[forms."versatalent-talent".notifications]]
+      type = "email"
+      to = ["versatalent.management@gmail.com"]
+      subject = "New Talent Application - VersaTalent"
+      template = "talent-application-form"
+
+  # Brand partnership form
+  [forms."versatalent-brand"]
+    name = "versatalent-brand"
+    # Email notifications
+    [[forms."versatalent-brand".notifications]]
+      type = "email"
+      to = ["versatalent.management@gmail.com"]
+      subject = "New Brand Partnership Inquiry - VersaTalent"
+      template = "brand-partnership-form"
