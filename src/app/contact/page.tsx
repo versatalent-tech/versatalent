@@ -239,7 +239,7 @@ export default function ContactPage() {
                   <form
                     name={`versatalent-${formType}`}
                     method="POST"
-                    data-netlify="true"
+                    netlify
                     data-netlify-honeypot="bot-field"
                     onSubmit={handleSubmit}
                     className="space-y-6"
