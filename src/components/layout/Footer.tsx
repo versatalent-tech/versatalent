@@ -13,6 +13,7 @@ const navigation = {
     { name: "For Brands", href: "/for-brands" },
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/contact" },
+    { name: "Dashboard", href: "/dashboard" },
   ],
   industries: [
     { name: "Acting", href: "/talents?industry=acting" },
@@ -27,7 +28,7 @@ const navigation = {
       href: "https://instagram.com/versatalent",
       icon: Instagram,
     },
-    {
+    /*{
       name: "Twitter",
       href: "https://twitter.com/versatalent",
       icon: Twitter,
@@ -41,7 +42,7 @@ const navigation = {
       name: "LinkedIn",
       href: "https://linkedin.com/company/versatalent",
       icon: Linkedin,
-    },
+    },*/
   ],
 };
 
@@ -77,8 +78,8 @@ export function Footer() {
             <div className="mt-2 flex space-x-4 text-gray-600">
               <div className="flex items-center">
                 <Phone className="h-4 w-4 mr-2 text-gold" />
-                <a href="tel:+1234567890" className="text-sm hover:text-gold">
-                  +1 (234) 567-890
+                <a href="tel:+447714688007" className="text-sm hover:text-gold">
+                  +44 7714688007
                 </a>
               </div>
             </div>
