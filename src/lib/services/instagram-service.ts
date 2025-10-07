@@ -38,7 +38,8 @@ export const ARTIST_INSTAGRAM_ACCOUNTS: Record<string, ArtistInstagramConfig> = 
       // 1. Going to the Instagram post
       // 2. Clicking "..." and selecting "Copy link"
       // 3. Pasting the URL here
-
+      'https://www.instagram.com/deejaywg_/p/DOy39hlDF8p/',
+      'https://www.instagram.com/deejaywg_/p/DPRrq80CBl1/'
     ]
   },
   jessicadias: {
@@ -61,6 +62,7 @@ export const ARTIST_INSTAGRAM_ACCOUNTS: Record<string, ArtistInstagramConfig> = 
     account_type: 'personal',
     featured_posts: [
       // Add actual Instagram post URLs here
+      'https://www.instagram.com/joaorodolfo_official/reel/DKMehnEMRSi/'
     ]
   },
   antoniomonteiro: {

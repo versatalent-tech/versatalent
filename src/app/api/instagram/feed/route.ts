@@ -48,9 +48,9 @@ const ARTIST_INSTAGRAM_ACCOUNTS: Record<string, ArtistInstagramConfig> = {
     display_name: 'Deejay WG',
     profile_picture: '/deejaywg/IMG_8999.jpg',
     instagram_url: 'https://instagram.com/deejaywg_',
-    account_type: 'business',
+    account_type: 'personal',
     featured_posts: [
-      'https://www.instagram.com/p/C9XzQzxN8mP/', // Replace with actual URLs
+      'https://www.instagram.com/deejaywg_/p/DOy39hlDF8p/', // Replace with actual URLs
     ]
   },
   jessicadias: {
@@ -58,29 +58,19 @@ const ARTIST_INSTAGRAM_ACCOUNTS: Record<string, ArtistInstagramConfig> = {
     display_name: 'Jessica Dias',
     profile_picture: '/jessicadias/IMG_9288-altered.jpg',
     instagram_url: 'https://instagram.com/miss_chocolatinha',
-    account_type: 'business',
+    account_type: 'personal',
     featured_posts: [
-      'https://www.instagram.com/p/C9XzQzxN8mR/', // Replace with actual URLs
+      'https://www.instagram.com/miss_chocolatinha/p/DJRlKRuiq4w/', // Replace with actual URLs
     ]
   },
   joaorodolfo: {
     username: 'joaorodolfo_official',
     display_name: 'João Rodolfo',
-    profile_picture: '/joaorodolfo/billboard.PNG',
+    profile_picture: '/joaorodolfo/JROD1.jpg',
     instagram_url: 'https://instagram.com/joaorodolfo_official',
-    account_type: 'business',
+    account_type: 'personal',
     featured_posts: [
-      'https://www.instagram.com/p/C9XzQzxN8mT/', // Replace with actual URLs
-    ]
-  },
-  antoniomonteiro: {
-    username: 'antoniolaflare98',
-    display_name: 'Antonio Monteiro',
-    profile_picture: '/antoniomonteiro/Tonecas_1.jpg',
-    instagram_url: 'https://instagram.com/antoniolaflare98',
-    account_type: 'business',
-    featured_posts: [
-      'https://www.instagram.com/p/C9XzQzxN8mU/', // Replace with actual URLs
+      'https://www.instagram.com/joaorodolfo_official/reel/DKMehnEMRSi/', // Replace with actual URLs
     ]
   }
 };
