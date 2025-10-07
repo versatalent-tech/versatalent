@@ -351,4 +351,4 @@ export class InstagramService {
 }
 
 // Export types and constants for use in components
-export { ARTIST_INSTAGRAM_ACCOUNTS };
+// ARTIST_INSTAGRAM_ACCOUNTS is already exported above with the const declaration

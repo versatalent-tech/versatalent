@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { InstagramConfiguration } from '@/components/admin/InstagramConfiguration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,15 @@ import {
 } from 'lucide-react';
 import { InstagramService } from '@/lib/services/instagram-service';
 import { useInstagramFeed } from '@/lib/hooks/useInstagramFeed';
+
+// Dynamically import Instagram configuration to prevent SSR issues
+const InstagramConfiguration = dynamic(
+  () => import('@/components/admin/InstagramConfiguration').then(mod => ({ default: mod.InstagramConfiguration })),
+  {
+    loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>,
+    ssr: false
+  }
+);
 
 export default function InstagramAdminPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -217,7 +226,9 @@ export default function InstagramAdminPage() {
           )}
 
           {/* Instagram Configuration Component */}
-          <InstagramConfiguration key={refreshKey} onUpdate={handleConfigUpdate} />
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>}>
+            <InstagramConfiguration key={refreshKey} onUpdate={handleConfigUpdate} />
+          </Suspense>
 
           {/* API Documentation */}
           <Card className="mt-8">
