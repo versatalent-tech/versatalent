@@ -20,67 +20,7 @@ import {
 } from "lucide-react";
 
 export default function ContactPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formType, setFormType] = useState<'contact' | 'talent' | 'brand'>('contact');
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const formData = new FormData(e.currentTarget);
-      const response = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(Object.fromEntries(formData)).toString(),
-      });
-
-      if (response.ok) {
-        setIsSubmitted(true);
-        (e.target as HTMLFormElement).reset();
-      } else {
-        throw new Error('Form submission failed');
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('There was an error submitting your form. Please try again or contact us directly.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (isSubmitted) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <motion.div
-            className="text-center max-w-md mx-auto p-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-foreground mb-4">
-              Thank You!
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Your message has been sent successfully. We'll get back to you within 48 hours.
-            </p>
-            <Button
-              onClick={() => {
-                setIsSubmitted(false);
-                setFormType('contact');
-              }}
-              className="bg-gold hover:bg-gold/90 text-white"
-            >
-              Send Another Message
-            </Button>
-          </motion.div>
-        </div>
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout>
@@ -239,9 +179,9 @@ export default function ContactPage() {
                   <form
                     name={`versatalent-${formType}`}
                     method="POST"
+                    action="/success"
                     data-netlify="true"
                     data-netlify-honeypot="bot-field"
-                    onSubmit={handleSubmit}
                     className="space-y-6"
                   >
                     {/* Hidden fields for Netlify */}
@@ -380,20 +320,10 @@ export default function ContactPage() {
 
                     <Button
                       type="submit"
-                      disabled={isSubmitting}
                       className="w-full bg-gold hover:bg-gold/90 text-white"
                     >
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Send Message
-                        </>
-                      )}
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Message
                     </Button>
 
                     <p className="text-xs text-gray-500 text-center">
