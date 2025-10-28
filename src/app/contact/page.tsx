@@ -5,7 +5,6 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -13,9 +12,6 @@ import {
   MapPin,
   Clock,
   Send,
-  User,
-  Building,
-  MessageSquare,
   CheckCircle
 } from "lucide-react";
 
@@ -175,161 +171,86 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  {/* Contact Form */}
+                  {/* General Contact Form */}
                   <form
-                    name={`versatalent-${formType}`}
+                    name="versatalent-contact"
                     method="POST"
-                    action="/success"
                     data-netlify="true"
-                    data-netlify-honeypot="bot-field"
-                    className="space-y-6"
+                    style={{ display: formType === 'contact' ? 'block' : 'none' }}
                   >
-                    {/* Hidden fields for Netlify */}
-                    <input type="hidden" name="form-name" value={`versatalent-${formType}`} />
-                    <p style={{ display: 'none' }}>
-                      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                          First Name *
-                        </label>
-                        <Input
-                          id="firstName"
-                          name="firstName"
-                          type="text"
-                          required
-                          className="w-full"
-                          placeholder="Your first name"
-                        />
+                    <input type="hidden" name="form-name" value="versatalent-contact" />
+                    
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input name="firstName" placeholder="First Name" required />
+                        <Input name="lastName" placeholder="Last Name" required />
                       </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                          Last Name *
-                        </label>
-                        <Input
-                          id="lastName"
-                          name="lastName"
-                          type="text"
-                          required
-                          className="w-full"
-                          placeholder="Your last name"
-                        />
-                      </div>
+                      <Input name="email" type="email" placeholder="Email" required />
+                      <Input name="phone" type="tel" placeholder="Phone" />
+                      <Input name="subject" placeholder="Subject" required />
+                      <Textarea name="message" placeholder="Message" rows={5} required />
+                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
                     </div>
-
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address *
-                      </label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        className="w-full"
-                        placeholder="your.email@example.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone Number
-                      </label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        className="w-full"
-                        placeholder="+44 (0) 123 456 7890"
-                      />
-                    </div>
-
-                    {formType === 'talent' && (
-                      <div>
-                        <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
-                          Industry/Field *
-                        </label>
-                        <Input
-                          id="industry"
-                          name="industry"
-                          type="text"
-                          required
-                          className="w-full"
-                          placeholder="e.g., Music, Modeling, Acting, Sports, etc."
-                        />
-                      </div>
-                    )}
-
-                    {formType === 'brand' && (
-                      <div>
-                        <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
-                          Company/Organization *
-                        </label>
-                        <Input
-                          id="company"
-                          name="company"
-                          type="text"
-                          required
-                          className="w-full"
-                          placeholder="Your company name"
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                        Subject *
-                      </label>
-                      <Input
-                        id="subject"
-                        name="subject"
-                        type="text"
-                        required
-                        className="w-full"
-                        placeholder={
-                          formType === 'talent'
-                            ? "Application for talent representation"
-                            : formType === 'brand'
-                            ? "Talent booking inquiry"
-                            : "Brief subject of your inquiry"
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                        Message *
-                      </label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        required
-                        rows={5}
-                        className="w-full"
-                        placeholder={
-                          formType === 'talent'
-                            ? "Tell us about your background, experience, and what you're looking for in representation..."
-                            : formType === 'brand'
-                            ? "Describe your project, timeline, budget, and the type of talent you're seeking..."
-                            : "Please provide details about your inquiry..."
-                        }
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full bg-gold hover:bg-gold/90 text-white"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Send Message
-                    </Button>
-
-                    <p className="text-xs text-gray-500 text-center">
-                      We'll respond to your inquiry within 48 hours. Your information is kept confidential.
-                    </p>
                   </form>
+
+                  {/* Talent Application Form */}
+                  <form
+                    name="versatalent-talent"
+                    method="POST"
+                    data-netlify="true"
+                    style={{ display: formType === 'talent' ? 'block' : 'none' }}
+                  >
+                    <input type="hidden" name="form-name" value="versatalent-talent" />
+                    
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input name="firstName" placeholder="First Name" required />
+                        <Input name="lastName" placeholder="Last Name" required />
+                      </div>
+                      <Input name="email" type="email" placeholder="Email" required />
+                      <Input name="phone" type="tel" placeholder="Phone" />
+                      <Input name="industry" placeholder="Industry (e.g., Music, Modeling)" required />
+                      <Input name="subject" placeholder="Subject" required />
+                      <Textarea name="message" placeholder="Tell us about your background and experience..." rows={5} required />
+                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    </div>
+                  </form>
+
+                  {/* Brand Partnership Form */}
+                  <form
+                    name="versatalent-brand"
+                    method="POST"
+                    data-netlify="true"
+                    style={{ display: formType === 'brand' ? 'block' : 'none' }}
+                  >
+                    <input type="hidden" name="form-name" value="versatalent-brand" />
+                    
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input name="firstName" placeholder="First Name" required />
+                        <Input name="lastName" placeholder="Last Name" required />
+                      </div>
+                      <Input name="email" type="email" placeholder="Email" required />
+                      <Input name="phone" type="tel" placeholder="Phone" />
+                      <Input name="company" placeholder="Company Name" required />
+                      <Input name="subject" placeholder="Subject" required />
+                      <Textarea name="message" placeholder="Describe your project and talent needs..." rows={5} required />
+                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    </div>
+                  </form>
+
+                  <p className="text-xs text-gray-500 text-center mt-4">
+                    We'll respond within 48 hours. Your information is kept confidential.
+                  </p>
                 </div>
               </motion.div>
             </div>
