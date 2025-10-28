@@ -171,6 +171,7 @@ export default function ContactPage() {
                   <form
                     name="versatalent-contact"
                     method="POST"
+                    action="/success"
                     data-netlify="true"
                     data-netlify-honeypot="bot-field"
                     style={{ display: formType === 'contact' ? 'block' : 'none' }}
@@ -204,7 +205,7 @@ export default function ContactPage() {
                         name="email"
                         placeholder="Email"
                         required
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-1 focus-visible:ring-ring"
                       />
                       <input
                         type="tel"
@@ -240,6 +241,7 @@ export default function ContactPage() {
                   <form
                     name="versatalent-talent"
                     method="POST"
+                    action="/success"
                     data-netlify="true"
                     data-netlify-honeypot="bot-field"
                     style={{ display: formType === 'talent' ? 'block' : 'none' }}
@@ -313,6 +315,7 @@ export default function ContactPage() {
                   <form
                     name="versatalent-brand"
                     method="POST"
+                    action="/success"
                     data-netlify="true"
                     data-netlify-honeypot="bot-field"
                     style={{ display: formType === 'brand' ? 'block' : 'none' }}
@@ -402,7 +405,7 @@ export default function ContactPage() {
             <h2 className="text-3xl font-bold text-foreground mb-8">
               Quick <span className="text-gold">Answers</span>
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Response Time</h3>
@@ -410,21 +413,21 @@ export default function ContactPage() {
                   We respond to all inquiries within 48 hours during business days.
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Application Process</h3>
                 <p className="text-gray-600 text-sm">
                   Talent applications are reviewed within 1 week, with next steps communicated promptly.
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Booking Timeline</h3>
                 <p className="text-gray-600 text-sm">
                   We recommend booking talent 2-4 weeks in advance for optimal availability.
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Confidentiality</h3>
                 <p className="text-gray-600 text-sm">

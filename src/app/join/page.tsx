@@ -73,6 +73,7 @@ export default function JoinPage() {
               <form
                 name="versatalent-talent"
                 method="POST"
+                action="/success"
                 data-netlify="true"
                 data-netlify-honeypot="bot-field"
                 className="space-y-6"
