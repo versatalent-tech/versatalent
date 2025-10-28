@@ -172,100 +172,97 @@ export default function ContactPage() {
                   </div>
 
                   {/* General Contact Form */}
-                  {formType === 'contact' && (
-                    <form
-                      name="versatalent-contact"
-                      method="POST"
-                      data-netlify="true"
-                      data-netlify-honeypot="bot-field"
-                    >
-                      <input type="hidden" name="form-name" value="versatalent-contact" />
-                      <p style={{ display: 'none' }}>
-                        <label>
-                          Don't fill this out if you're human: <input name="bot-field" />
-                        </label>
-                      </p>
+                  <form
+                    name="versatalent-contact"
+                    method="POST"
+                    data-netlify="true"
+                    data-netlify-honeypot="bot-field"
+                    style={{ display: formType === 'contact' ? 'block' : 'none' }}
+                  >
+                    <input type="hidden" name="form-name" value="versatalent-contact" />
+                    <p style={{ display: 'none' }}>
+                      <label>
+                        Don't fill this out if you're human: <input name="bot-field" />
+                      </label>
+                    </p>
 
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Input name="firstName" placeholder="First Name" required />
-                          <Input name="lastName" placeholder="Last Name" required />
-                        </div>
-                        <Input name="email" type="email" placeholder="Email" required />
-                        <Input name="phone" type="tel" placeholder="Phone" />
-                        <Input name="subject" placeholder="Subject" required />
-                        <Textarea name="message" placeholder="Message" rows={5} required />
-                        <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
-                          <Send className="h-4 w-4 mr-2" />
-                          Send Message
-                        </Button>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input name="firstName" placeholder="First Name" required />
+                        <Input name="lastName" placeholder="Last Name" required />
                       </div>
-                    </form>
-                  )}
+                      <Input name="email" type="email" placeholder="Email" required />
+                      <Input name="phone" type="tel" placeholder="Phone" />
+                      <Input name="subject" placeholder="Subject" required />
+                      <Textarea name="message" placeholder="Message" rows={5} required />
+                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    </div>
+                  </form>
 
                   {/* Talent Application Form */}
-                  {formType === 'talent' && (
-                    <form
-                      name="versatalent-talent"
-                      method="POST"
-                      data-netlify="true"
-                      data-netlify-honeypot="bot-field"
-                    >
-                      <input type="hidden" name="form-name" value="versatalent-talent" />
-                      <p style={{ display: 'none' }}>
-                        <label>
-                          Don't fill this out if you're human: <input name="bot-field" />
-                        </label>
-                      </p>
+                  <form
+                    name="versatalent-talent"
+                    method="POST"
+                    data-netlify="true"
+                    data-netlify-honeypot="bot-field"
+                    style={{ display: formType === 'talent' ? 'block' : 'none' }}
+                  >
+                    <input type="hidden" name="form-name" value="versatalent-talent" />
+                    <p style={{ display: 'none' }}>
+                      <label>
+                        Don't fill this out if you're human: <input name="bot-field" />
+                      </label>
+                    </p>
 
-                      <div className="space-y-6">
-                        <Input name="name" placeholder="Full Name" required />
-                        <Input name="email" type="email" placeholder="Email" required />
-                        <Input name="phone" type="tel" placeholder="Phone" />
-                        <Input name="industry" placeholder="Industry (e.g., Music, Modeling)" required />
-                        <Textarea name="experience" placeholder="Briefly describe your experience..." rows={3} required />
-                        <Input name="portfolioLink" type="url" placeholder="Portfolio Link (Optional)" />
-                        <Textarea name="message" placeholder="Why do you want to join VersaTalent?" rows={4} required />
-                        <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
-                          <Send className="h-4 w-4 mr-2" />
-                          Send Message
-                        </Button>
-                      </div>
-                    </form>
-                  )}
+                    <div className="space-y-6">
+                      <Input name="name" placeholder="Full Name" required />
+                      <Input name="email" type="email" placeholder="Email" required />
+                      <Input name="phone" type="tel" placeholder="Phone" />
+                      <Input name="industry" placeholder="Industry (e.g., Music, Modeling)" required />
+                      <Textarea name="experience" placeholder="Briefly describe your experience..." rows={3} required />
+                      <Input name="portfolioLink" type="url" placeholder="Portfolio Link (Optional)" />
+                      <Textarea name="message" placeholder="Why do you want to join VersaTalent?" rows={4} required />
+                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    </div>
+                  </form>
 
                   {/* Brand Partnership Form */}
-                  {formType === 'brand' && (
-                    <form
-                      name="versatalent-brand"
-                      method="POST"
-                      data-netlify="true"
-                      data-netlify-honeypot="bot-field"
-                    >
-                      <input type="hidden" name="form-name" value="versatalent-brand" />
-                      <p style={{ display: 'none' }}>
-                        <label>
-                          Don't fill this out if you're human: <input name="bot-field" />
-                        </label>
-                      </p>
+                  <form
+                    name="versatalent-brand"
+                    method="POST"
+                    data-netlify="true"
+                    data-netlify-honeypot="bot-field"
+                    style={{ display: formType === 'brand' ? 'block' : 'none' }}
+                  >
+                    <input type="hidden" name="form-name" value="versatalent-brand" />
+                    <p style={{ display: 'none' }}>
+                      <label>
+                        Don't fill this out if you're human: <input name="bot-field" />
+                      </label>
+                    </p>
 
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Input name="firstName" placeholder="First Name" required />
-                          <Input name="lastName" placeholder="Last Name" required />
-                        </div>
-                        <Input name="email" type="email" placeholder="Email" required />
-                        <Input name="phone" type="tel" placeholder="Phone" />
-                        <Input name="company" placeholder="Company Name" required />
-                        <Input name="subject" placeholder="Subject" required />
-                        <Textarea name="message" placeholder="Describe your project and talent needs..." rows={5} required />
-                        <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
-                          <Send className="h-4 w-4 mr-2" />
-                          Send Message
-                        </Button>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input name="firstName" placeholder="First Name" required />
+                        <Input name="lastName" placeholder="Last Name" required />
                       </div>
-                    </form>
-                  )}
+                      <Input name="email" type="email" placeholder="Email" required />
+                      <Input name="phone" type="tel" placeholder="Phone" />
+                      <Input name="company" placeholder="Company Name" required />
+                      <Input name="subject" placeholder="Subject" required />
+                      <Textarea name="message" placeholder="Describe your project and talent needs..." rows={5} required />
+                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    </div>
+                  </form>
 
                   <p className="text-xs text-gray-500 text-center mt-4">
                     We'll respond within 48 hours. Your information is kept confidential.
