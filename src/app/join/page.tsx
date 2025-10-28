@@ -1,5 +1,4 @@
 "use client";
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 
@@ -60,7 +59,6 @@ export default function JoinPage() {
                     Sports
                   </Badge>
                 </div>
-
                 <p className="mt-6 text-gray-300">
                   Don't see your specific talent listed? We're always open to expanding our roster with exceptional individuals from various fields. Tell us about your unique abilities!
                 </p>
@@ -69,21 +67,13 @@ export default function JoinPage() {
 
             <div className="bg-zinc-900 p-8 rounded-lg border border-zinc-800">
               <h2 className="text-2xl font-semibold text-white mb-6">Application Form</h2>
-
               <form
                 name="versatalent-talent"
                 method="POST"
-                action="/success"
                 data-netlify="true"
-                data-netlify-honeypot="bot-field"
                 className="space-y-6"
               >
                 <input type="hidden" name="form-name" value="versatalent-talent" />
-                <p style={{ display: 'none' }}>
-                  <label>
-                    Don't fill this out if you're human: <input name="bot-field" />
-                  </label>
-                </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -96,7 +86,6 @@ export default function JoinPage() {
                       required
                     />
                   </div>
-
                   <div>
                     <label className="block text-white mb-2 text-sm font-medium">Email *</label>
                     <input
@@ -120,7 +109,6 @@ export default function JoinPage() {
                       required
                     />
                   </div>
-
                   <div>
                     <label className="block text-white mb-2 text-sm font-medium">Industry *</label>
                     <select

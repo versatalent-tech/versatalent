@@ -171,17 +171,10 @@ export default function ContactPage() {
                   <form
                     name="versatalent-contact"
                     method="POST"
-                    action="/success"
                     data-netlify="true"
-                    data-netlify-honeypot="bot-field"
                     style={{ display: formType === 'contact' ? 'block' : 'none' }}
                   >
                     <input type="hidden" name="form-name" value="versatalent-contact" />
-                    <p style={{ display: 'none' }}>
-                      <label>
-                        Don't fill this out if you're human: <input name="bot-field" />
-                      </label>
-                    </p>
 
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -241,17 +234,10 @@ export default function ContactPage() {
                   <form
                     name="versatalent-talent"
                     method="POST"
-                    action="/success"
                     data-netlify="true"
-                    data-netlify-honeypot="bot-field"
                     style={{ display: formType === 'talent' ? 'block' : 'none' }}
                   >
                     <input type="hidden" name="form-name" value="versatalent-talent" />
-                    <p style={{ display: 'none' }}>
-                      <label>
-                        Don't fill this out if you're human: <input name="bot-field" />
-                      </label>
-                    </p>
 
                     <div className="space-y-6">
                       <input
@@ -315,17 +301,10 @@ export default function ContactPage() {
                   <form
                     name="versatalent-brand"
                     method="POST"
-                    action="/success"
                     data-netlify="true"
-                    data-netlify-honeypot="bot-field"
                     style={{ display: formType === 'brand' ? 'block' : 'none' }}
                   >
                     <input type="hidden" name="form-name" value="versatalent-brand" />
-                    <p style={{ display: 'none' }}>
-                      <label>
-                        Don't fill this out if you're human: <input name="bot-field" />
-                      </label>
-                    </p>
 
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
