@@ -1,10 +1,6 @@
 "use client";
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -188,17 +184,55 @@ export default function ContactPage() {
 
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input name="firstName" placeholder="First Name" required />
-                        <Input name="lastName" placeholder="Last Name" required />
+                        <input
+                          type="text"
+                          name="firstName"
+                          placeholder="First Name"
+                          required
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                        <input
+                          type="text"
+                          name="lastName"
+                          placeholder="Last Name"
+                          required
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
                       </div>
-                      <Input name="email" type="email" placeholder="Email" required />
-                      <Input name="phone" type="tel" placeholder="Phone" />
-                      <Input name="subject" placeholder="Subject" required />
-                      <Textarea name="message" placeholder="Message" rows={5} required />
-                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="Email"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="tel"
+                        name="phone"
+                        placeholder="Phone"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="text"
+                        name="subject"
+                        placeholder="Subject"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <textarea
+                        name="message"
+                        placeholder="Message"
+                        rows={5}
+                        required
+                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[120px]"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-gold text-white hover:bg-gold/90 h-9 px-4 py-2"
+                      >
                         <Send className="h-4 w-4 mr-2" />
                         Send Message
-                      </Button>
+                      </button>
                     </div>
                   </form>
 
@@ -218,17 +252,60 @@ export default function ContactPage() {
                     </p>
 
                     <div className="space-y-6">
-                      <Input name="name" placeholder="Full Name" required />
-                      <Input name="email" type="email" placeholder="Email" required />
-                      <Input name="phone" type="tel" placeholder="Phone" />
-                      <Input name="industry" placeholder="Industry (e.g., Music, Modeling)" required />
-                      <Textarea name="experience" placeholder="Briefly describe your experience..." rows={3} required />
-                      <Input name="portfolioLink" type="url" placeholder="Portfolio Link (Optional)" />
-                      <Textarea name="message" placeholder="Why do you want to join VersaTalent?" rows={4} required />
-                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                      <input
+                        type="text"
+                        name="name"
+                        placeholder="Full Name"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="Email"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="tel"
+                        name="phone"
+                        placeholder="Phone"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="text"
+                        name="industry"
+                        placeholder="Industry (e.g., Music, Modeling)"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <textarea
+                        name="experience"
+                        placeholder="Briefly describe your experience..."
+                        rows={3}
+                        required
+                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[80px]"
+                      />
+                      <input
+                        type="url"
+                        name="portfolioLink"
+                        placeholder="Portfolio Link (Optional)"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <textarea
+                        name="message"
+                        placeholder="Why do you want to join VersaTalent?"
+                        rows={4}
+                        required
+                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[100px]"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-gold text-white hover:bg-gold/90 h-9 px-4 py-2"
+                      >
                         <Send className="h-4 w-4 mr-2" />
                         Send Message
-                      </Button>
+                      </button>
                     </div>
                   </form>
 
@@ -249,18 +326,62 @@ export default function ContactPage() {
 
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input name="firstName" placeholder="First Name" required />
-                        <Input name="lastName" placeholder="Last Name" required />
+                        <input
+                          type="text"
+                          name="firstName"
+                          placeholder="First Name"
+                          required
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                        <input
+                          type="text"
+                          name="lastName"
+                          placeholder="Last Name"
+                          required
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
                       </div>
-                      <Input name="email" type="email" placeholder="Email" required />
-                      <Input name="phone" type="tel" placeholder="Phone" />
-                      <Input name="company" placeholder="Company Name" required />
-                      <Input name="subject" placeholder="Subject" required />
-                      <Textarea name="message" placeholder="Describe your project and talent needs..." rows={5} required />
-                      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white">
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="Email"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="tel"
+                        name="phone"
+                        placeholder="Phone"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="text"
+                        name="company"
+                        placeholder="Company Name"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <input
+                        type="text"
+                        name="subject"
+                        placeholder="Subject"
+                        required
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <textarea
+                        name="message"
+                        placeholder="Describe your project and talent needs..."
+                        rows={5}
+                        required
+                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[120px]"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-gold text-white hover:bg-gold/90 h-9 px-4 py-2"
+                      >
                         <Send className="h-4 w-4 mr-2" />
                         Send Message
-                      </Button>
+                      </button>
                     </div>
                   </form>
 
@@ -281,7 +402,7 @@ export default function ContactPage() {
             <h2 className="text-3xl font-bold text-foreground mb-8">
               Quick <span className="text-gold">Answers</span>
             </h2>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Response Time</h3>
@@ -289,21 +410,21 @@ export default function ContactPage() {
                   We respond to all inquiries within 48 hours during business days.
                 </p>
               </div>
-
+              
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Application Process</h3>
                 <p className="text-gray-600 text-sm">
                   Talent applications are reviewed within 1 week, with next steps communicated promptly.
                 </p>
               </div>
-
+              
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Booking Timeline</h3>
                 <p className="text-gray-600 text-sm">
                   We recommend booking talent 2-4 weeks in advance for optimal availability.
                 </p>
               </div>
-
+              
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="font-semibold text-foreground mb-3">Confidentiality</h3>
                 <p className="text-gray-600 text-sm">

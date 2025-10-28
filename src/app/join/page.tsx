@@ -1,9 +1,6 @@
 "use client";
 
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 export default function JoinPage() {
@@ -90,21 +87,22 @@ export default function JoinPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-white mb-2 text-sm font-medium">Full Name *</label>
-                    <Input
+                    <input
+                      type="text"
                       name="name"
                       placeholder="Your full name"
-                      className="bg-zinc-800 border-zinc-700 text-white"
+                      className="flex h-9 w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-1 text-base shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       required
                     />
                   </div>
 
                   <div>
                     <label className="block text-white mb-2 text-sm font-medium">Email *</label>
-                    <Input
+                    <input
                       type="email"
                       name="email"
                       placeholder="your.email@example.com"
-                      className="bg-zinc-800 border-zinc-700 text-white"
+                      className="flex h-9 w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-1 text-base shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       required
                     />
                   </div>
@@ -113,11 +111,11 @@ export default function JoinPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-white mb-2 text-sm font-medium">Phone Number *</label>
-                    <Input
+                    <input
                       type="tel"
                       name="phone"
                       placeholder="Your phone number"
-                      className="bg-zinc-800 border-zinc-700 text-white"
+                      className="flex h-9 w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-1 text-base shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       required
                     />
                   </div>
@@ -126,7 +124,7 @@ export default function JoinPage() {
                     <label className="block text-white mb-2 text-sm font-medium">Industry *</label>
                     <select
                       name="industry"
-                      className="w-full h-10 px-3 rounded-md bg-zinc-800 border border-zinc-700 text-white"
+                      className="flex h-10 w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-2 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       required
                     >
                       <option value="">Select your industry</option>
@@ -142,37 +140,37 @@ export default function JoinPage() {
 
                 <div>
                   <label className="block text-white mb-2 text-sm font-medium">Experience *</label>
-                  <Textarea
+                  <textarea
                     name="experience"
                     placeholder="Briefly describe your experience in your industry"
-                    className="bg-zinc-800 border-zinc-700 min-h-24 text-white"
+                    className="flex w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-2 text-base shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-24"
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-white mb-2 text-sm font-medium">Portfolio Link (Optional)</label>
-                  <Input
+                  <input
                     type="url"
                     name="portfolioLink"
                     placeholder="Link to your website, Instagram, YouTube, etc."
-                    className="bg-zinc-800 border-zinc-700 text-white"
+                    className="flex h-9 w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-1 text-base shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
 
                 <div>
                   <label className="block text-white mb-2 text-sm font-medium">Why do you want to join VersaTalent? *</label>
-                  <Textarea
+                  <textarea
                     name="message"
                     placeholder="Tell us why you want to join and what makes you unique"
-                    className="bg-zinc-800 border-zinc-700 min-h-24 text-white"
+                    className="flex w-full rounded-md border bg-zinc-800 border-zinc-700 text-white px-3 py-2 text-base shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-24"
                     required
                   />
                 </div>
 
-                <Button type="submit" className="bg-gold hover:bg-gold/90 text-black w-full md:w-auto">
+                <button type="submit" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-gold hover:bg-gold/90 text-black h-9 px-4 py-2 w-full md:w-auto">
                   Submit Application
-                </Button>
+                </button>
               </form>
             </div>
           </div>
