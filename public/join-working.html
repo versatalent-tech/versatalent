@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join VersaTalent</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .form-container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #d4af37;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #b8941f;
+    }
+    .note {
+      background: #e8f4fd;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Join VersaTalent</h1>
+    <p class="subtitle">Apply to become part of our exclusive talent network</p>
+    <form name="versatalent-talent" method="POST" data-netlify="true">
+      <input type="hidden" name="form-name" value="versatalent-talent" />
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" required>
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" required>
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" name="phone">
+      <label for="industry">Industry *</label>
+      <select id="industry" name="industry" required>
+        <option value="">-- Select Industry --</option>
+        <option value="acting">Acting</option>
+        <option value="modeling">Modeling</option>
+        <option value="music">Music</option>
+        <option value="influencer">Influencer</option>
+        <option value="photography">Photography</option>
+        <option value="videography">Videography</option>
+        <option value="dance">Dance</option>
+        <option value="other">Other</option>
+      </select>
+      <label for="experience">Experience *</label>
+      <textarea id="experience" name="experience" rows="5" required placeholder="Tell us about your experience and background..."></textarea>
+      <label for="portfolioLink">Portfolio Link</label>
+      <input type="url" id="portfolioLink" name="portfolioLink" placeholder="https://...">
+      <label for="message">Additional Message</label>
+      <textarea id="message" name="message" rows="4" placeholder="Anything else you'd like us to know?"></textarea>
+      <button type="submit">Submit Application</button>
+    </form>
+    <div class="note">
+      <strong>What happens next?</strong>
+      <p style="margin: 10px 0 0 0;">Our team will review your application and reach out if there's a good fit. We typically respond within 3-5 business days.</p>
+    </div>
+  </div>
+</body>
+</html>

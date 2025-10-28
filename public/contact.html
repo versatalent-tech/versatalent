@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - VersaTalent</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 750px;
+      margin: 40px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+    }
+    .form-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 8px;
+      font-size: 32px;
+    }
+    .subtitle {
+      color: #7f8c8d;
+      margin-bottom: 35px;
+      font-size: 15px;
+    }
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 5px;
+      border-bottom: 2px solid #ecf0f1;
+      margin-bottom: 30px;
+    }
+    .tab-button {
+      background: #f8f9fa;
+      border: none;
+      padding: 14px 24px;
+      cursor: pointer;
+      font-size: 15px;
+      color: #7f8c8d;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+    .tab-button:hover {
+      color: #2c3e50;
+      background: #e9ecef;
+    }
+    .tab-button.active {
+      color: #d4af37;
+      background: white;
+      border-bottom: 2px solid #d4af37;
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    /* Form styles */
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #d4af37;
+    }
+    button[type="submit"] {
+      background: linear-gradient(135deg, #d4af37 0%, #c9a532 100%);
+      color: white;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Get in Touch</h1>
+    <p class="subtitle">We'd love to hear from you. Select the appropriate category below.</p>
+    <div class="tabs">
+      <button class="tab-button active" onclick="openTab(event, 'general')">General Inquiry</button>
+      <button class="tab-button" onclick="openTab(event, 'talent')">Join as Talent</button>
+      <button class="tab-button" onclick="openTab(event, 'brand')">Book Our Talent</button>
+    </div>
+    <!-- General Inquiry Form -->
+    <div id="general" class="tab-content active">
+      <form name="versatalent-contact" method="POST" data-netlify="true">
+        <input type="hidden" name="form-name" value="versatalent-contact" />
+        <label for="firstName1">First Name *</label>
+        <input type="text" id="firstName1" name="firstName" required>
+        <label for="lastName1">Last Name *</label>
+        <input type="text" id="lastName1" name="lastName" required>
+        <label for="email1">Email *</label>
+        <input type="email" id="email1" name="email" required>
+        <label for="phone1">Phone</label>
+        <input type="tel" id="phone1" name="phone">
+        <label for="subject1">Subject *</label>
+        <input type="text" id="subject1" name="subject" required>
+        <label for="message1">Message *</label>
+        <textarea id="message1" name="message" rows="5" required></textarea>
+        <button type="submit">Send Message</button>
+      </form>
+    </div>
+    <!-- Join as Talent Form -->
+    <div id="talent" class="tab-content">
+      <form name="versatalent-talent" method="POST" data-netlify="true">
+        <input type="hidden" name="form-name" value="versatalent-talent" />
+        <label for="name2">Name *</label>
+        <input type="text" id="name2" name="name" required>
+        <label for="email2">Email *</label>
+        <input type="email" id="email2" name="email" required>
+        <label for="phone2">Phone</label>
+        <input type="tel" id="phone2" name="phone">
+        <label for="industry2">Industry *</label>
+        <input type="text" id="industry2" name="industry" required>
+        <label for="experience2">Experience *</label>
+        <textarea id="experience2" name="experience" rows="4" required></textarea>
+        <label for="portfolioLink2">Portfolio Link</label>
+        <input type="url" id="portfolioLink2" name="portfolioLink">
+        <label for="message2">Message</label>
+        <textarea id="message2" name="message" rows="4"></textarea>
+        <button type="submit">Submit Application</button>
+      </form>
+    </div>
+    <!-- Book Our Talent Form -->
+    <div id="brand" class="tab-content">
+      <form name="versatalent-brand" method="POST" data-netlify="true">
+        <input type="hidden" name="form-name" value="versatalent-brand" />
+        <label for="firstName3">First Name *</label>
+        <input type="text" id="firstName3" name="firstName" required>
+        <label for="lastName3">Last Name *</label>
+        <input type="text" id="lastName3" name="lastName" required>
+        <label for="email3">Email *</label>
+        <input type="email" id="email3" name="email" required>
+        <label for="phone3">Phone</label>
+        <input type="tel" id="phone3" name="phone">
+        <label for="company3">Company *</label>
+        <input type="text" id="company3" name="company" required>
+        <label for="subject3">Subject *</label>
+        <input type="text" id="subject3" name="subject" required>
+        <label for="message3">Message *</label>
+        <textarea id="message3" name="message" rows="5" required></textarea>
+        <button type="submit">Send Inquiry</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    function openTab(evt, tabName) {
+      // Hide all tab contents
+      var tabContents = document.getElementsByClassName('tab-content');
+      for (var i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove('active');
+      }
+      // Remove active class from all buttons
+      var tabButtons = document.getElementsByClassName('tab-button');
+      for (var i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove('active');
+      }
+      // Show the selected tab and mark button as active
+      document.getElementById(tabName).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+  </script>
+</body>
+</html>
