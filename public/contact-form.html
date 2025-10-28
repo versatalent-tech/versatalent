@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Contact Form - Hidden for Netlify</title>
+  <!-- This form is hidden and used by Netlify to detect form fields during build time -->
+</head>
+<body style="display: none;">
+
+  <!-- Contact Form -->
+  <form name="contact" method="POST" netlify netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="contact" />
+    <p style="display: none;">
+      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+    </p>
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+    <input type="text" name="subject" />
+    <textarea name="message"></textarea>
+  </form>
+
+  <!-- Newsletter Form -->
+  <form name="newsletter" method="POST" netlify netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="newsletter" />
+    <p style="display: none;">
+      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+    </p>
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+  </form>
+
+  <!-- Talent Application Form -->
+  <form name="talent-application" method="POST" netlify netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="talent-application" />
+    <p style="display: none;">
+      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+    </p>
+    <!-- Personal Information -->
+    <input type="text" name="firstName" />
+    <input type="text" name="lastName" />
+    <input type="email" name="email" />
+    <input type="tel" name="phone" />
+    <input type="text" name="location" />
+    <input type="date" name="dateOfBirth" />
+
+    <!-- Professional Information -->
+    <select name="industry">
+      <option value="acting">Acting</option>
+      <option value="modeling">Modeling</option>
+      <option value="music">Music</option>
+      <option value="culinary">Culinary Arts</option>
+      <option value="sports">Sports</option>
+      <option value="other">Other</option>
+    </select>
+    <input type="text" name="profession" />
+    <select name="experience">
+      <option value="beginner">Beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="experienced">Experienced</option>
+      <option value="professional">Professional</option>
+    </select>
+    <textarea name="specialties"></textarea>
+
+    <!-- Portfolio & Social -->
+    <input type="url" name="portfolioUrl" />
+    <input type="text" name="instagramHandle" />
+    <textarea name="previousWork"></textarea>
+    <textarea name="achievements"></textarea>
+
+    <!-- Goals & Motivation -->
+    <textarea name="careerGoals"></textarea>
+    <textarea name="whyVersaTalent"></textarea>
+
+    <!-- Additional Information -->
+    <select name="availability">
+      <option value="full-time">Full-time</option>
+      <option value="part-time">Part-time</option>
+      <option value="project-based">Project-based</option>
+      <option value="flexible">Flexible</option>
+    </select>
+    <select name="willingToTravel">
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+      <option value="locally-only">Locally only</option>
+    </select>
+    <textarea name="additionalInfo"></textarea>
+  </form>
+
+  <!-- Brand Partnership Form -->
+  <form name="brand-partnership" method="POST" netlify netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="brand-partnership" />
+    <p style="display: none;">
+      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+    </p>
+    <input type="text" name="companyName" />
+    <input type="text" name="contactName" />
+    <input type="email" name="email" />
+    <input type="tel" name="phone" />
+    <input type="text" name="industry" />
+    <textarea name="projectDescription"></textarea>
+    <textarea name="budget"></textarea>
+    <input type="date" name="timeline" />
+    <textarea name="additionalInfo"></textarea>
+  </form>
+
+</body>
+</html>
