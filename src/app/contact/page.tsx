@@ -239,14 +239,16 @@ export default function ContactPage() {
                   <form
                     name={`versatalent-${formType}`}
                     method="POST"
-                    netlify
+                    data-netlify="true"
                     data-netlify-honeypot="bot-field"
                     onSubmit={handleSubmit}
                     className="space-y-6"
                   >
                     {/* Hidden fields for Netlify */}
                     <input type="hidden" name="form-name" value={`versatalent-${formType}`} />
-                    <input type="hidden" name="bot-field" />
+                    <p style={{ display: 'none' }}>
+                      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+                    </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>

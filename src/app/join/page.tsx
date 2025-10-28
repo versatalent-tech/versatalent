@@ -179,8 +179,6 @@ export default function JoinPage() {
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-6"
                   >
-                    <input type="hidden" name="form-name" value="join" />
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
