@@ -12,10 +12,10 @@ const navigation = [
   { name: "About Us", href: "/about" },
   { name: "Talent Directory", href: "/talents" },
   { name: "Events", href: "/events" },
-  { name: "Join Us", href: "/join" },
+  { name: "Join Us", href: "/join-working.html" },
   { name: "For Brands", href: "/for-brands" },
   { name: "Blog", href: "/blog" },
-  { name: "Contact", href: "/contact" },
+  { name: "Contact", href: "/contact-working.html" },
 ];
 
 export function Header() {
@@ -75,7 +75,7 @@ export function Header() {
                   </div>
                   <div className="py-6">
                     <Link
-                      href="/contact"
+                      href="/contact-working.html"
                       onClick={() => setMobileMenuOpen(false)}
                       className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gold hover:bg-gold-10"
                     >
@@ -107,7 +107,7 @@ export function Header() {
             variant="outline"
             className="border-gold text-gold hover:bg-gold hover:text-background"
           >
-            <Link href="/contact">Get in touch</Link>
+            <Link href="/contact-working.html">Get in touch</Link>
           </Button>
         </div>
       </nav>
