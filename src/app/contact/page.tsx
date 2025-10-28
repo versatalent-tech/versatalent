@@ -178,7 +178,6 @@ export default function ContactPage() {
                       method="POST"
                       data-netlify="true"
                       data-netlify-honeypot="bot-field"
-                      action="/success"
                     >
                       <input type="hidden" name="form-name" value="versatalent-contact" />
                       <p style={{ display: 'none' }}>
@@ -211,7 +210,6 @@ export default function ContactPage() {
                       method="POST"
                       data-netlify="true"
                       data-netlify-honeypot="bot-field"
-                      action="/success"
                     >
                       <input type="hidden" name="form-name" value="versatalent-talent" />
                       <p style={{ display: 'none' }}>
@@ -243,7 +241,6 @@ export default function ContactPage() {
                       method="POST"
                       data-netlify="true"
                       data-netlify-honeypot="bot-field"
-                      action="/success"
                     >
                       <input type="hidden" name="form-name" value="versatalent-brand" />
                       <p style={{ display: 'none' }}>
