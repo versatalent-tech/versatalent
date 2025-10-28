@@ -175,7 +175,7 @@ export default function JoinPage() {
                 <Form {...form}>
                   <form
                     name="join"
-                    netlify
+                    data-netlify="true"
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-6"
                   >
