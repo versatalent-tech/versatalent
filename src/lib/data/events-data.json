@@ -1,0 +1,166 @@
+[
+  {
+    "id": "1",
+    "title": "La Gitane - Batida Quente",
+    "description": "Deejay WG headlines featuring a special set mixing Afrobeats, Amapiano, House music, Kizomba and more",
+    "type": "performance",
+    "status": "completed",
+    "date": "2025-10-10T22:00:00Z",
+    "time": "10:00 PM",
+    "venue": {
+      "name": "La Gitane",
+      "address": "Bridge Street",
+      "city": "Manchester",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/Batida_Quente.avif",
+    "featured": false,
+    "ticketsUrl": "https://www.fatsoma.com/e/2zpafrr4/batida-quente-palop-world-music-sean-wilson-dj-wg-fabio-israel",
+    "price": {
+      "min": 7,
+      "max": 10,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Afro House", "Afrobeats", "Kizomba"],
+    "organizer": "Palop Entertainment",
+    "expectedAttendance": 100
+  },
+  {
+    "id": "2",
+    "title": "La Gitane - Batida Quente - Halloween",
+    "description": "Deejay WG headlines featuring a special set mixing Afrobeats, Amapiano, House music, Kizomba and more fo halloween",
+    "type": "performance",
+    "status": "completed",
+    "date": "2025-10-31T22:00:00Z",
+    "time": "10:00 PM",
+    "venue": {
+      "name": "La Gitane",
+      "address": "Bridge Street",
+      "city": "Manchester",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/Batida_Quente_Halloween.avif",
+    "featured": false,
+    "ticketsUrl": "https://www.fatsoma.com/e/2yz12k9n/batida-quente-halloween-party-palop-world-music-sean-wilson-dj-fanta-dj-wg",
+    "price": {
+      "min": 7,
+      "max": 10,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Afro House", "Afrobeats", "Kizomba"],
+    "organizer": "Palop Entertainment",
+    "expectedAttendance": 100
+  },
+  {
+    "id": "3",
+    "title": "Guiné-Bissau Cultural Night",
+    "description": "João Rodolfo performs traditional and contemporary Gumbé music at this special cultural celebration, bringing the sounds of Guiné-Bissau to Leeds.",
+    "type": "performance",
+    "status": "upcoming",
+    "date": "2025-11-20T19:30:00Z",
+    "time": "7:30 PM",
+    "venue": {
+      "name": "Leeds Town Hall",
+      "address": "The Headrow",
+      "city": "Leeds",
+      "country": "UK",
+      "capacity": 1500
+    },
+    "talentIds": ["3"],
+    "imageSrc": "/joaorodolfo/billboard.PNG",
+    "featured": true,
+    "ticketsUrl": "https://leedstownhall.co.uk/events",
+    "price": {
+      "min": 25,
+      "max": 60,
+      "currency": "GBP"
+    },
+    "tags": ["World Music", "Cultural", "Gumbé", "Traditional"],
+    "organizer": "Leeds Cultural Centre",
+    "expectedAttendance": 800
+  },
+  {
+    "id": "4",
+    "title": "Championship Semi-Final",
+    "description": "Antonio Monteiro takes the field in this crucial semi-final match that could secure promotion to the Premier League for his team.",
+    "type": "match",
+    "status": "upcoming",
+    "date": "2025-11-14T15:00:00Z",
+    "time": "3:00 PM",
+    "venue": {
+      "name": "Elland Road Stadium",
+      "address": "Elland Road",
+      "city": "Leeds",
+      "country": "UK",
+      "capacity": 37500,
+      "website": "https://www.leedsunited.com"
+    },
+    "talentIds": ["4"],
+    "imageSrc": "/antoniomonteiro/Tonecas_1.jpg",
+    "featured": true,
+    "ticketsUrl": "https://leedsunited.com/tickets",
+    "price": {
+      "min": 35,
+      "max": 150,
+      "currency": "GBP"
+    },
+    "tags": ["Football", "Championship", "Semi-Final", "Sports"],
+    "organizer": "English Football League",
+    "expectedAttendance": 35000
+  },
+  {
+    "id": "5",
+    "title": "Music Production Masterclass",
+    "description": "Deejay WG shares his expertise in electronic music production, covering Afrobeat fusion techniques and modern mixing methods.",
+    "type": "workshop",
+    "status": "upcoming",
+    "date": "2025-12-02T14:00:00Z",
+    "time": "2:00 PM",
+    "venue": {
+      "name": "Abbey Road Institute",
+      "address": "6 Mitre Passage",
+      "city": "London",
+      "country": "UK",
+      "capacity": 50
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/deejaywg/IMG_8987.jpg",
+    "featured": false,
+    "ticketsUrl": "https://abbeyroadinstitute.com/workshops",
+    "price": {
+      "min": 95,
+      "currency": "GBP"
+    },
+    "tags": ["Workshop", "Education", "Music Production", "Electronic"],
+    "organizer": "Abbey Road Institute",
+    "expectedAttendance": 45
+  },
+  {
+    "id": "6",
+    "title": "Brand Ambassador Campaign Launch",
+    "description": "Jessica Dias unveils her new role as brand ambassador for a major international fashion house at this exclusive launch event.",
+    "type": "appearance",
+    "status": "upcoming",
+    "date": "2026-01-10T18:00:00Z",
+    "time": "6:00 PM",
+    "venue": {
+      "name": "The Shard",
+      "address": "32 London Bridge Street",
+      "city": "London",
+      "country": "UK",
+      "capacity": 200
+    },
+    "talentIds": ["2"],
+    "imageSrc": "/jessicadias/IMG_9365-altered.jpg",
+    "featured": false,
+    "price": {
+      "min": 0,
+      "currency": "GBP",
+      "isFree": true
+    },
+    "tags": ["Fashion", "Brand Launch", "Ambassador", "Exclusive"],
+    "organizer": "International Fashion House"
+  }
+]
