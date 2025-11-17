@@ -51,6 +51,11 @@ export default function AdminTalentsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTalent, setSelectedTalent] = useState<Talent | null>(null);
 
+  // Feedback states
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState<Partial<Talent>>({
     name: "",
@@ -109,6 +114,9 @@ export default function AdminTalentsPage() {
 
   const handleCreate = async () => {
     try {
+      setSaving(true);
+      setError(null);
+
       const response = await fetch("/api/talents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,9 +127,17 @@ export default function AdminTalentsPage() {
         await fetchTalents();
         setIsCreateDialogOpen(false);
         resetForm();
+        setSuccess("Talent profile created successfully!");
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to create talent profile. Please check all required fields.");
       }
     } catch (error) {
       console.error("Error creating talent:", error);
+      setError("Failed to create talent profile. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -129,6 +145,9 @@ export default function AdminTalentsPage() {
     if (!selectedTalent) return;
 
     try {
+      setSaving(true);
+      setError(null);
+
       const response = await fetch(`/api/talents/${selectedTalent.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -140,9 +159,17 @@ export default function AdminTalentsPage() {
         setIsEditDialogOpen(false);
         setSelectedTalent(null);
         resetForm();
+        setSuccess("Talent profile updated successfully!");
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to update talent profile. Please check all required fields.");
       }
     } catch (error) {
       console.error("Error updating talent:", error);
+      setError("Failed to update talent profile. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -150,6 +177,9 @@ export default function AdminTalentsPage() {
     if (!selectedTalent) return;
 
     try {
+      setSaving(true);
+      setError(null);
+
       const response = await fetch(`/api/talents/${selectedTalent.id}`, {
         method: "DELETE",
       });
@@ -158,20 +188,30 @@ export default function AdminTalentsPage() {
         await fetchTalents();
         setIsDeleteDialogOpen(false);
         setSelectedTalent(null);
+        setSuccess("Talent profile deleted successfully!");
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to delete talent profile.");
       }
     } catch (error) {
       console.error("Error deleting talent:", error);
+      setError("Failed to delete talent profile. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const openEditDialog = (talent: Talent) => {
     setSelectedTalent(talent);
     setFormData(talent);
+    setError(null);
     setIsEditDialogOpen(true);
   };
 
   const openDeleteDialog = (talent: Talent) => {
     setSelectedTalent(talent);
+    setError(null);
     setIsDeleteDialogOpen(true);
   };
 
@@ -233,6 +273,7 @@ export default function AdminTalentsPage() {
             <Button
               onClick={() => {
                 resetForm();
+                setError(null);
                 setIsCreateDialogOpen(true);
               }}
               className="bg-gold hover:bg-gold/90 text-white"
@@ -276,6 +317,22 @@ export default function AdminTalentsPage() {
           </div>
         </div>
       </section>
+
+      {/* Success/Error Feedback */}
+      {(error || success) && (
+        <section className="container px-4 mx-auto mt-4">
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-2">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded mb-2">
+              {success}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Talents List */}
       <section className="py-8">
@@ -597,6 +654,7 @@ export default function AdminTalentsPage() {
                 setSelectedTalent(null);
                 resetForm();
               }}
+              disabled={saving}
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -604,9 +662,16 @@ export default function AdminTalentsPage() {
             <Button
               onClick={isCreateDialogOpen ? handleCreate : handleUpdate}
               className="bg-gold hover:bg-gold/90 text-white"
+              disabled={saving}
             >
               <Save className="h-4 w-4 mr-2" />
-              {isCreateDialogOpen ? "Add Talent" : "Save Changes"}
+              {saving
+                ? isCreateDialogOpen
+                  ? "Adding..."
+                  : "Saving..."
+                : isCreateDialogOpen
+                ? "Add Talent"
+                : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -629,6 +694,12 @@ export default function AdminTalentsPage() {
             </div>
           )}
 
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-2">
+              {error}
+            </div>
+          )}
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -636,15 +707,17 @@ export default function AdminTalentsPage() {
                 setIsDeleteDialogOpen(false);
                 setSelectedTalent(null);
               }}
+              disabled={saving}
             >
               Cancel
             </Button>
             <Button
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={saving}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete Talent
+              {saving ? "Deleting..." : "Delete Talent"}
             </Button>
           </DialogFooter>
         </DialogContent>
