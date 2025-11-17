@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { formatEventDate, EventType, EventItem } from "@/lib/data/events";
-import { getTalentById } from "@/lib/data/talents";
+import type { Talent } from "@/lib/data/talents";
 import { Calendar, MapPin, Clock, Users, Filter, Search } from "lucide-react";
 
 const eventTypes: { value: EventType | 'all'; label: string }[] = [
@@ -25,24 +25,39 @@ export default function EventsPage() {
   const [selectedType, setSelectedType] = useState<EventType | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [talents, setTalents] = useState<Map<string, Talent>>(new Map());
   const [loading, setLoading] = useState(true);
 
-  // Fetch events from API
+  // Fetch events and talents from API
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/events');
-        const data = await response.json();
-        setEvents(data);
+
+        // Fetch both events and talents in parallel
+        const [eventsResponse, talentsResponse] = await Promise.all([
+          fetch('/api/events'),
+          fetch('/api/talents')
+        ]);
+
+        const eventsData = await eventsResponse.json();
+        const talentsData = await talentsResponse.json();
+
+        // Create talent map for quick lookup
+        const talentMap = new Map<string, Talent>();
+        talentsData.forEach((talent: Talent) => {
+          talentMap.set(talent.id, talent);
+        });
+        setTalents(talentMap);
+        setEvents(eventsData);
       } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEvents();
+    fetchData();
   }, []);
 
   // Filter events based on selected type and search term
@@ -152,7 +167,7 @@ export default function EventsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
               {upcomingEvents.map((event, index) => {
-                const talent = getTalentById(event.talentIds[0]);
+                const talent = talents.get(event.talentIds[0]);
 
                 return (
                   <motion.div
@@ -267,7 +282,7 @@ export default function EventsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {completedEvents.map((event, index) => {
-                const talent = getTalentById(event.talentIds[0]);
+                const talent = talents.get(event.talentIds[0]);
 
                 return (
                   <motion.div

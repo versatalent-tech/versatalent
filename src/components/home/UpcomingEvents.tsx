@@ -7,33 +7,49 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { formatEventDate, EventItem } from "@/lib/data/events";
-import { getTalentById } from "@/lib/data/talents";
+import type { Talent } from "@/lib/data/talents";
 import { Calendar, MapPin, Clock, Users } from "lucide-react";
 
 export function UpcomingEvents() {
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [talents, setTalents] = useState<Map<string, Talent>>(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFeaturedEvents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/events');
-        const data = await response.json();
+
+        // Fetch both events and talents in parallel
+        const [eventsResponse, talentsResponse] = await Promise.all([
+          fetch('/api/events'),
+          fetch('/api/talents')
+        ]);
+
+        const eventsData = await eventsResponse.json();
+        const talentsData = await talentsResponse.json();
+
+        // Create talent map for quick lookup
+        const talentMap = new Map<string, Talent>();
+        talentsData.forEach((talent: Talent) => {
+          talentMap.set(talent.id, talent);
+        });
+        setTalents(talentMap);
+
         // Filter for featured events and sort by date (newest first)
-        const featuredEvents = data
+        const featuredEvents = eventsData
           .filter((event: EventItem) => event.featured)
           .sort((a: EventItem, b: EventItem) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 3);
         setEvents(featuredEvents);
       } catch (error) {
-        console.error('Error fetching featured events:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeaturedEvents();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -74,7 +90,7 @@ export function UpcomingEvents() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.map((event, index) => {
-            const talent = getTalentById(event.talentIds[0]); // Get first talent for display
+            const talent = talents.get(event.talentIds[0]); // Get first talent for display
 
             return (
               <motion.div

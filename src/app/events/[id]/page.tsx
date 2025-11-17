@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -7,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
-import { getEventById, formatEventDate, getEventsByType } from "@/lib/data/events";
-import { getTalentById } from "@/lib/data/talents";
+import { formatEventDate, type EventItem } from "@/lib/data/events";
+import type { Talent } from "@/lib/data/talents";
 import {
   Calendar,
   MapPin,
@@ -25,10 +26,74 @@ import {
 
 export default function EventDetailPage() {
   const params = useParams();
-  const eventId = params.id as string;
-  const event = getEventById(eventId);
+  const [event, setEvent] = useState<EventItem | null>(null);
+  const [talent, setTalent] = useState<Talent | null>(null);
+  const [relatedEvents, setRelatedEvents] = useState<EventItem[]>([]);
+  const [talents, setTalents] = useState<Map<string, Talent>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!event) {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch event and all events for related events
+        const [eventResponse, eventsResponse, talentsResponse] = await Promise.all([
+          fetch(`/api/events/${params.id}`),
+          fetch('/api/events'),
+          fetch('/api/talents')
+        ]);
+
+        if (!eventResponse.ok) {
+          setNotFound(true);
+          return;
+        }
+
+        const eventData = await eventResponse.json();
+        const eventsData = await eventsResponse.json();
+        const talentsData = await talentsResponse.json();
+
+        // Create talent map
+        const talentMap = new Map<string, Talent>();
+        talentsData.forEach((t: Talent) => {
+          talentMap.set(t.id, t);
+        });
+        setTalents(talentMap);
+
+        // Set event and talent
+        setEvent(eventData);
+        setTalent(talentMap.get(eventData.talentIds[0]) || null);
+
+        // Get related events (same type, different ID)
+        const related = eventsData
+          .filter((e: EventItem) => e.type === eventData.type && e.id !== eventData.id)
+          .slice(0, 3);
+        setRelatedEvents(related);
+      } catch (error) {
+        console.error('Error fetching event:', error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchData();
+    }
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (notFound || !event) {
     return (
       <MainLayout>
         <div className="min-h-screen flex items-center justify-center">
@@ -45,9 +110,6 @@ export default function EventDetailPage() {
       </MainLayout>
     );
   }
-
-  const talent = getTalentById(event.talentIds[0]);
-  const relatedEvents = getEventsByType(event.type).filter(e => e.id !== event.id).slice(0, 3);
 
   return (
     <MainLayout>
@@ -345,7 +407,7 @@ export default function EventDetailPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedEvents.map((relatedEvent) => {
-                const relatedTalent = getTalentById(relatedEvent.talentIds[0]);
+                const relatedTalent = talents.get(relatedEvent.talentIds[0]);
 
                 return (
                   <Link key={relatedEvent.id} href={`/events/${relatedEvent.id}`}>

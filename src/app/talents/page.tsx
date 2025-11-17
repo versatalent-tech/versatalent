@@ -6,13 +6,33 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { talents, type Talent, type Industry } from "@/lib/data/talents";
+import { type Talent, type Industry } from "@/lib/data/talents";
 import { motion } from "framer-motion";
 
 export default function TalentsPage() {
-  const [filteredTalents, setFilteredTalents] = useState<Talent[]>(talents);
+  const [talents, setTalents] = useState<Talent[]>([]);
+  const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedIndustry, setSelectedIndustry] = useState<Industry | "all">("all");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Fetch talents from API
+  useEffect(() => {
+    const fetchTalents = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/talents');
+        const data = await response.json();
+        setTalents(data);
+      } catch (error) {
+        console.error('Error fetching talents:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTalents();
+  }, []);
 
   // Process URL params for industry filter
   useEffect(() => {
@@ -45,7 +65,7 @@ export default function TalentsPage() {
     }
 
     setFilteredTalents(result);
-  }, [selectedIndustry, searchTerm]);
+  }, [selectedIndustry, searchTerm, talents]);
 
   // Handle industry filter click
   const handleIndustryChange = (industry: Industry | "all") => {
@@ -191,7 +211,11 @@ export default function TalentsPage() {
           </motion.div>
 
           {/* Talent grid */}
-          {filteredTalents.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading talents...</p>
+            </div>
+          ) : filteredTalents.length > 0 ? (
             <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               variants={container}
