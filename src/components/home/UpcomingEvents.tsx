@@ -91,8 +91,10 @@ export function UpcomingEvents() {
                     alt={event.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    quality={80}
+                    quality={75}
                     className="object-cover"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    priority={index === 0}
                   />
                   <div className="absolute top-4 left-4 flex gap-2">
                     <Badge className="bg-gold text-white border-none">

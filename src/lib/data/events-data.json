@@ -57,8 +57,8 @@
     "id": "3",
     "title": "West Yorkshire Fashion Week",
     "description": "Jessica Dias shines at the West Yorkshire Fashion Week, catwalking for amazing designers.",
-    "type": "performance",
-    "status": "upcoming",
+    "type": "appearance",
+    "status": "completed",
     "date": "2025-10-11T19:30:00Z",
     "time": "7:30 PM",
     "venue": {

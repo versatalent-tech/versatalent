@@ -28,6 +28,11 @@ export async function GET(request: NextRequest) {
   try {
     const events = await readEvents();
 
+    // Add cache headers for better performance
+    const headers = {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+    };
+
     // Optional: Filter by query params
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type');
@@ -48,7 +53,7 @@ export async function GET(request: NextRequest) {
       filteredEvents = filteredEvents.filter(e => e.talentIds.includes(talentId));
     }
 
-    return NextResponse.json(filteredEvents);
+    return NextResponse.json(filteredEvents, { headers });
   } catch (error) {
     console.error('Error fetching events:', error);
     return NextResponse.json(

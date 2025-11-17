@@ -125,7 +125,25 @@ export default function EventsPage() {
       </section>
 
       {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
+      {loading ? (
+        <section className="py-16 bg-white">
+          <div className="container px-4 mx-auto">
+            <div className="h-9 w-48 bg-gray-200 rounded mb-8 animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                  <div className="h-48 bg-gray-200 animate-pulse" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : upcomingEvents.length > 0 && (
         <section className="py-16 bg-white">
           <div className="container px-4 mx-auto">
             <h2 className="text-3xl font-bold text-foreground mb-8">
@@ -153,6 +171,8 @@ export default function EventsPage() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         quality={80}
                         className="object-cover"
+                        loading={index < 3 ? "eager" : "lazy"}
+                        priority={index < 3}
                       />
                       <div className="absolute top-4 left-4">
                         <Badge className="bg-gold text-white border-none">
