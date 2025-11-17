@@ -150,8 +150,7 @@
     "price": {
       "min": 8,
       "max": 10,
-      "currency": "GBP",
-      "isFree": true
+      "currency": "GBP"
     },
     "tags": ["Nightclub", "Amapiano", "Afrobeats", "Afrohouse"],
     "organizer": "11:11"
