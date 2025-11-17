@@ -34,11 +34,12 @@ import {
   Star,
   Link as LinkIcon,
 } from "lucide-react";
-import type { Talent, Industry } from "@/lib/data/talents";
+import type { Talent, Industry, PortfolioItem } from "@/lib/data/talents";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { PortfolioManager } from "@/components/admin/PortfolioManager";
 
 export default function AdminTalentsPage() {
+  const [mounted, setMounted] = useState(false);
   const [talents, setTalents] = useState<Talent[]>([]);
   const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,13 +71,20 @@ export default function AdminTalentsPage() {
     imageSrc: "",
     featured: false,
     socialLinks: {},
-    portfolio: [],
+    portfolio: [] as PortfolioItem[],
   });
+
+  // Mount check for hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch talents
   useEffect(() => {
-    fetchTalents();
-  }, []);
+    if (mounted) {
+      fetchTalents();
+    }
+  }, [mounted]);
 
   // Filter talents
   useEffect(() => {
@@ -204,7 +212,10 @@ export default function AdminTalentsPage() {
 
   const openEditDialog = (talent: Talent) => {
     setSelectedTalent(talent);
-    setFormData(talent);
+    setFormData({
+      ...talent,
+      portfolio: Array.isArray(talent.portfolio) ? talent.portfolio : [],
+    });
     setError(null);
     setIsEditDialogOpen(true);
   };
@@ -229,11 +240,11 @@ export default function AdminTalentsPage() {
       imageSrc: "",
       featured: false,
       socialLinks: {},
-      portfolio: [],
+      portfolio: [] as PortfolioItem[],
     });
   };
 
-  const handleFormChange = (field: string, value: any) => {
+  const handleFormChange = (field: string, value: string | boolean | string[] | PortfolioItem[] | undefined) => {
     if (field.startsWith("socialLinks.")) {
       const socialField = field.split(".")[1];
       setFormData((prev) => ({
@@ -255,6 +266,21 @@ export default function AdminTalentsPage() {
     const skills = skillsString.split(",").map((s) => s.trim()).filter(Boolean);
     setFormData((prev) => ({ ...prev, skills }));
   };
+
+  // Prevent hydration mismatch by waiting for client-side mount
+  if (!mounted) {
+    return (
+      <MainLayout>
+        <section className="bg-gradient-to-br from-black via-gray-900 to-black py-12 md:py-16">
+          <div className="container px-4 mx-auto">
+            <div className="flex items-center justify-center py-12">
+              <div className="text-white">Loading...</div>
+            </div>
+          </div>
+        </section>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
