@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - VersaTalent</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #fff;
+    }
+
+    /* Header Styles */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e5e5e5;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      height: 64px;
+      width: 64px;
+      object-fit: contain;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: #d4af37;
+    }
+
+    .cta-button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d4af37;
+      border-radius: 0.375rem;
+      color: #d4af37;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.15s;
+    }
+
+    .cta-button:hover {
+      background: #d4af37;
+      color: #fff;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #333;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+      padding: 8rem 2rem 5rem;
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    .hero h1 {
+      font-size: 3.75rem;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero .gold {
+      color: #d4af37;
+    }
+
+    .hero p {
+      font-size: 1.5rem;
+      color: #d1d5db;
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+
+    /* Main Content */
+    .content-section {
+      padding: 4rem 2rem;
+      background: #fff;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+
+    /* Contact Info */
+    .contact-info h2 {
+      font-size: 1.875rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 2rem;
+    }
+
+    .info-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: flex-start;
+    }
+
+    .icon-circle {
+      width: 48px;
+      height: 48px;
+      background: rgba(212, 175, 55, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-circle svg {
+      width: 24px;
+      height: 24px;
+      color: #d4af37;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .info-content h3 {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.25rem;
+    }
+
+    .info-content p {
+      color: #666;
+    }
+
+    .info-box {
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .info-box h3 {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+
+    .info-box ul {
+      list-style: none;
+    }
+
+    .info-box li {
+      display: flex;
+      gap: 0.5rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .checkmark {
+      color: #10b981;
+      flex-shrink: 0;
+    }
+
+    /* Form Container */
+    .form-container {
+      background: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+      padding: 2rem;
+    }
+
+    .form-type-selector {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-type-selector h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+
+    .form-type-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .form-type-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .form-type-btn.active {
+      background: #d4af37;
+      color: #fff;
+    }
+
+    .form-type-btn:not(.active) {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .form-type-btn:not(.active):hover {
+      background: #e5e7eb;
+    }
+
+    .form-wrapper {
+      display: none;
+    }
+
+    .form-wrapper.active {
+      display: block;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      transition: all 0.15s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #d4af37;
+      box-shadow: 0 0 0 1px #d4af37;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 0.5rem 1rem;
+      background: #d4af37;
+      color: #fff;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-center;
+      gap: 0.5rem;
+    }
+
+    .submit-btn:hover {
+      background: #b8941f;
+    }
+
+    .form-note {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 1rem;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      padding: 4rem 2rem;
+      background: #f9fafb;
+    }
+
+    .faq-section h2 {
+      text-align: center;
+      font-size: 1.875rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 2rem;
+    }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      max-width: 1024px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: #fff;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+    }
+
+    .faq-item h3 {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.75rem;
+    }
+
+    .faq-item p {
+      color: #666;
+      font-size: 0.875rem;
+    }
+
+    /* Footer */
+    .footer {
+      background: #f9fafb;
+      padding: 3rem 2rem;
+    }
+
+    .footer-content {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .footer-main {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .footer-brand {
+      max-width: 400px;
+    }
+
+    .footer-brand img {
+      height: 64px;
+      width: 64px;
+      margin-bottom: 1rem;
+    }
+
+    .footer-brand p {
+      color: #666;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer-contact {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #666;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-contact a {
+      color: #666;
+      text-decoration: none;
+    }
+
+    .footer-contact a:hover {
+      color: #d4af37;
+    }
+
+    .footer-nav {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+
+    .footer-nav h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #d4af37;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-nav ul {
+      list-style: none;
+    }
+
+    .footer-nav li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-nav a {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .footer-nav a:hover {
+      color: #d4af37;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-bottom p {
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .social-links a {
+      color: #9ca3af;
+      transition: color 0.15s;
+    }
+
+    .social-links a:hover {
+      color: #d4af37;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero p {
+        font-size: 1.25rem;
+      }
+
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-nav {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding: 6rem 1rem 3rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <nav class="nav-container">
+      <div class="logo-container">
+        <a href="/">
+          <img src="/images/versatalent-new-logo.png" alt="VersaTalent Logo" class="logo">
+        </a>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About Us</a></li>
+        <li><a href="/talents">Talent Directory</a></li>
+        <li><a href="/events">Events</a></li>
+        <li><a href="/join">Join Us</a></li>
+        <li><a href="/for-brands">For Brands</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+
+      <a href="/contact" class="cta-button">Get in touch</a>
+      <button class="mobile-menu-btn">☰</button>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Get in <span class="gold">Touch</span></h1>
+    <p>Ready to work with exceptional talent or join our roster? Let's start the conversation.</p>
+  </section>
+
+  <!-- Contact Form Section -->
+  <section class="content-section">
+    <div class="container">
+      <div class="grid-2">
+        <!-- Contact Information -->
+        <div class="contact-info">
+          <h2>Contact Information</h2>
+
+          <div class="info-item">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+            </div>
+            <div class="info-content">
+              <h3>Email</h3>
+              <p>versatalent.management@gmail.com</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="info-content">
+              <h3>Phone</h3>
+              <p>+44 7714688007</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="info-content">
+              <h3>Location</h3>
+              <p>Leeds, United Kingdom</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="info-content">
+              <h3>Response Time</h3>
+              <p>Within 48 hours</p>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <h3>Why Choose VersaTalent?</h3>
+            <ul>
+              <li><span class="checkmark">✓</span> Professional representation across multiple industries</li>
+              <li><span class="checkmark">✓</span> Personalized career guidance and development</li>
+              <li><span class="checkmark">✓</span> Extensive industry connections and opportunities</li>
+              <li><span class="checkmark">✓</span> No upfront fees - we succeed when you succeed</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div>
+          <div class="form-container">
+            <!-- Form Type Selector -->
+            <div class="form-type-selector">
+              <h3>What can we help you with?</h3>
+              <div class="form-type-buttons">
+                <button type="button" class="form-type-btn active" onclick="switchForm('contact')">General Inquiry</button>
+                <button type="button" class="form-type-btn" onclick="switchForm('talent')">Join as Talent</button>
+                <button type="button" class="form-type-btn" onclick="switchForm('brand')">Book Our Talent</button>
+              </div>
+            </div>
+
+            <!-- General Contact Form -->
+            <div id="contact-form" class="form-wrapper active">
+              <form name="versatalent-contact" method="POST" action="/success.html" data-netlify="true">
+                <input type="hidden" name="form-name" value="versatalent-contact">
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <input type="text" name="firstName" placeholder="First Name" required>
+                  </div>
+                  <div class="form-group">
+                    <input type="text" name="lastName" placeholder="Last Name" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <input type="email" name="email" placeholder="Email" required>
+                </div>
+
+                <div class="form-group">
+                  <input type="tel" name="phone" placeholder="Phone">
+                </div>
+
+                <div class="form-group">
+                  <input type="text" name="subject" placeholder="Subject" required>
+                </div>
+
+                <div class="form-group">
+                  <textarea name="message" placeholder="Message" rows="5" required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/>
+                  </svg>
+                  Send Message
+                </button>
+              </form>
+            </div>
+
+            <!-- Talent Application Form -->
+            <div id="talent-form" class="form-wrapper">
+              <form name="versatalent-talent-from-contact" method="POST" action="/success.html" data-netlify="true">
+                <input type="hidden" name="form-name" value="versatalent-talent">
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <input type="text" name="firstName" placeholder="First Name" required>
+                  </div>
+                  <div class="form-group">
+                    <input type="text" name="lastName" placeholder="Last Name" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <input type="email" name="email" placeholder="Email" required>
+                </div>
+
+                <div class="form-group">
+                  <input type="tel" name="phone" placeholder="Phone">
+                </div>
+
+                <div class="form-group">
+                  <input type="text" name="industry" placeholder="Industry (e.g., Music, Modeling)" required>
+                </div>
+
+                <div class="form-group">
+                  <textarea name="experience" placeholder="Briefly describe your experience..." rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                  <input type="url" name="portfolioLink" placeholder="Portfolio Link (Optional)">
+                </div>
+
+                <div class="form-group">
+                  <textarea name="message" placeholder="Why do you want to join VersaTalent?" rows="4" required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/>
+                  </svg>
+                  Send Message
+                </button>
+              </form>
+            </div>
+
+            <!-- Brand Partnership Form -->
+            <div id="brand-form" class="form-wrapper">
+              <form name="versatalent-brand" method="POST" action="/success.html" data-netlify="true">
+                <input type="hidden" name="form-name" value="versatalent-brand">
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <input type="text" name="firstName" placeholder="First Name" required>
+                  </div>
+                  <div class="form-group">
+                    <input type="text" name="lastName" placeholder="Last Name" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <input type="email" name="email" placeholder="Email" required>
+                </div>
+
+                <div class="form-group">
+                  <input type="tel" name="phone" placeholder="Phone">
+                </div>
+
+                <div class="form-group">
+                  <input type="text" name="company" placeholder="Company Name" required>
+                </div>
+
+                <div class="form-group">
+                  <input type="text" name="subject" placeholder="Subject" required>
+                </div>
+
+                <div class="form-group">
+                  <textarea name="message" placeholder="Describe your project and talent needs..." rows="5" required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/>
+                  </svg>
+                  Send Message
+                </button>
+              </form>
+            </div>
+
+            <p class="form-note">We'll respond within 48 hours. Your information is kept confidential.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <div class="container">
+      <h2>Quick <span class="gold">Answers</span></h2>
+
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>Response Time</h3>
+          <p>We respond to all inquiries within 48 hours during business days.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Application Process</h3>
+          <p>Talent applications are reviewed within 1 week, with next steps communicated promptly.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Booking Timeline</h3>
+          <p>We recommend booking talent 2-4 weeks in advance for optimal availability.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Confidentiality</h3>
+          <p>All inquiries and information shared are kept strictly confidential.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <img src="/images/versatalent-new-logo.png" alt="VersaTalent Logo">
+          <p>Representing exceptional talent across various industries. We connect talented individuals with opportunities that showcase their unique abilities.</p>
+          <div class="footer-contact">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+            </svg>
+            <a href="mailto:versatalent.management@gmail.com">versatalent.management@gmail.com</a>
+          </div>
+          <div class="footer-contact">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <a href="tel:+447714688007">+44 7714688007</a>
+          </div>
+        </div>
+
+        <div class="footer-nav">
+          <div>
+            <h3>Navigation</h3>
+            <ul>
+              <li><a href="/">Home</a></li>
+              <li><a href="/about">About Us</a></li>
+              <li><a href="/talents">Talent Directory</a></li>
+              <li><a href="/join">Join Us</a></li>
+              <li><a href="/for-brands">For Brands</a></li>
+              <li><a href="/blog">Blog</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/dashboard">Dashboard</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Industries</h3>
+            <ul>
+              <li><a href="/talents?industry=acting">Acting</a></li>
+              <li><a href="/talents?industry=modeling">Modeling</a></li>
+              <li><a href="/talents?industry=music">Music</a></li>
+              <li><a href="/talents?industry=culinary">Culinary Arts</a></li>
+              <li><a href="/talents?industry=sports">Sports</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 VersaTalent. All rights reserved.</p>
+        <div class="social-links">
+          <a href="https://instagram.com/versatalent" target="_blank">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function switchForm(formType) {
+      // Hide all forms
+      document.querySelectorAll('.form-wrapper').forEach(form => {
+        form.classList.remove('active');
+      });
+
+      // Remove active class from all buttons
+      document.querySelectorAll('.form-type-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show selected form
+      document.getElementById(formType + '-form').classList.add('active');
+
+      // Add active class to clicked button
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

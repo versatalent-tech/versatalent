@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You - VersaTalent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        .gold {
+            color: #D4AF37;
+        }
+        .bg-gold {
+            background-color: #D4AF37;
+        }
+        .border-gold {
+            border-color: #D4AF37;
+        }
+        .hover\:bg-gold:hover {
+            background-color: #D4AF37;
+        }
+        .hover\:text-gold:hover {
+            color: #D4AF37;
+        }
+        .bg-gold\/10 {
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+        .bg-gold\/20 {
+            background-color: rgba(212, 175, 55, 0.2);
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-scale-in {
+            animation: scaleIn 0.5s ease-out forwards;
+        }
+        .delay-1 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+        .delay-2 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .delay-3 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+        .delay-4 {
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-white">
+    <!-- Header -->
+    <header class="fixed w-full bg-white/90 backdrop-blur-md z-50 border-b border-gray-200 shadow-sm">
+        <nav class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+            <div class="flex lg:flex-1">
+                <a href="/" class="-m-1.5 p-1.5 flex items-center">
+                    <img src="/images/versatalent-new-logo.png" alt="VersaTalent Logo" class="h-16 w-16 object-contain">
+                </a>
+            </div>
+            <!-- Desktop Navigation -->
+            <div class="hidden lg:flex lg:gap-x-6">
+                <a href="/" class="text-sm font-semibold text-gray-900 hover:text-gold transition">Home</a>
+                <a href="/about" class="text-sm font-semibold text-gray-900 hover:text-gold transition">About Us</a>
+                <a href="/talents" class="text-sm font-semibold text-gray-900 hover:text-gold transition">Talent Directory</a>
+                <a href="/events" class="text-sm font-semibold text-gray-900 hover:text-gold transition">Events</a>
+                <a href="/join" class="text-sm font-semibold text-gray-900 hover:text-gold transition">Join Us</a>
+                <a href="/for-brands" class="text-sm font-semibold text-gray-900 hover:text-gold transition">For Brands</a>
+                <a href="/blog" class="text-sm font-semibold text-gray-900 hover:text-gold transition">Blog</a>
+                <a href="/contact" class="text-sm font-semibold text-gray-900 hover:text-gold transition">Contact</a>
+            </div>
+            <div class="hidden lg:flex lg:flex-1 lg:justify-end">
+                <a href="/contact" class="rounded-lg border-2 border-gold px-4 py-2 text-sm font-semibold gold hover:bg-gold hover:text-white transition">
+                    Get in touch
+                </a>
+            </div>
+            <!-- Mobile menu button -->
+            <div class="flex lg:hidden">
+                <button type="button" class="text-gray-900" onclick="toggleMobileMenu()">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden lg:hidden border-t border-gray-200">
+            <div class="space-y-1 px-6 py-4">
+                <a href="/" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">Home</a>
+                <a href="/about" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">About Us</a>
+                <a href="/talents" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">Talent Directory</a>
+                <a href="/events" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">Events</a>
+                <a href="/join" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">Join Us</a>
+                <a href="/for-brands" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">For Brands</a>
+                <a href="/blog" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">Blog</a>
+                <a href="/contact" class="block py-2 text-base font-semibold text-gray-900 hover:text-gold">Contact</a>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <main class="flex-1 pt-20">
+        <!-- Hero Section with Success Message -->
+        <section class="bg-gradient-to-br from-black via-gray-900 to-black py-20 md:py-32">
+            <div class="container px-4 mx-auto text-center max-w-4xl">
+                <!-- Success Icon -->
+                <div class="flex justify-center mb-8 animate-scale-in">
+                    <div class="w-24 h-24 bg-gold/20 rounded-full flex items-center justify-center">
+                        <svg class="w-12 h-12 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up delay-1">
+                    Thank <span class="gold">You!</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-300 mb-4 animate-fade-in-up delay-2">
+                    We've received your message
+                </p>
+                <p class="text-lg text-gray-400 animate-fade-in-up delay-3">
+                    We'll be in touch soon
+                </p>
+            </div>
+        </section>
+        <!-- Response Time & What's Next Section -->
+        <section class="py-16 bg-white">
+            <div class="container px-4 mx-auto max-w-5xl">
+                <!-- Response Time Card -->
+                <div class="bg-gradient-to-r from-gold/10 to-gold/5 rounded-2xl p-8 md:p-12 mb-12 border border-gold/20 text-center">
+                    <div class="flex items-center justify-center gap-3 mb-4">
+                        <svg class="w-6 h-6 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Response Time</h2>
+                    </div>
+                    <p class="text-lg text-gray-700">
+                        We typically respond within <span class="gold font-semibold">48 hours</span>
+                    </p>
+                </div>
+                <!-- What Happens Next -->
+                <div class="mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+                        What Happens <span class="gold">Next</span>
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Step 1 -->
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl font-bold gold">1</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-3">We Review</h3>
+                            <p class="text-gray-600">
+                                Our team carefully reviews your submission and assesses how we can best assist you
+                            </p>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl font-bold gold">2</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-3">We Reach Out</h3>
+                            <p class="text-gray-600">
+                                A member of our team will contact you via email or phone to discuss next steps
+                            </p>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl font-bold gold">3</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-3">Let's Connect</h3>
+                            <p class="text-gray-600">
+                                We'll schedule a conversation to explore how VersaTalent can help you succeed
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- CTA Buttons -->
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">While You Wait</h3>
+                    <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Explore our website to learn more about VersaTalent and the exceptional talent we represent
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <a href="/" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold text-white rounded-lg font-semibold hover:bg-gold/90 transition">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Back to Home
+                        </a>
+                        <a href="/talents" class="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gold text-gray-900 rounded-lg font-semibold hover:bg-gold hover:text-white transition">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Explore Talent
+                        </a>
+                        <a href="/events" class="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gold text-gray-900 rounded-lg font-semibold hover:bg-gold hover:text-white transition">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            View Events
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Additional Information Section -->
+        <section class="py-16 bg-gray-50">
+            <div class="container px-4 mx-auto max-w-4xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900">Email</h3>
+                        </div>
+                        <p class="text-gray-600">versatalent.management@gmail.com</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900">Phone</h3>
+                        </div>
+                        <p class="text-gray-600">+44 7714688007</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900">Location</h3>
+                        </div>
+                        <p class="text-gray-600">Leeds, United Kingdom</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900">Confidentiality</h3>
+                        </div>
+                        <p class="text-gray-600">Your information is kept strictly confidential</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-gray-50 border-t border-gray-200">
+        <div class="mx-auto max-w-7xl px-6 py-12 sm:py-16 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between mb-8">
+                <div class="mb-8 md:mb-0">
+                    <a href="/" class="flex items-center">
+                        <img src="/images/versatalent-new-logo.png" alt="VersaTalent Logo" class="h-16 w-16 object-contain mr-3">
+                    </a>
+                    <p class="mt-4 text-sm text-gray-600 max-w-md">
+                        Representing exceptional talent across various industries. We connect talented individuals with opportunities that showcase their unique abilities.
+                    </p>
+                    <div class="mt-4 space-y-2">
+                        <div class="flex items-center text-gray-600">
+                            <svg class="w-4 h-4 mr-2 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <a href="mailto:versatalent.management@gmail.com" class="text-sm hover:text-gold transition">
+                                versatalent.management@gmail.com
+                            </a>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <svg class="w-4 h-4 mr-2 gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <a href="tel:+447714688007" class="text-sm hover:text-gold transition">
+                                +44 7714688007
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-8 sm:grid-cols-3">
+                    <div>
+                        <h3 class="text-sm font-semibold gold mb-4">Navigation</h3>
+                        <ul class="space-y-2">
+                            <li><a href="/" class="text-sm text-gray-600 hover:text-gold transition">Home</a></li>
+                            <li><a href="/about" class="text-sm text-gray-600 hover:text-gold transition">About Us</a></li>
+                            <li><a href="/talents" class="text-sm text-gray-600 hover:text-gold transition">Talent Directory</a></li>
+                            <li><a href="/join" class="text-sm text-gray-600 hover:text-gold transition">Join Us</a></li>
+                            <li><a href="/for-brands" class="text-sm text-gray-600 hover:text-gold transition">For Brands</a></li>
+                            <li><a href="/blog" class="text-sm text-gray-600 hover:text-gold transition">Blog</a></li>
+                            <li><a href="/contact" class="text-sm text-gray-600 hover:text-gold transition">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold gold mb-4">Industries</h3>
+                        <ul class="space-y-2">
+                            <li><a href="/talents?industry=acting" class="text-sm text-gray-600 hover:text-gold transition">Acting</a></li>
+                            <li><a href="/talents?industry=modeling" class="text-sm text-gray-600 hover:text-gold transition">Modeling</a></li>
+                            <li><a href="/talents?industry=music" class="text-sm text-gray-600 hover:text-gold transition">Music</a></li>
+                            <li><a href="/talents?industry=culinary" class="text-sm text-gray-600 hover:text-gold transition">Culinary Arts</a></li>
+                            <li><a href="/talents?industry=sports" class="text-sm text-gray-600 hover:text-gold transition">Sports</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 border-t border-gray-200 pt-8">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p class="text-xs text-gray-500">
+                        &copy; <span id="year"></span> VersaTalent. All rights reserved.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="https://instagram.com/versatalent" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gold transition">
+                            <span class="sr-only">Instagram</span>
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Set current year
+        document.getElementById('year').textContent = new Date().getFullYear();
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
