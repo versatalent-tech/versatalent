@@ -223,7 +223,7 @@ export function VIPConsumptionTracker() {
                   <td className="py-3 px-4 text-right">
                     <span className="inline-flex items-center gap-1 text-gold font-semibold">
                       <TrendingUp className="h-4 w-4" />
-                      +{Math.floor(consumption.amount)}
+                      +{Math.floor(consumption.amount / 3)}
                     </span>
                   </td>
                 </tr>
@@ -239,7 +239,7 @@ export function VIPConsumptionTracker() {
           <DialogHeader>
             <DialogTitle>Record Consumption</DialogTitle>
             <DialogDescription>
-              Record a purchase/spending and automatically award points (1 point per euro)
+              Record a purchase/spending and automatically award points (1 point per 3 euros)
             </DialogDescription>
           </DialogHeader>
 
@@ -289,7 +289,7 @@ export function VIPConsumptionTracker() {
                 <div className="text-sm text-gray-700">
                   Points to be awarded:{' '}
                   <span className="font-bold text-gold">
-                    +{Math.floor(parseFloat(formData.amount))} points
+                    +{Math.floor(parseFloat(formData.amount) / 3)} points
                   </span>
                 </div>
               </div>

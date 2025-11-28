@@ -10,7 +10,7 @@ The VIP Points & Tier System is a comprehensive loyalty program integrated with 
 
 ### 1. **Automatic Points Awarding**
 - **Event Check-ins**: +10 points per check-in (configurable)
-- **Consumption**: +1 point per euro spent (configurable)
+- **Consumption**: +1 point per 3 euros spent (configurable)
 - **Manual Adjustments**: Admin can add/deduct points manually
 
 ### 2. **Tier System**
@@ -130,7 +130,7 @@ Response:
 When a VIP member makes a purchase:
 
 1. Admin/staff records consumption
-2. System looks up the `consumption` point rule (default: 1 point per euro)
+2. System looks up the `consumption` point rule (default: 1 point per 3 euros)
 3. Points = floor(amount × points_per_unit)
 4. Points are awarded
 5. Membership is updated
@@ -156,8 +156,8 @@ Response:
 {
   "consumption": {...},
   "points": {
-    "awarded": 150,
-    "new_balance": 410,
+    "awarded": 50,
+    "new_balance": 310,
     "new_tier": "silver"
   }
 }
@@ -264,7 +264,7 @@ Existing NFC system remains intact. Points are awarded automatically during chec
 5. Enter amount (e.g., 150.00)
 6. Add description (optional)
 7. Click "Record Consumption"
-8. Points are automatically awarded (1 point per euro)
+8. Points are automatically awarded (1 point per 3 euros)
 
 #### Manually Adjust Points
 1. Go to `/admin/vip`
@@ -285,7 +285,7 @@ Point rules are stored in `vip_point_rules` table.
 
 **Default Rules:**
 - `event_checkin`: 10 points per event
-- `consumption`: 1 point per euro
+- `consumption`: 1 point per 3 euros
 
 **To modify:**
 ```sql
@@ -305,7 +305,7 @@ Or create API endpoint to manage rules via UI.
 
 #### Earn Points
 - **Check-in at events**: Scan your NFC card (+10 points)
-- **Make purchases**: Ask staff to record your purchase (+1 point per euro)
+- **Make purchases**: Ask staff to record your purchase (+1 point per 3 euros)
 
 #### Tier Benefits
 - **Silver**: Standard VIP access

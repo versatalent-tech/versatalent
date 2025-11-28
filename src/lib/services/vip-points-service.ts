@@ -155,9 +155,9 @@ export async function processConsumption(
 ): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
   // Get point rule for consumption
   const rule = await getPointRuleByActionType('consumption');
-  const pointsPerUnit = rule ? rule.points_per_unit : 1; // Default 1 point per euro
+  const pointsPerUnit = rule ? rule.points_per_unit : 0.333333; // Default 1 point per 3 euros
 
-  // Calculate points (1 point per euro by default)
+  // Calculate points (1 point per 3 euros by default)
   const pointsToAward = Math.floor(amount * pointsPerUnit);
 
   const result = await awardPoints(

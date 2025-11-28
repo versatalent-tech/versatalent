@@ -70,10 +70,11 @@ CREATE TRIGGER update_vip_point_rules_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert default point rules
+-- Note: consumption is 1 point per 3 euros (0.333333 points per euro)
 INSERT INTO vip_point_rules (action_type, points_per_unit, unit, is_active)
 VALUES
   ('event_checkin', 10, 'event', TRUE),
-  ('consumption', 1, 'euro', TRUE),
+  ('consumption', 0.333333, 'euro', TRUE),
   ('manual_adjust', 1, 'point', TRUE)
 ON CONFLICT (action_type) DO NOTHING;
 
