@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Form - VersaTalent</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .form-container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #d4af37;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #b8941f;
+    }
+    .note {
+      background: #e8f4fd;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Test Form Submission</h1>
+    <p class="subtitle">Use this form to test if Netlify Forms is working correctly</p>
+
+    <form name="versatalent-contact" method="POST" data-netlify="true">
+      <input type="hidden" name="form-name" value="versatalent-contact" />
+
+      <label for="firstName">First Name *</label>
+      <input type="text" id="firstName" name="firstName" required>
+
+      <label for="lastName">Last Name *</label>
+      <input type="text" id="lastName" name="lastName" required>
+
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" name="phone">
+
+      <label for="subject">Subject *</label>
+      <input type="text" id="subject" name="subject" required>
+
+      <label for="message">Message *</label>
+      <textarea id="message" name="message" rows="5" required></textarea>
+
+      <button type="submit">Send Test Message</button>
+    </form>
+
+    <div class="note">
+      <strong>After submitting:</strong>
+      <ol style="margin: 10px 0; padding-left: 20px;">
+        <li>Check your Netlify Dashboard → Forms</li>
+        <li>You should see "versatalent-contact" listed</li>
+        <li>Click on it to see your submission</li>
+        <li>Configure email notifications if not done yet</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>
