@@ -1,0 +1,158 @@
+[
+  {
+    "id": "1",
+    "title": "La Gitane - Batida Quente",
+    "description": "Deejay WG headlines featuring a special set mixing Afrobeatts, Amapiano, House music, Kizomba and more",
+    "type": "performance",
+    "status": "completed",
+    "date": "2025-10-10T22:00:00Z",
+    "time": "10:00 PM",
+    "venue": {
+      "name": "La Gitane",
+      "address": "Bridge Street",
+      "city": "Manchester",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/Batida_Quente.jpg",
+    "featured": true,
+    "ticketsUrl": "https://www.fatsoma.com/e/2zpafrr4/batida-quente-palop-worldd-music-sean-wilson-dj-wg-fabio-israel",
+    "price": {
+      "min": 7,
+      "max": 10,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Afro House", "Afrobeats", "Kizomba"],
+    "organizer": "Palop Entertainment",
+    "expectedAttendance": 100
+  },
+  {
+    "id": "2",
+    "title": "La Gitane - Batida Quente - Halloween",
+    "description": "Deejay WG headlines featuring a special set mixing Afrobeatts, Amapiano, House music, Kizomba and more fo halloween",
+    "type": "performance",
+    "status": "completed",
+    "date": "2025-10-31T22:00:00Z",
+    "time": "10:00 PM",
+    "venue": {
+      "name": "La Gitane",
+      "address": "Bridge Street",
+      "city": "Manchester",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/Batida_Quente_Halloween.jpg",
+    "featured": true,
+    "ticketsUrl": "https://www.fatsoma.com/e/2yz12k9n/batida-quente-halloween-pparty-palop-world-music-sean-wilson-dj-fanta-dj-wg",
+    "price": {
+      "min": 7,
+      "max": 10,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Afro House", "Afrobeats", "Kizomba"],
+    "organizer": "Palop Entertainment",
+    "expectedAttendance": 100
+  },
+  {
+    "id": "3",
+    "title": "West Yorkshire Fashion Week",
+    "description": "Jessica Dias shines at the West Yorkshire Fashion Week, catwalking for amazing designers.",
+    "type": "appearance",
+    "status": "completed",
+    "date": "2025-10-11T19:30:00Z",
+    "time": "7:30 PM",
+    "venue": {
+      "name": "Gomersal Park Hotel",
+      "address": "Moor Ln, BD19 4LJ",
+      "city": "Cleckheaton",
+      "country": "UK"
+    },
+    "talentIds": ["2"],
+    "imageSrc": "/images/events/West_Yorkshire_Fashion_Week.jpeg",
+    "featured": true,
+    "price": {
+      "min": 15,
+      "currency": "GBP"
+    },
+    "tags": ["Fashion Show", "Catwalking", "Designers", "West Yorkshire"],
+    "organizer": "West Yorkshire Fashion Week"
+  },
+  {
+    "id": "4",
+    "title": "Hot Tarraxinha Mini Weekender - 1st Day",
+    "description": "Deejay WG will be bringing his smooth, versatile sound to tthe Hot Tarraxinha Weekender 2025. He'll deliver a balanced blend of tarraxinha,  kizomba, ghetto zouk and konpa that perfectly complements the weekend's vibe. A  set you'll want to experience.",
+    "type": "performance",
+    "status": "upcoming",
+    "date": "2025-11-21T20:00:00Z",
+    "time": "8:00 PM",
+    "venue": {
+      "name": "La Gitane",
+      "address": "79-81 Bridge St, M3 2RH",
+      "city": "Manchester",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/hot_tarraxinha.jpg",
+    "featured": true,
+    "ticketsUrl": "https://www.fatsoma.com/e/yjcobqww/hot-tarraxinha-weekender--manchester-2025-21st-23rd-nov-tarraxinha-konpa-ghetto-zouk-kizomba",
+    "price": {
+      "min": 15,
+      "max": 60,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Tarraxinha", "Kompa", "Ghetto Zouk", "Kizomba"],
+    "organizer": "Kizomba Manchester"
+  },
+  {
+    "id": "5",
+    "title": "Hot Tarraxinha Mini Weekender - 3rd Day",
+    "description": "Deejay WG will be bringing his smooth, versatile sound to tthe Hot Tarraxinha Weekender 2025. He'll deliver a balanced blend of tarraxinha,  kizomba, ghetto zouk and konpa that perfectly complements the weekend's vibe. A  set you'll want to experience.",
+    "type": "performance",
+    "status": "upcoming",
+    "date": "2025-11-23T20:00:00Z",
+    "time": "8:00 PM",
+    "venue": {
+      "name": "La Gitane",
+      "address": "79-81 Bridge St, M3 2RH",
+      "city": "Manchester",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/hot_tarraxinha.jpg",
+    "featured": true,
+    "ticketsUrl": "https://www.fatsoma.com/e/yjcobqww/hot-tarraxinha-weekender--manchester-2025-21st-23rd-nov-tarraxinha-konpa-ghetto-zouk-kizomba",
+    "price": {
+      "min": 15,
+      "max": 60,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Tarraxinha", "Kompa", "Ghetto Zouk", "Kizomba"],
+    "organizer": "Kizomba Manchester"
+  },
+  {
+    "id": "6",
+    "title": "Sundown Sessions",
+    "description": "We're excited to welcome Deejay WG to the decks — a masteer of seamless genre-mixing whose sets breathe rhythm and vibe. Known for his reffined energy and ability to connect with the floor, WG will be weaving through meelodic house grooves, Afro-house pulses and undercurrent of global dance rhythms  that echo the evening's promise of \"energy, the people and the music.\"",
+    "type": "appearance",
+    "status": "upcoming",
+    "date": "2026-11-30T18:00:00Z",
+    "time": "6:00 PM",
+    "venue": {
+      "name": "The Neighbourhood Leeds",
+      "address": "5 Greek St, LS1 5RW",
+      "city": "Leeds",
+      "country": "UK"
+    },
+    "talentIds": ["1"],
+    "imageSrc": "/images/events/After_Dark.jpg",
+    "featured": true,
+    "ticketsUrl": "https://www.fatsoma.com/e/xia2ppoe/11-11-neighbourhood-leeds-30th-november-2025?utm_campaign=prom_ss&utm_medium=social&utm_source=dynamic",
+    "price": {
+      "min": 8,
+      "max": 10,
+      "currency": "GBP"
+    },
+    "tags": ["Nightclub", "Amapiano", "Afrobeats", "Afrohouse"],
+    "organizer": "11:11"
+  }
+]
