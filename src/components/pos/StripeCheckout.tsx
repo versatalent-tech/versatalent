@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -168,7 +168,7 @@ export function StripeCheckout({
   const [error, setError] = useState<string | null>(null);
 
   // Fetch payment intent client secret
-  useState(() => {
+  useEffect(() => {
     const fetchClientSecret = async () => {
       try {
         setLoading(true);
@@ -177,6 +177,7 @@ export function StripeCheckout({
         const response = await fetch('/api/pos/create-payment-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ orderId })
         });
 
@@ -196,7 +197,7 @@ export function StripeCheckout({
     };
 
     fetchClientSecret();
-  });
+  }, [orderId]);
 
   const appearance = {
     theme: 'stripe' as const,
