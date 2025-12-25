@@ -209,13 +209,13 @@ export async function updateTalent(
 
     if (value !== undefined) {
       if (key === 'social_links' || key === 'portfolio') {
-        updates.push(`${key} = $${paramIndex}`);
+        updates.push(`${key} = ${paramIndex}`);
         params.push(JSON.stringify(value));
       } else if (key === 'skills') {
-        updates.push(`${key} = $${paramIndex}`);
+        updates.push(`${key} = ${paramIndex}`);
         params.push(value);
       } else {
-        updates.push(`${key} = $${paramIndex}`);
+        updates.push(`${key} = ${paramIndex}`);
         params.push(value);
       }
       paramIndex++;
@@ -223,25 +223,46 @@ export async function updateTalent(
   });
 
   if (updates.length === 0) {
+    console.log(`[DB] No fields to update for talent ${id}, returning existing talent`);
     return getTalentById(id);
   }
 
   const queryText = `
     UPDATE talents
     SET ${updates.join(', ')}, updated_at = NOW()
-    WHERE id = $${paramIndex}
+    WHERE id = ${paramIndex}
     RETURNING *
   `;
 
   params.push(id);
 
-  const result = await query(queryText, params);
+  console.log('[DB] Executing UPDATE query:', {
+    talentId: id,
+    fieldsToUpdate: updates.length,
+    fields: updates,
+    query: queryText,
+    paramCount: params.length
+  });
 
-  if (result.length === 0) {
-    return null;
+  try {
+    const result = await query(queryText, params);
+
+    if (result.length === 0) {
+      console.error(`[DB] No talent found with id ${id} after update`);
+      return null;
+    }
+
+    console.log(`[DB] Successfully updated talent ${id}`);
+    return mapRowToTalent(result[0]);
+  } catch (error) {
+    console.error('[DB] Update query failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      query: queryText,
+      paramCount: params.length,
+      fields: updates
+    });
+    throw error;
   }
-
-  return mapRowToTalent(result[0]);
 }
 
 /**

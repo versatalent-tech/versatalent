@@ -40,25 +40,61 @@ export const PUT = withAdminAuth(async (
 ) => {
   try {
     if (!context) {
+      console.error('[API] Update talent failed: Invalid request context');
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
     const { id } = await context.params;
     const data: UpdateTalentRequest = await request.json();
 
+    console.log(`[API] Updating talent ${id} with fields:`, Object.keys(data));
+    console.log('[API] Update data:', JSON.stringify(data, null, 2));
+
     const talent = await updateTalent(id, data);
 
     if (!talent) {
+      console.error(`[API] Talent not found: ${id}`);
       return NextResponse.json(
-        { error: 'Talent not found' },
+        { error: 'Talent not found', talentId: id },
         { status: 404 }
       );
     }
 
+    console.log(`[API] Successfully updated talent ${id}`);
     return NextResponse.json(talent);
   } catch (error) {
-    console.error('Error updating talent:', error);
+    console.error('[API] Error updating talent:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      type: error instanceof Error ? error.constructor.name : typeof error,
+    });
+
+    // Provide detailed error message based on error type
+    let errorMessage = 'Failed to update talent';
+    let errorDetails = 'Unknown error';
+
+    if (error instanceof Error) {
+      errorDetails = error.message;
+
+      // Check for common database errors
+      if (error.message.includes('syntax error')) {
+        errorMessage = 'Database query syntax error';
+      } else if (error.message.includes('invalid input')) {
+        errorMessage = 'Invalid data format';
+      } else if (error.message.includes('type') || error.message.includes('integer')) {
+        errorMessage = 'Data type mismatch - check field values';
+      } else if (error.message.includes('permission')) {
+        errorMessage = 'Database permission error';
+      } else if (error.message.includes('connection')) {
+        errorMessage = 'Database connection error';
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Failed to update talent', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: errorMessage,
+        details: errorDetails,
+        hint: 'Check the server logs for more information'
+      },
       { status: 500 }
     );
   }

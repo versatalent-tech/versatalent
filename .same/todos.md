@@ -1,7 +1,105 @@
 # VersaTalent Platform - Active Tasks
 
-**Last Updated**: December 24, 2025 (Version 196)
-**Current Focus**: Testing Cover Image Display
+**Last Updated**: December 25, 2025 (Version 199)
+**Current Focus**: Testing Enhanced Error Logging & Investigating SQL Fix
+
+---
+
+## 🔍 v199 - Test Enhanced Error Logging
+
+### Better Error Messages & Complete Logging!
+**Priority**: HIGH
+**Status**: ✅ **READY TO TEST**
+
+Now you'll see detailed error messages instead of generic "Failed to update" messages!
+
+#### Test 1: Check Browser Console Logs
+- [ ] Open admin panel at `/admin/talents`
+- [ ] Press F12 to open browser console
+- [ ] Click "Edit" on any talent
+- [ ] Make a change (edit name)
+- [ ] Click "Save Changes"
+- [ ] **Expected in console**:
+  ```
+  [Frontend] Updating talent: abc-123
+  [Frontend] Form data fields: ["name", "profession", ...]
+  ```
+- [ ] **If successful**: See success message
+- [ ] **If error**: See detailed error with type and details
+
+#### Test 2: Check Server Terminal Logs
+- [ ] Look at terminal where `bun run dev` is running
+- [ ] Perform an update operation
+- [ ] **Expected to see**:
+  ```
+  [API] Updating talent abc-123 with fields: [...]
+  [DB] Executing UPDATE query: { ... }
+  [DB] Successfully updated talent abc-123
+  ```
+
+#### Test 3: Trigger an Error (If Update Still Fails)
+- [ ] Try to update a talent from modal
+- [ ] If it fails, check error message
+- [ ] **Should see**: Specific error like "Database query syntax error" or "Data type mismatch"
+- [ ] **Should include**: "Details: [specific error]"
+- [ ] **Should include**: Hint to check server logs
+
+#### Test 4: Check SQL Query in Logs
+- [ ] Look at terminal logs when updating
+- [ ] Find the `[DB] Executing UPDATE query` log
+- [ ] Check the SQL query text
+- [ ] **Look for**: Are there `$1`, `$2`, `$3` OR just `1`, `2`, `3`?
+- [ ] If you see `SET name = 1` → SQL fix still needed
+- [ ] If you see `SET name = $1` → SQL fix applied
+
+**Documentation**:
+- `.same/v199-enhanced-error-logging.md` - Full technical details
+- `.same/v199-quick-summary.md` - Quick user guide
+
+---
+
+## ⚠️ INVESTIGATION - SQL Parameter Fix Status
+
+### Current Status: NEEDS DECISION
+**Priority**: CRITICAL
+**Status**: 🤔 **INVESTIGATING**
+
+The SQL parameter fix (adding `# VersaTalent Platform - Active Tasks
+
+**Last Updated**: December 25, 2025 (Version 199)
+**Current Focus**: Testing Enhanced Error Logging & Investigating SQL Fix
+
+ prefix) was reverted at user's request because "it made the update function not work properly". However, investigation shows:
+
+**Root Cause Identified**:
+- Missing `# VersaTalent Platform - Active Tasks
+
+**Last Updated**: December 25, 2025 (Version 199)
+**Current Focus**: Testing Enhanced Error Logging & Investigating SQL Fix
+
+ prefix in SQL parameters is THE problem
+- Code generates `SET name = 1` instead of `SET name = $1`
+- PostgreSQL interprets `name = 1` as "set name to NUMBER 1"
+- This causes type mismatch errors
+
+**Why Modal Fails More Than Toggles**:
+- Toggle sends 1 field → `SET featured = 1` (simpler, less obvious error)
+- Modal sends 10+ fields → `SET name = 1, profession = 2, bio = 3...` (obvious type mismatch)
+
+**Documentation**:
+- `.same/INVESTIGATION-RESULTS.md` - Executive summary
+- `.same/root-cause-analysis.md` - Complete technical analysis
+
+**Next Steps**:
+1. [ ] Test with enhanced logging (v199)
+2. [ ] Check SQL query in terminal logs
+3. [ ] Confirm if `# VersaTalent Platform - Active Tasks
+
+**Last Updated**: December 25, 2025 (Version 199)
+**Current Focus**: Testing Enhanced Error Logging & Investigating SQL Fix
+
+ prefix is needed
+4. [ ] Apply correct fix based on evidence
 
 ---
 

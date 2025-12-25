@@ -169,6 +169,8 @@ export default function AdminTalentsPage() {
         return;
       }
 
+      console.log('[Frontend] Creating new talent with fields:', Object.keys(formData));
+
       const response = await fetch("/api/talents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -177,6 +179,7 @@ export default function AdminTalentsPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[Frontend] Talent created successfully');
         await fetchTalents();
         setIsCreateDialogOpen(false);
         resetForm();
@@ -200,11 +203,26 @@ export default function AdminTalentsPage() {
         }
       } else {
         const data = await response.json();
-        setError(data.error || "Failed to create talent profile. Please check all required fields.");
+        console.error('[Frontend] Failed to create talent:', {
+          status: response.status,
+          error: data.error,
+          details: data.details
+        });
+
+        let errorMessage = data.error || "Failed to create talent profile";
+        if (data.details) {
+          errorMessage += `\n\nDetails: ${data.details}`;
+        }
+        errorMessage += "\n\nPlease check all required fields.";
+
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error("Error creating talent:", error);
-      setError("Failed to create talent profile. Please try again.");
+      console.error("[Frontend] Error creating talent:", error);
+      const errorMessage = error instanceof Error
+        ? `Network error: ${error.message}`
+        : "Failed to create talent profile. Please try again.";
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -217,6 +235,9 @@ export default function AdminTalentsPage() {
       setSaving(true);
       setError(null);
 
+      console.log('[Frontend] Updating talent:', selectedTalent.id);
+      console.log('[Frontend] Form data fields:', Object.keys(formData));
+
       const response = await fetch(`/api/talents/${selectedTalent.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -224,6 +245,7 @@ export default function AdminTalentsPage() {
       });
 
       if (response.ok) {
+        console.log('[Frontend] Talent updated successfully');
         await fetchTalents();
         setIsEditDialogOpen(false);
         setSelectedTalent(null);
@@ -232,11 +254,30 @@ export default function AdminTalentsPage() {
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const data = await response.json();
-        setError(data.error || "Failed to update talent profile. Please check all required fields.");
+        console.error('[Frontend] Update failed:', {
+          status: response.status,
+          error: data.error,
+          details: data.details,
+          hint: data.hint
+        });
+
+        // Build detailed error message
+        let errorMessage = data.error || "Failed to update talent profile";
+        if (data.details) {
+          errorMessage += `\n\nDetails: ${data.details}`;
+        }
+        if (data.hint) {
+          errorMessage += `\n\n${data.hint}`;
+        }
+
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error("Error updating talent:", error);
-      setError("Failed to update talent profile. Please try again.");
+      console.error("[Frontend] Error updating talent:", error);
+      const errorMessage = error instanceof Error
+        ? `Network error: ${error.message}`
+        : "Failed to update talent profile. Please try again.";
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -249,11 +290,14 @@ export default function AdminTalentsPage() {
       setSaving(true);
       setError(null);
 
+      console.log(`[Frontend] Deleting talent ${selectedTalent.id}`);
+
       const response = await fetch(`/api/talents/${selectedTalent.id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
+        console.log('[Frontend] Talent deleted successfully');
         await fetchTalents();
         setIsDeleteDialogOpen(false);
         setSelectedTalent(null);
@@ -261,11 +305,25 @@ export default function AdminTalentsPage() {
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const data = await response.json();
-        setError(data.error || "Failed to delete talent profile.");
+        console.error('[Frontend] Failed to delete talent:', {
+          status: response.status,
+          error: data.error,
+          details: data.details
+        });
+
+        let errorMessage = data.error || "Failed to delete talent profile";
+        if (data.details) {
+          errorMessage += `\n\nDetails: ${data.details}`;
+        }
+
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error("Error deleting talent:", error);
-      setError("Failed to delete talent profile. Please try again.");
+      console.error("[Frontend] Error deleting talent:", error);
+      const errorMessage = error instanceof Error
+        ? `Network error: ${error.message}`
+        : "Failed to delete talent profile. Please try again.";
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -273,6 +331,8 @@ export default function AdminTalentsPage() {
 
   const toggleFeatured = async (talent: Talent) => {
     try {
+      console.log(`[Frontend] Toggling featured status for talent ${talent.id} to ${!talent.featured}`);
+
       const response = await fetch(`/api/talents/${talent.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -280,20 +340,36 @@ export default function AdminTalentsPage() {
       });
 
       if (response.ok) {
+        console.log('[Frontend] Featured status updated successfully');
         await fetchTalents();
         setSuccess(`Talent ${!talent.featured ? 'marked as featured' : 'removed from featured'}!`);
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError("Failed to update featured status.");
+        const data = await response.json();
+        console.error('[Frontend] Failed to toggle featured:', {
+          status: response.status,
+          error: data.error,
+          details: data.details
+        });
+
+        const errorMessage = data.error
+          ? `Failed to update featured status: ${data.error}`
+          : "Failed to update featured status. Please try again.";
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error("Error toggling featured:", error);
-      setError("Failed to update featured status.");
+      console.error("[Frontend] Error toggling featured:", error);
+      const errorMessage = error instanceof Error
+        ? `Network error while updating featured status: ${error.message}`
+        : "Failed to update featured status. Please check your connection.";
+      setError(errorMessage);
     }
   };
 
   const toggleActive = async (talent: Talent) => {
     try {
+      console.log(`[Frontend] Toggling active status for talent ${talent.id} to ${!talent.is_active}`);
+
       const response = await fetch(`/api/talents/${talent.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -301,15 +377,29 @@ export default function AdminTalentsPage() {
       });
 
       if (response.ok) {
+        console.log('[Frontend] Active status updated successfully');
         await fetchTalents();
         setSuccess(`Talent ${!talent.is_active ? 'activated' : 'deactivated'}!`);
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError("Failed to update active status.");
+        const data = await response.json();
+        console.error('[Frontend] Failed to toggle active:', {
+          status: response.status,
+          error: data.error,
+          details: data.details
+        });
+
+        const errorMessage = data.error
+          ? `Failed to update active status: ${data.error}`
+          : "Failed to update active status. Please try again.";
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error("Error toggling active:", error);
-      setError("Failed to update active status.");
+      console.error("[Frontend] Error toggling active:", error);
+      const errorMessage = error instanceof Error
+        ? `Network error while updating active status: ${error.message}`
+        : "Failed to update active status. Please check your connection.";
+      setError(errorMessage);
     }
   };
 
