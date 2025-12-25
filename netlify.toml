@@ -1,0 +1,27 @@
+# Netlify Configuration for Next.js 15
+# Using @netlify/plugin-nextjs v4 (pinned to avoid v5 forms migration)
+
+[build]
+  command = "bun install && bun run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Using v4 of the plugin (installed via package.json) to avoid v5 forms migration requirement
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Explicit redirects for API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/___netlify-handler/:splat"
+  status = 200
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
