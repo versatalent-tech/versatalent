@@ -113,7 +113,7 @@ export async function updateProduct(id: string, data: UpdateProductRequest): Pro
     }
 
     if (value !== undefined) {
-      updates.push(`${key} = ${paramIndex}`);
+      updates.push(`${key} = $${paramIndex}`);
       params.push(value);
       paramIndex++;
     }

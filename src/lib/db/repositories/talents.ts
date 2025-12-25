@@ -209,13 +209,13 @@ export async function updateTalent(
 
     if (value !== undefined) {
       if (key === 'social_links' || key === 'portfolio') {
-        updates.push(`${key} = ${paramIndex}`);
+        updates.push(`${key} = $${paramIndex}`);
         params.push(JSON.stringify(value));
       } else if (key === 'skills') {
-        updates.push(`${key} = ${paramIndex}`);
+        updates.push(`${key} = $${paramIndex}`);
         params.push(value);
       } else {
-        updates.push(`${key} = ${paramIndex}`);
+        updates.push(`${key} = $${paramIndex}`);
         params.push(value);
       }
       paramIndex++;
