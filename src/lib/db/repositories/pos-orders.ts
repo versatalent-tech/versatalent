@@ -20,24 +20,24 @@ export async function getAllOrders(options: {
   let paramIndex = 1;
 
   if (status) {
-    queryText += ` AND status = ${paramIndex}`;
+    queryText += ` AND status = $${paramIndex}`;
     params.push(status);
     paramIndex++;
   }
 
   if (staffUserId) {
-    queryText += ` AND staff_user_id = ${paramIndex}`;
+    queryText += ` AND staff_user_id = $${paramIndex}`;
     params.push(staffUserId);
     paramIndex++;
   }
 
   if (customerUserId) {
-    queryText += ` AND customer_user_id = ${paramIndex}`;
+    queryText += ` AND customer_user_id = $${paramIndex}`;
     params.push(customerUserId);
     paramIndex++;
   }
 
-  queryText += ` ORDER BY created_at DESC LIMIT ${paramIndex} OFFSET ${paramIndex + 1}`;
+  queryText += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
   params.push(limit, offset);
 
   const result = await query(queryText, params);
