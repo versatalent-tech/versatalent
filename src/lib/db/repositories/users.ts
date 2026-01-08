@@ -113,11 +113,11 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
     values.push(data.avatar_url);
   }
   if (data.talent_id !== undefined) {
-    updates.push(`talent_id = ${paramIndex++}`);
+    updates.push(`talent_id = $${paramIndex++}`);
     values.push(data.talent_id);
   }
   if (data.stripe_customer_id !== undefined) {
-    updates.push(`stripe_customer_id = ${paramIndex++}`);
+    updates.push(`stripe_customer_id = $${paramIndex++}`);
     values.push(data.stripe_customer_id);
   }
 
