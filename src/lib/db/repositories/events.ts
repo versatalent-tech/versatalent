@@ -68,7 +68,8 @@ export async function getAllEvents(options?: {
   if (status === 'upcoming') {
     query = sql`${query} AND (end_time >= NOW() OR (end_time IS NULL AND start_time >= NOW()))`;
   } else if (status === 'past') {
-    query = sql`${query} AND end_time < NOW()`;
+    // Include events where end_time is in the past, OR where there's no end_time and start_time is in the past
+    query = sql`${query} AND (end_time < NOW() OR (end_time IS NULL AND start_time < NOW()))`;
   }
 
   // Order by start_time
@@ -105,7 +106,7 @@ export async function getPastEvents(limit?: number): Promise<Event[]> {
   const events = await sql<Event[]>`
     SELECT * FROM events
     WHERE is_published = TRUE
-    AND end_time < NOW()
+    AND (end_time < NOW() OR (end_time IS NULL AND start_time < NOW()))
     ORDER BY start_time DESC
     ${limit ? sql`LIMIT ${limit}` : sql``}
   `;
