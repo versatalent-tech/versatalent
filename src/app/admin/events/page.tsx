@@ -39,11 +39,23 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  Info,
 } from "lucide-react";
-import type { Event, EventType, EventStatus, CreateEventRequest, EventVenue, EventPrice } from "@/lib/db/types";
+import type { Event, EventType, EventStatus, CreateEventRequest, EventVenue, EventPrice, Talent } from "@/lib/db/types";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { TalentMultiSelect } from "@/components/admin/TalentMultiSelect";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+
+// Helper function to check if an event should be auto-completed
+function shouldAutoComplete(event: Partial<Event>): boolean {
+  if (!event.start_time) return false;
+  if (event.status === 'completed' || event.status === 'cancelled') return false;
+
+  const eventDate = new Date(event.start_time);
+  const now = new Date();
+  return eventDate < now;
+}
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -66,6 +78,7 @@ export default function AdminEventsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [autoCompleteNotice, setAutoCompleteNotice] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<Partial<Event>>({
@@ -93,17 +106,21 @@ export default function AdminEventsPage() {
     is_published: true,
   });
 
-  const [talents, setTalents] = useState<any[]>([]);
+  const [talents, setTalents] = useState<Talent[]>([]);
+  const [talentsLoading, setTalentsLoading] = useState(true);
 
   // Fetch talents from API
   useEffect(() => {
     const fetchTalents = async () => {
       try {
+        setTalentsLoading(true);
         const response = await fetch("/api/talents?activeOnly=true");
         const data = await response.json();
         setTalents(data);
       } catch (error) {
         console.error("Error fetching talents:", error);
+      } finally {
+        setTalentsLoading(false);
       }
     };
     fetchTalents();
@@ -141,10 +158,35 @@ export default function AdminEventsPage() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/events");
+      const response = await fetch("/api/events?includeAll=true");
       const data = await response.json();
-      setEvents(data);
-      setFilteredEvents(data);
+
+      // Auto-complete past events that aren't already completed/cancelled
+      const updatedEvents = data.map((event: Event) => {
+        if (shouldAutoComplete(event)) {
+          return { ...event, status: 'completed' as EventStatus };
+        }
+        return event;
+      });
+
+      setEvents(updatedEvents);
+      setFilteredEvents(updatedEvents);
+
+      // Update past events in the database (fire and forget)
+      updatedEvents.forEach(async (event: Event) => {
+        const original = data.find((e: Event) => e.id === event.id);
+        if (original && original.status !== event.status && event.status === 'completed') {
+          try {
+            await fetch(`/api/events/${event.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: 'completed' }),
+            });
+          } catch (err) {
+            console.error('Failed to auto-complete event:', event.id, err);
+          }
+        }
+      });
 
       // Fetch check-in stats for each event
       const stats: Record<string, { enabled: boolean; totalCheckins: number; uniqueAttendees: number }> = {};
@@ -218,17 +260,28 @@ export default function AdminEventsPage() {
       setSaving(true);
       setError(null);
 
+      // Check if event should be auto-completed
+      let eventData = { ...formData };
+      if (shouldAutoComplete(eventData)) {
+        eventData.status = 'completed';
+      }
+
       const response = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(eventData),
       });
 
       if (response.ok) {
         await fetchEvents();
         setIsCreateDialogOpen(false);
         resetForm();
-        setSuccess("Event created successfully!");
+
+        if (eventData.status === 'completed' && formData.status !== 'completed') {
+          setSuccess("Event created and automatically marked as completed (past date)");
+        } else {
+          setSuccess("Event created successfully!");
+        }
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const data = await response.json();
@@ -249,10 +302,16 @@ export default function AdminEventsPage() {
       setSaving(true);
       setError(null);
 
+      // Check if event should be auto-completed
+      let eventData = { ...formData };
+      if (shouldAutoComplete(eventData)) {
+        eventData.status = 'completed';
+      }
+
       const response = await fetch(`/api/events/${selectedEvent.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(eventData),
       });
 
       if (response.ok) {
@@ -260,7 +319,12 @@ export default function AdminEventsPage() {
         setIsEditDialogOpen(false);
         setSelectedEvent(null);
         resetForm();
-        setSuccess("Event updated successfully!");
+
+        if (eventData.status === 'completed' && formData.status !== 'completed') {
+          setSuccess("Event updated and automatically marked as completed (past date)");
+        } else {
+          setSuccess("Event updated successfully!");
+        }
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const data = await response.json();
@@ -307,6 +371,14 @@ export default function AdminEventsPage() {
     setSelectedEvent(event);
     setFormData(event);
     setError(null);
+
+    // Check if event should be auto-completed
+    if (shouldAutoComplete(event)) {
+      setAutoCompleteNotice("This event's date has passed. It will be automatically marked as completed when saved.");
+    } else {
+      setAutoCompleteNotice(null);
+    }
+
     setIsEditDialogOpen(true);
   };
 
@@ -341,9 +413,10 @@ export default function AdminEventsPage() {
       },
       is_published: true,
     });
+    setAutoCompleteNotice(null);
   };
 
-  const handleFormChange = (field: string, value: string | number | boolean | undefined) => {
+  const handleFormChange = (field: string, value: string | number | boolean | string[] | undefined) => {
     if (field.startsWith("venue.")) {
       const venueField = field.split(".")[1];
       setFormData((prev) => ({
@@ -363,10 +436,23 @@ export default function AdminEventsPage() {
         },
       }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
+      setFormData((prev) => {
+        const newData = {
+          ...prev,
+          [field]: value,
+        };
+
+        // Check for auto-complete when date changes
+        if (field === 'start_time') {
+          if (shouldAutoComplete(newData)) {
+            setAutoCompleteNotice("This event's date is in the past. It will be automatically marked as completed when saved.");
+          } else {
+            setAutoCompleteNotice(null);
+          }
+        }
+
+        return newData;
+      });
     }
   };
 
@@ -375,9 +461,16 @@ export default function AdminEventsPage() {
     setFormData((prev) => ({ ...prev, tags }));
   };
 
-  const handleTalentIdsChange = (talentIdsString: string) => {
-    const talent_ids = talentIdsString.split(",").map((t) => t.trim()).filter(Boolean);
-    setFormData((prev) => ({ ...prev, talent_ids }));
+  const handleTalentIdsChange = (talentIds: string[]) => {
+    setFormData((prev) => ({ ...prev, talent_ids: talentIds }));
+  };
+
+  // Get talent names for display
+  const getTalentNames = (talentIds: string[]) => {
+    return talentIds
+      .map((id) => talents.find((t) => t.id === id)?.name)
+      .filter(Boolean)
+      .join(", ");
   };
 
   return (
@@ -570,6 +663,14 @@ export default function AdminEventsPage() {
                         <Tag className="h-4 w-4 mr-2 text-gold" />
                         {event.type}
                       </div>
+                      {event.talent_ids && event.talent_ids.length > 0 && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Users className="h-4 w-4 mr-2 text-gold" />
+                          <span className="truncate">
+                            {getTalentNames(event.talent_ids) || `${event.talent_ids.length} talent(s)`}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Tags */}
@@ -691,6 +792,14 @@ export default function AdminEventsPage() {
               Fill in the details for the event
             </DialogDescription>
           </DialogHeader>
+
+          {/* Auto-complete notice */}
+          {autoCompleteNotice && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-2">
+              <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <span className="text-sm">{autoCompleteNotice}</span>
+            </div>
+          )}
 
           <div className="space-y-4 py-4">
             {/* Basic Info */}
@@ -824,19 +933,22 @@ export default function AdminEventsPage() {
               />
             </div>
 
-            {/* Talent IDs */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Talent IDs (comma-separated)
-              </label>
-              <Input
-                value={formData.talent_ids?.join(", ") || ""}
-                onChange={(e) => handleTalentIdsChange(e.target.value)}
-                placeholder="talent-uuid-1, talent-uuid-2"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {talents.length > 0 ? `Available talents: ${talents.slice(0, 3).map((t: any) => `${t.name}`).join(", ")}${talents.length > 3 ? ` (+${talents.length - 3} more)` : ""}` : "Loading talents..."}
+            {/* Featured Talents - Multi-Select */}
+            <div className="border-t pt-4">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-gold" />
+                Featured Talents
+              </h4>
+              <p className="text-sm text-gray-500 mb-3">
+                Select the talents that will be featured in this event
               </p>
+              <TalentMultiSelect
+                talents={talents}
+                selectedIds={formData.talent_ids || []}
+                onChange={handleTalentIdsChange}
+                loading={talentsLoading}
+                placeholder="Search and select talents..."
+              />
             </div>
 
             {/* Tags */}

@@ -18,7 +18,8 @@ import {
   ZoomOut,
   RotateCcw,
   Maximize,
-  Loader2
+  Loader2,
+  Play
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,28 @@ interface EnhancedLightboxProps {
   onPrevious: () => void;
 }
 
+// Helper function to convert YouTube/Vimeo URLs to embed URLs
+function getEmbedUrl(url: string): string {
+  // Already an embed URL
+  if (url.includes('/embed/') || url.includes('player.vimeo.com')) {
+    return url;
+  }
+
+  // YouTube regular URL conversion
+  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+
+  // Vimeo regular URL conversion
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  return url;
+}
+
 export function EnhancedLightbox({
   items,
   currentIndex,
@@ -51,19 +74,24 @@ export function EnhancedLightbox({
   const [isDragging, setIsDragging] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [videoLoading, setVideoLoading] = useState(true);
   const lightboxRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const currentItem = items[currentIndex];
+  const isVideo = currentItem?.type === 'video';
+
+  // Only preload image URLs, not video URLs
+  const imageUrls = items
+    .filter(item => item.type !== 'video')
+    .map(item => item.url);
 
   // Preload adjacent images for smoother navigation
-  const { preloadImages, isLoaded } = useBatchImagePreloader(
-    items.map(item => item.url)
-  );
+  const { preloadImages, isLoaded } = useBatchImagePreloader(imageUrls);
 
   // Preload next and previous images when current changes
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isVideo) {
       // Preload current, next, and previous images
       const indicesToPreload = [
         currentIndex,
@@ -73,40 +101,40 @@ export function EnhancedLightbox({
 
       preloadImages(Math.max(0, currentIndex - 1), 3);
     }
-  }, [currentIndex, isOpen, preloadImages, items.length]);
+  }, [currentIndex, isOpen, preloadImages, items.length, isVideo]);
 
-  // Mobile gesture support
+  // Mobile gesture support - only for images
   useMobileGestures(lightboxRef, {
     onSwipeLeft: onNext,
     onSwipeRight: onPrevious,
     onSwipeDown: onClose,
-    onDoubleTap: () => setZoom(prev => prev === 1 ? 2 : 1),
-    onPinchZoom: (scale) => setZoom(prev => Math.max(1, Math.min(3, prev * scale)))
+    onDoubleTap: isVideo ? undefined : () => setZoom(prev => prev === 1 ? 2 : 1),
+    onPinchZoom: isVideo ? undefined : (scale) => setZoom(prev => Math.max(1, Math.min(3, prev * scale)))
   });
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.5, 3));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.5, 1));
+  const handleZoomIn = () => !isVideo && setZoom(prev => Math.min(prev + 0.5, 3));
+  const handleZoomOut = () => !isVideo && setZoom(prev => Math.max(prev - 0.5, 1));
   const handleResetZoom = () => {
     setZoom(1);
     setPosition({ x: 0, y: 0 });
   };
 
-  // Mouse drag for panning when zoomed
+  // Mouse drag for panning when zoomed (only for images)
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoom > 1) {
+    if (zoom > 1 && !isVideo) {
       setIsDragging(true);
       e.preventDefault();
     }
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isDragging && zoom > 1) {
+    if (isDragging && zoom > 1 && !isVideo) {
       setPosition(prev => ({
         x: prev.x + e.movementX,
         y: prev.y + e.movementY
       }));
     }
-  }, [isDragging, zoom]);
+  }, [isDragging, zoom, isVideo]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -167,10 +195,11 @@ export function EnhancedLightbox({
     }
   }, [isOpen, handleKeyDown]);
 
-  // Reset zoom when changing images
+  // Reset zoom and loading state when changing items
   useEffect(() => {
     handleResetZoom();
     setImageLoading(true);
+    setVideoLoading(true);
   }, [currentIndex]);
 
   if (!isOpen || !currentItem) return null;
@@ -194,31 +223,42 @@ export function EnhancedLightbox({
         >
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
-                className="text-white hover:bg-white/20"
-              >
-                <ZoomIn className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
-                className="text-white hover:bg-white/20"
-              >
-                <ZoomOut className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
-                className="text-white hover:bg-white/20"
-              >
-                <RotateCcw className="h-5 w-5" />
-              </Button>
-              <span className="text-white/70 text-sm ml-2">{Math.round(zoom * 100)}%</span>
+              {/* Only show zoom controls for images */}
+              {!isVideo && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
+                    className="text-white hover:bg-white/20"
+                  >
+                    <ZoomIn className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
+                    className="text-white hover:bg-white/20"
+                  >
+                    <ZoomOut className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
+                    className="text-white hover:bg-white/20"
+                  >
+                    <RotateCcw className="h-5 w-5" />
+                  </Button>
+                  <span className="text-white/70 text-sm ml-2">{Math.round(zoom * 100)}%</span>
+                </>
+              )}
+              {isVideo && (
+                <div className="flex items-center gap-2 text-white/70">
+                  <Play className="h-5 w-5" />
+                  <span className="text-sm">Video</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -238,7 +278,7 @@ export function EnhancedLightbox({
               >
                 <Share2 className="h-5 w-5" />
               </Button>
-              {currentItem.downloadable && (
+              {!isVideo && currentItem.downloadable && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -260,40 +300,74 @@ export function EnhancedLightbox({
           </div>
         </motion.div>
 
-        {/* Main Image Container */}
+        {/* Main Content Container */}
         <div
           ref={imageContainerRef}
           className="absolute inset-0 flex items-center justify-center p-4 pt-20 pb-20"
           onClick={(e) => e.stopPropagation()}
         >
-          <motion.div
-            className="relative max-w-full max-h-full"
-            style={{
-              scale: zoom,
-              x: position.x,
-              y: position.y,
-              cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
-            }}
-            transition={isDragging ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
-            onMouseDown={handleMouseDown}
-          >
-            {imageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-                <Loader2 className="h-8 w-8 text-white animate-spin" />
+          {isVideo ? (
+            /* Video Player */
+            <motion.div
+              className="relative w-full max-w-4xl"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              {videoLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg z-10">
+                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                </div>
+              )}
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src={getEmbedUrl(currentItem.url)}
+                  title={currentItem.title}
+                  className="absolute inset-0 w-full h-full rounded-lg shadow-2xl"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  onLoad={() => setVideoLoading(false)}
+                />
               </div>
-            )}
+              {/* Video Title */}
+              <div className="mt-4 text-center">
+                <h3 className="text-white text-lg font-semibold">{currentItem.title}</h3>
+                {currentItem.description && (
+                  <p className="text-white/70 text-sm mt-1">{currentItem.description}</p>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            /* Image Display */
+            <motion.div
+              className="relative max-w-full max-h-full"
+              style={{
+                scale: zoom,
+                x: position.x,
+                y: position.y,
+                cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
+              }}
+              transition={isDragging ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
+              onMouseDown={handleMouseDown}
+            >
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                </div>
+              )}
 
-            <Image
-              src={currentItem.url}
-              alt={currentItem.title}
-              width={currentItem.width || 1920}
-              height={currentItem.height || 1080}
-              className="rounded-lg shadow-2xl"
-              style={{ maxHeight: '80vh', width: 'auto', height: 'auto' }}
-              onLoadingComplete={() => setImageLoading(false)}
-              priority
-            />
-          </motion.div>
+              <Image
+                src={currentItem.url}
+                alt={currentItem.title}
+                width={currentItem.width || 1920}
+                height={currentItem.height || 1080}
+                className="rounded-lg shadow-2xl"
+                style={{ maxHeight: '80vh', width: 'auto', height: 'auto' }}
+                onLoadingComplete={() => setImageLoading(false)}
+                priority
+              />
+            </motion.div>
+          )}
         </div>
 
         {/* Navigation */}
@@ -327,7 +401,7 @@ export function EnhancedLightbox({
 
         {/* Metadata Panel */}
         <AnimatePresence>
-          {showMetadata && currentItem.metadata && (
+          {showMetadata && (
             <motion.div
               className="absolute right-0 top-20 bottom-20 w-80 bg-black/80 backdrop-blur-md p-6 overflow-y-auto"
               initial={{ x: 320 }}
@@ -341,39 +415,54 @@ export function EnhancedLightbox({
                 <p className="text-white/70 text-sm mb-4">{currentItem.description}</p>
               )}
 
+              {/* Show media type */}
+              <div className="mb-4">
+                <Badge variant={isVideo ? "secondary" : "default"} className="text-xs">
+                  {isVideo ? "Video" : "Image"}
+                </Badge>
+              </div>
+
               <div className="space-y-3">
-                {currentItem.metadata.camera && (
+                {currentItem.category && (
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <Badge variant="outline" className="text-xs border-white/30 text-white/70">
+                      {currentItem.category}
+                    </Badge>
+                  </div>
+                )}
+
+                {currentItem.photographer && (
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <User className="h-4 w-4" />
+                    <span>{currentItem.photographer}</span>
+                  </div>
+                )}
+
+                {currentItem.location && (
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <MapPin className="h-4 w-4" />
+                    <span>{currentItem.location}</span>
+                  </div>
+                )}
+
+                {currentItem.date && (
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <Calendar className="h-4 w-4" />
+                    <span>{currentItem.date}</span>
+                  </div>
+                )}
+
+                {currentItem.client && (
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <Building className="h-4 w-4" />
+                    <span>{currentItem.client}</span>
+                  </div>
+                )}
+
+                {currentItem.metadata?.camera && (
                   <div className="flex items-center gap-2 text-white/60 text-sm">
                     <Camera className="h-4 w-4" />
                     <span>{currentItem.metadata.camera}</span>
-                  </div>
-                )}
-
-                {currentItem.metadata.location && (
-                  <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <MapPin className="h-4 w-4" />
-                    <span>{currentItem.metadata.location}</span>
-                  </div>
-                )}
-
-                {currentItem.metadata.date && (
-                  <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(currentItem.metadata.date).toLocaleDateString()}</span>
-                  </div>
-                )}
-
-                {currentItem.metadata.photographer && (
-                  <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <User className="h-4 w-4" />
-                    <span>{currentItem.metadata.photographer}</span>
-                  </div>
-                )}
-
-                {currentItem.metadata.client && (
-                  <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <Building className="h-4 w-4" />
-                    <span>{currentItem.metadata.client}</span>
                   </div>
                 )}
               </div>

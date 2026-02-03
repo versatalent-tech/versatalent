@@ -29,6 +29,7 @@ function mapRowToTalent(row: any): Talent {
     social_links: row.social_links || {},
     socialLinks: row.social_links || {}, // Backward compatibility
     portfolio: row.portfolio || [],
+    industry_details: row.industry_details || {},
     created_at: new Date(row.created_at),
     updated_at: new Date(row.updated_at),
   } as any;
@@ -164,17 +165,18 @@ export async function createTalent(data: CreateTalentRequest): Promise<Talent> {
     is_active = true,
     social_links = {},
     portfolio = [],
+    industry_details = {},
   } = data;
 
   const rows = await sql`
     INSERT INTO talents (
       name, industry, gender, age_group, profession, location,
       bio, tagline, skills, image_src, cover_image, featured, is_active,
-      social_links, portfolio
+      social_links, portfolio, industry_details
     ) VALUES (
       ${name}, ${industry}, ${gender}, ${age_group}, ${profession}, ${location},
       ${bio}, ${tagline}, ${skills}, ${image_src}, ${cover_image || null}, ${featured}, ${is_active},
-      ${JSON.stringify(social_links)}, ${JSON.stringify(portfolio)}
+      ${JSON.stringify(social_links)}, ${JSON.stringify(portfolio)}, ${JSON.stringify(industry_details)}
     )
     RETURNING *
   `;
@@ -193,7 +195,7 @@ export async function updateTalent(
   const allowedFields = [
     'name', 'industry', 'gender', 'age_group', 'profession', 'location',
     'bio', 'tagline', 'skills', 'image_src', 'cover_image', 'featured', 'is_active',
-    'social_links', 'portfolio'
+    'social_links', 'portfolio', 'industry_details'
   ];
 
   const updates: string[] = [];
@@ -208,14 +210,14 @@ export async function updateTalent(
     }
 
     if (value !== undefined) {
-      if (key === 'social_links' || key === 'portfolio') {
-        updates.push(`${key} = $${paramIndex}`);
+      if (key === 'social_links' || key === 'portfolio' || key === 'industry_details') {
+        updates.push(`${key} = ${paramIndex}`);
         params.push(JSON.stringify(value));
       } else if (key === 'skills') {
-        updates.push(`${key} = $${paramIndex}`);
+        updates.push(`${key} = ${paramIndex}`);
         params.push(value);
       } else {
-        updates.push(`${key} = $${paramIndex}`);
+        updates.push(`${key} = ${paramIndex}`);
         params.push(value);
       }
       paramIndex++;

@@ -9,12 +9,18 @@ import { motion } from "framer-motion";
 import type { Talent } from "@/lib/data/talents";
 import { PortfolioSection } from "./PortfolioSection";
 import { HeroSection } from "./HeroSection";
+import { IndustryDetailsDisplay } from "./IndustryDetailsDisplay";
+import type { Industry, IndustryDetails } from "@/lib/db/types";
 
 interface TalentProfileProps {
   talent: Talent;
 }
 
 export function TalentProfile({ talent }: TalentProfileProps) {
+  // Support both camelCase and snake_case field names for compatibility
+  const socialLinks = (talent as any).socialLinks || talent.social_links;
+  const imageSrc = (talent as any).imageSrc || talent.image_src;
+
   return (
     <div className="bg-white py-10 md:py-16">
         <div className="container px-4 mx-auto">
@@ -31,7 +37,7 @@ export function TalentProfile({ talent }: TalentProfileProps) {
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <Image
-                src={talent.imageSrc}
+                src={imageSrc}
                 alt={talent.name}
                 fill
                 priority
@@ -79,7 +85,7 @@ export function TalentProfile({ talent }: TalentProfileProps) {
             </div>
 
             {/* Social Links */}
-            {talent.socialLinks && (
+            {socialLinks && (
               <motion.div
                 className="mt-6"
                 initial={{ opacity: 0, y: 10 }}
@@ -88,9 +94,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
               >
                 <h3 className="text-foreground text-lg font-semibold mb-3">Connect</h3>
                 <div className="flex gap-3">
-                  {talent.socialLinks.instagram && (
+                  {socialLinks.instagram && (
                     <motion.a
-                      href={talent.socialLinks.instagram}
+                      href={socialLinks.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
@@ -103,9 +109,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       </svg>
                     </motion.a>
                   )}
-                  {talent.socialLinks.twitter && (
+                  {socialLinks.twitter && (
                     <motion.a
-                      href={talent.socialLinks.twitter}
+                      href={socialLinks.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
@@ -116,9 +122,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       </svg>
                     </motion.a>
                   )}
-                  {talent.socialLinks.youtube && (
+                  {socialLinks.youtube && (
                     <motion.a
-                      href={talent.socialLinks.youtube}
+                      href={socialLinks.youtube}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
@@ -130,9 +136,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       </svg>
                     </motion.a>
                   )}
-                  {talent.socialLinks?.tiktok && (
+                  {socialLinks?.tiktok && (
                     <motion.a
-                      href={talent.socialLinks.tiktok}
+                      href={socialLinks.tiktok}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
@@ -146,9 +152,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       </svg>
                     </motion.a>
                   )}
-                  {talent.socialLinks?.linkedin && (
+                  {socialLinks?.linkedin && (
                     <motion.a
-                      href={talent.socialLinks.linkedin}
+                      href={socialLinks.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
@@ -161,9 +167,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                       </svg>
                     </motion.a>
                   )}
-                  {talent.socialLinks?.website && (
+                  {socialLinks?.website && (
                     <motion.a
-                      href={talent.socialLinks.website}
+                      href={socialLinks.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg text-gold border border-gray-200 shadow-sm"
@@ -236,6 +242,21 @@ export function TalentProfile({ talent }: TalentProfileProps) {
                 ))}
               </div>
             </motion.div>
+
+            {/* Industry-Specific Details */}
+            {talent.industry_details && (
+              <motion.div
+                className="mb-8"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.25 }}
+              >
+                <IndustryDetailsDisplay
+                  industry={talent.industry as Industry}
+                  details={talent.industry_details as IndustryDetails}
+                />
+              </motion.div>
+            )}
 
             {/* Portfolio Section */}
             {talent.portfolio && talent.portfolio.length > 0 && (

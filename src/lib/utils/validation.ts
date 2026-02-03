@@ -246,6 +246,161 @@ export function isValidIndustry(industry: string): boolean {
 }
 
 /**
+ * Industry-specific field validation
+ * Returns validation errors for industry-specific required/recommended fields
+ */
+export interface IndustryValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export function validateModelingDetails(details: Record<string, unknown>): IndustryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required fields for models
+  if (!details.height) {
+    errors.push('Height is required for models');
+  }
+
+  // Recommended fields (warnings, not errors)
+  if (!details.chest && !details.waist && !details.hips) {
+    warnings.push('Adding measurements (chest, waist, hips) is recommended');
+  }
+  if (!details.hair_colour) {
+    warnings.push('Hair colour is recommended');
+  }
+  if (!details.eye_colour) {
+    warnings.push('Eye colour is recommended');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+export function validateSportsDetails(details: Record<string, unknown>): IndustryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required fields for sports talents
+  if (!details.sport_type) {
+    errors.push('Sport type is required');
+  }
+
+  // Recommended fields
+  const positions = details.positions_played as unknown[] | undefined;
+  if (!positions || positions.length === 0) {
+    warnings.push('Adding positions played is recommended');
+  }
+  if (!details.current_team) {
+    warnings.push('Current team is recommended');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+export function validateMusicDetails(details: Record<string, unknown>): IndustryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required fields for music talents
+  const genres = details.genre as unknown[] | undefined;
+  if (!genres || genres.length === 0) {
+    errors.push('At least one genre is required for music talents');
+  }
+
+  // Recommended fields
+  if (!details.years_active) {
+    warnings.push('Years active is recommended');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+export function validateActingDetails(details: Record<string, unknown>): IndustryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required fields for acting talents
+  const actingTypes = details.acting_type as unknown[] | undefined;
+  if (!actingTypes || actingTypes.length === 0) {
+    errors.push('At least one acting type is required (Film, TV, Theatre, etc.)');
+  }
+
+  // Recommended fields
+  if (!details.agencies || (details.agencies as unknown[]).length === 0) {
+    warnings.push('Adding representation/agencies is recommended');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+export function validateCulinaryDetails(details: Record<string, unknown>): IndustryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required fields for culinary talents
+  const specialties = details.cuisine_specialties as unknown[] | undefined;
+  if (!specialties || specialties.length === 0) {
+    errors.push('At least one cuisine specialty is required');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+/**
+ * Validate industry-specific details based on the industry type
+ */
+export function validateIndustryDetails(
+  industry: string,
+  details: Record<string, unknown> | undefined
+): IndustryValidationResult {
+  if (!details || Object.keys(details).length === 0) {
+    // Return warnings if no details are provided
+    return {
+      valid: true, // Allow saving without industry details
+      errors: [],
+      warnings: [`Consider adding ${industry}-specific details to enhance the profile`],
+    };
+  }
+
+  switch (industry.toLowerCase()) {
+    case 'modeling':
+      return validateModelingDetails(details);
+    case 'sports':
+      return validateSportsDetails(details);
+    case 'music':
+      return validateMusicDetails(details);
+    case 'acting':
+      return validateActingDetails(details);
+    case 'culinary':
+      return validateCulinaryDetails(details);
+    default:
+      return { valid: true, errors: [], warnings: [] };
+  }
+}
+
+/**
  * Validate event type
  */
 export function isValidEventType(type: string): boolean {

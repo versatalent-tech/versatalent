@@ -363,6 +363,61 @@ export interface SocialLinks {
   tiktok?: string;
 }
 
+// Industry-specific details interfaces
+export interface ModelingDetails {
+  height?: string; // e.g., "5'10" or "178cm"
+  chest?: string;
+  waist?: string;
+  hips?: string;
+  shoe_size?: string;
+  dress_size?: string;
+  top_size?: string;
+  bottom_size?: string;
+  hair_colour?: string;
+  hair_style?: string;
+  eye_colour?: string;
+}
+
+export interface SportsDetails {
+  positions_played?: string[];
+  teams_played?: string[];
+  current_team?: string;
+  goals_scored?: number;
+  assists?: number;
+  league_played?: string;
+  team_position_in_league?: string;
+  sport_type?: string; // football, basketball, etc.
+}
+
+export interface MusicDetails {
+  genre?: string[];
+  record_label?: string;
+  years_active?: string;
+  instruments?: string[];
+  streaming_links?: {
+    spotify?: string;
+    apple_music?: string;
+    soundcloud?: string;
+  };
+}
+
+export interface ActingDetails {
+  acting_type?: string[]; // film, TV, theatre, commercials
+  agencies?: string[];
+  notable_roles?: string[];
+  training?: string[];
+}
+
+export interface CulinaryDetails {
+  cuisine_specialties?: string[];
+  restaurants?: string[];
+  certifications?: string[];
+  tv_appearances?: string[];
+}
+
+// Union type for all industry details
+export type IndustryDetails = ModelingDetails | SportsDetails | MusicDetails | ActingDetails | CulinaryDetails;
+
 export interface Talent {
   id: string;
   name: string;
@@ -380,6 +435,7 @@ export interface Talent {
   is_active: boolean;
   social_links?: SocialLinks;
   portfolio?: PortfolioItem[];
+  industry_details?: IndustryDetails; // Industry-specific fields
   created_at: Date;
   updated_at: Date;
 }
@@ -401,6 +457,7 @@ export interface CreateTalentRequest {
   is_active?: boolean;
   social_links?: SocialLinks;
   portfolio?: PortfolioItem[];
+  industry_details?: IndustryDetails;
 }
 
 export interface UpdateTalentRequest {
@@ -419,6 +476,7 @@ export interface UpdateTalentRequest {
   is_active?: boolean;
   social_links?: SocialLinks;
   portfolio?: PortfolioItem[];
+  industry_details?: IndustryDetails;
 }
 
 // ============================================
