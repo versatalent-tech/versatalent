@@ -15,7 +15,7 @@ interface PortfolioSectionProps {
 export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('masonry');
+  const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate initial loading
@@ -174,3 +174,4 @@ export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
     </motion.section>
   );
 }
+
