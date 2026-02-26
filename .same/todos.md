@@ -6,8 +6,13 @@
 - [x] Auto-complete events as "completed" after their date passes
 - [x] Fix admin/nfc page client-side error - NFCCardRegistration.tsx was empty
 - [x] Deploy fix to production (v249)
+- [x] Fix NFC reader CCID protected class browser limitation (v251)
+  - Added WebSocket bridge support for physical NFC readers
+  - Added Simulation Mode for testing without hardware
+  - Improved error messaging and UI guidance
 
 ## Backlog
+- [ ] Create NFC Bridge server documentation (for users who want to use physical NFC readers)
 - [ ] Clean up unused imports across project (warnings in linter)
 - [ ] Escape apostrophes in JSX strings (multiple files have react/no-unescaped-entities errors)
 - [ ] Replace img tags with Next.js Image component for performance
