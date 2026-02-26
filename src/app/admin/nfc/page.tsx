@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, CreditCard, Calendar, CheckSquare, Activity, Nfc } from "lucide-react";
+import { Users, CreditCard, Calendar, CheckSquare, Activity, Nfc, HelpCircle } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { InlineLoader } from "@/components/admin/DynamicLoader";
 
 // Dynamically import NFC management components with ssr: false since they use browser-only APIs
@@ -76,7 +78,15 @@ export default function AdminNFCPage() {
                   Manage NFC cards, users, events, and scan history
                 </p>
               </div>
-              <LogoutButton variant="outline" className="border-white text-white hover:bg-white hover:text-black" />
+              <div className="flex items-center gap-3">
+                <Link href="/admin/nfc/setup">
+                  <Button variant="outline" size="sm" className="border-gold/50 text-gold hover:bg-gold/10">
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Bridge Setup
+                  </Button>
+                </Link>
+                <LogoutButton variant="outline" className="border-white text-white hover:bg-white hover:text-black" />
+              </div>
             </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -1,9 +1,10 @@
 "use client";
 
-import { Wifi, WifiOff, Loader2, AlertTriangle, Nfc, Zap, Info, Server } from "lucide-react";
+import { Wifi, WifiOff, Loader2, AlertTriangle, Nfc, Zap, Info, Server, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNFCReader } from "@/lib/hooks/useNFCReader";
+import Link from "next/link";
 
 interface NFCReaderStatusProps {
   onCardScanned?: (uid: string) => void;
@@ -189,12 +190,19 @@ export function NFCReaderStatusIndicator({
       {!status.connected && !status.error && (
         <div className="flex items-start gap-2 mb-4 p-3 bg-blue-50 rounded border border-blue-200">
           <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-blue-800">
+          <div className="text-sm text-blue-800 flex-1">
             <p className="font-medium mb-1">Quick Start Options:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li><strong>Simulation Mode</strong> - Test NFC features without hardware</li>
               <li><strong>NFC Bridge</strong> - Connect physical readers via local server</li>
             </ul>
+            <Link
+              href="/admin/nfc/setup"
+              className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 mt-2 font-medium"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Need a physical NFC reader? View setup guide
+            </Link>
           </div>
         </div>
       )}
