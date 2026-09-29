@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getCurrentSession } from '@/lib/middleware/auth';
 
 /**
  * Staff Auth Middleware
@@ -13,61 +13,24 @@ export async function checkStaffAuth(request: NextRequest): Promise<{
   error?: string;
 }> {
   try {
-    // Check for staff session or admin session
-    const cookieStore = await cookies();
-    const staffSession = cookieStore.get('staff_session');
-    const adminSession = cookieStore.get('admin_session');
+    // Checks both admin and staff sessions (signature, expiry and role)
+    const session = await getCurrentSession();
 
-    const sessionCookie = staffSession || adminSession;
-
-    if (!sessionCookie) {
+    if (!session) {
       return {
         authorized: false,
         error: 'Not authenticated. Please login.'
       };
     }
 
-    // Validate session token
-    try {
-      const decoded = JSON.parse(Buffer.from(sessionCookie.value, 'base64').toString());
-      const now = Date.now();
-
-      // Check if token is expired
-      if (now > decoded.expires) {
-        return {
-          authorized: false,
-          error: 'Session expired. Please login again.'
-        };
-      }
-
-      // For admin session, the role might not be in the decoded data
-      // but we can infer it from the cookie type
-      const role = decoded.role || (adminSession ? 'admin' : undefined);
-
-      // Verify role (staff or admin only)
-      if (role !== 'staff' && role !== 'admin') {
-        return {
-          authorized: false,
-          error: 'Access denied. Staff credentials required.'
-        };
-      }
-
-      return {
-        authorized: true,
-        userId: decoded.userId,
-        role: role,
-        name: decoded.name
-      };
-
-    } catch {
-      return {
-        authorized: false,
-        error: 'Invalid session. Please login again.'
-      };
-    }
-
+    return {
+      authorized: true,
+      userId: session.userId,
+      role: session.role,
+      name: session.name,
+    };
   } catch (error) {
-    console.error('Staff auth check error:', error);
+    console.error('checkStaffAuth error:', error);
     return {
       authorized: false,
       error: 'Authentication failed'

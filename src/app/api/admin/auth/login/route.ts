@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  isAdminLoginConfigured,
   verifyAdminCredentials,
   createSessionToken,
   setSessionCookie,
 } from '@/lib/auth/admin-auth';
-import { setAdminAuth } from '@/lib/middleware/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +18,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!isAdminLoginConfigured()) {
+      console.error('Admin login attempted but ADMIN_USERNAME / ADMIN_PASSWORD are not set');
+      return NextResponse.json(
+        { error: 'Admin login is not configured' },
+        { status: 503 }
+      );
+    }
+
     // Verify credentials
     if (!verifyAdminCredentials(username, password)) {
       return NextResponse.json(
@@ -27,13 +35,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session token
-    const token = createSessionToken();
+    const token = await createSessionToken(username);
 
     // Set session cookie
     await setSessionCookie(token);
-
-    // ALSO set the admin_auth cookie that the middleware expects
-    await setAdminAuth();
 
     return NextResponse.json(
       { success: true, message: 'Login successful' },

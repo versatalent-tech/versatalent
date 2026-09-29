@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
-import { setStaffAuth } from '@/lib/middleware/auth';
+import {
+  STAFF_SESSION_COOKIE,
+  SESSION_COOKIE_OPTIONS,
+  signSession,
+} from '@/lib/auth/session';
 
 /**
  * Staff Login API
@@ -64,29 +68,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create session
-    const sessionData = {
+    // Create signed session
+    const sessionToken = await signSession({
       userId: user.id,
       role: user.role,
       name: user.name,
       email: user.email,
-      expires: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
-    };
-
-    const sessionToken = Buffer.from(JSON.stringify(sessionData)).toString('base64');
-
-    // Set secure cookie
-    const cookieStore = await cookies();
-    cookieStore.set('staff_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60, // 24 hours
-      path: '/',
     });
 
-    // Also set the staff_auth cookie that the middleware expects
-    await setStaffAuth();
+    const cookieStore = await cookies();
+    cookieStore.set(STAFF_SESSION_COOKIE, sessionToken, SESSION_COOKIE_OPTIONS);
 
     // Return success with user data (no sensitive info)
     return NextResponse.json({

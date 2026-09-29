@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserById } from '@/lib/db/repositories/users';
-import { cookies } from 'next/headers';
+import { getCurrentSession } from '@/lib/middleware/auth';
 
 /**
  * Auth middleware for POS routes
@@ -13,79 +12,23 @@ export async function checkPOSAuth(request: NextRequest): Promise<{
   error?: string;
 }> {
   try {
-    // Get session cookies - check both staff and admin sessions
-    const cookieStore = await cookies();
-    const staffSessionCookie = cookieStore.get('staff_session');
-    const adminSessionCookie = cookieStore.get('admin_session');
+    // Checks both admin and staff sessions (signature, expiry and role)
+    const session = await getCurrentSession();
 
-    // Try staff session first
-    if (staffSessionCookie) {
-      try {
-        const decoded = JSON.parse(Buffer.from(staffSessionCookie.value, 'base64').toString());
-        const now = Date.now();
-
-        // Check if token is expired
-        if (now > decoded.expires) {
-          return {
-            authorized: false,
-            error: 'Session expired. Please login again.'
-          };
-        }
-
-        // Verify role
-        if (decoded.role !== 'staff' && decoded.role !== 'admin') {
-          return {
-            authorized: false,
-            error: 'Insufficient permissions. Staff access required.'
-          };
-        }
-
-        return {
-          authorized: true,
-          userId: decoded.userId,
-          role: decoded.role
-        };
-      } catch (err) {
-        console.error('Staff session decode error:', err);
-        // Fall through to try admin session
-      }
+    if (!session) {
+      return {
+        authorized: false,
+        error: 'Not authenticated. Please login.'
+      };
     }
 
-    // Try admin session
-    if (adminSessionCookie) {
-      try {
-        const decoded = JSON.parse(Buffer.from(adminSessionCookie.value, 'base64').toString());
-        const now = Date.now();
-
-        // Check if token is expired
-        if (now > decoded.expires) {
-          return {
-            authorized: false,
-            error: 'Session expired. Please login again.'
-          };
-        }
-
-        return {
-          authorized: true,
-          role: 'admin'
-        };
-      } catch (err) {
-        console.error('Admin session decode error:', err);
-        return {
-          authorized: false,
-          error: 'Invalid session. Please login again.'
-        };
-      }
-    }
-
-    // No valid session found
     return {
-      authorized: false,
-      error: 'Not authenticated. Please login.'
+      authorized: true,
+      userId: session.userId,
+      role: session.role,
     };
-
   } catch (error) {
-    console.error('POS auth check error:', error);
+    console.error('checkPOSAuth error:', error);
     return {
       authorized: false,
       error: 'Authentication failed'

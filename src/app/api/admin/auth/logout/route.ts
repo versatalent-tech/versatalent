@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clearSessionCookie } from '@/lib/auth/admin-auth';
 import { clearAdminAuth } from '@/lib/middleware/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    // Clear session cookie
-    await clearSessionCookie();
-
-    // Clear the admin_auth cookie
+    // Clear session cookie (and any legacy auth cookies)
     await clearAdminAuth();
 
     return NextResponse.json(

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { clearStaffAuth } from '@/lib/middleware/auth';
 
 /**
@@ -8,10 +7,7 @@ import { clearStaffAuth } from '@/lib/middleware/auth';
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    cookieStore.delete('staff_session');
-
-    // Clear the staff_auth cookie
+    // Clear session cookie (and any legacy auth cookies)
     await clearStaffAuth();
 
     return NextResponse.json({ success: true });

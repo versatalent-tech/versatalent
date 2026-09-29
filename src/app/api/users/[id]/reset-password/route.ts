@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { updateUser, getUserById } from '@/lib/db/repositories/users';
 import { generateSecurePassword } from '@/lib/utils';
+import { withAdminAuth } from '@/lib/middleware/auth';
 
 // POST - Reset user password (admin only)
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const POST = withAdminAuth(async (
+  request: Request,
+  context?: { params: Promise<{ id: string }> }
+) => {
   try {
-    const { id } = params;
+    const { id } = await context!.params;
     const body = await request.json();
     const { newPassword, generateRandom } = body;
 
@@ -52,4 +53,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

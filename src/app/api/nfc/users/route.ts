@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllUsers, createUser, getUsersByRole } from '@/lib/db/repositories/users';
+import { withAdminAuth } from '@/lib/middleware/auth';
 
-// GET all users or filter by role
-export async function GET(request: NextRequest) {
+// GET all users or filter by role (admin only)
+export const GET = withAdminAuth(async (request: NextRequest) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const role = searchParams.get('role');
@@ -34,10 +35,10 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-// POST create new user
-export async function POST(request: NextRequest) {
+// POST create new user (admin only)
+export const POST = withAdminAuth(async (request: NextRequest) => {
   try {
     const data = await request.json();
 
@@ -89,4 +90,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

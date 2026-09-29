@@ -4,25 +4,48 @@
  */
 
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { ApiErrors } from '@/lib/utils/api-response';
+import {
+  ADMIN_SESSION_COOKIE,
+  STAFF_SESSION_COOKIE,
+  verifySession,
+  type SessionPayload,
+} from '@/lib/auth/session';
+
+// Legacy unsigned cookies from the old auth scheme - only ever deleted now
+const LEGACY_COOKIES = ['admin_auth', 'staff_auth'];
+
+/**
+ * Get the current signed session (admin session takes precedence)
+ */
+export async function getCurrentSession(): Promise<SessionPayload | null> {
+  const cookieStore = await cookies();
+
+  for (const name of [ADMIN_SESSION_COOKIE, STAFF_SESSION_COOKIE]) {
+    const session = await verifySession(cookieStore.get(name)?.value);
+    if (session) {
+      return session;
+    }
+  }
+
+  return null;
+}
 
 /**
  * Verify admin authentication
  */
 export async function verifyAdminAuth(request?: NextRequest): Promise<boolean> {
-  const cookieStore = await cookies();
-  const adminAuth = cookieStore.get('admin_auth');
-  return adminAuth?.value === 'true';
+  const session = await getCurrentSession();
+  return session?.role === 'admin';
 }
 
 /**
- * Verify staff authentication
+ * Verify staff authentication (admins also count as staff)
  */
 export async function verifyStaffAuth(request?: NextRequest): Promise<boolean> {
-  const cookieStore = await cookies();
-  const staffAuth = cookieStore.get('staff_auth');
-  return staffAuth?.value === 'true';
+  const session = await getCurrentSession();
+  return session !== null;
 }
 
 /**
@@ -31,10 +54,10 @@ export async function verifyStaffAuth(request?: NextRequest): Promise<boolean> {
  * Compatible with Next.js 14+ async params
  */
 export function withAdminAuth<T>(
-  handler: (request: Request, context?: any) => Promise<T>
+  handler: (request: NextRequest, context?: any) => Promise<T>
 ) {
   return async (
-    request: Request,
+    request: NextRequest,
     context?: any
   ) => {
     const isAuthenticated = await verifyAdminAuth();
@@ -53,10 +76,10 @@ export function withAdminAuth<T>(
  * Compatible with Next.js 14+ async params
  */
 export function withStaffAuth<T>(
-  handler: (request: Request, context?: any) => Promise<T>
+  handler: (request: NextRequest, context?: any) => Promise<T>
 ) {
   return async (
-    request: Request,
+    request: NextRequest,
     context?: any
   ) => {
     const isAuthenticated = await verifyStaffAuth();
@@ -74,16 +97,15 @@ export function withStaffAuth<T>(
  * Compatible with Next.js 14+ async params
  */
 export function withAuth<T>(
-  handler: (request: Request, context?: any) => Promise<T>
+  handler: (request: NextRequest, context?: any) => Promise<T>
 ) {
   return async (
-    request: Request,
+    request: NextRequest,
     context?: any
   ) => {
-    const isAdmin = await verifyAdminAuth();
-    const isStaff = await verifyStaffAuth();
+    const isAuthenticated = await verifyStaffAuth();
 
-    if (!isAdmin && !isStaff) {
+    if (!isAuthenticated) {
       return ApiErrors.Unauthorized('Authentication required');
     }
 
@@ -92,45 +114,21 @@ export function withAuth<T>(
 }
 
 /**
- * Set admin authentication cookie
- */
-export async function setAdminAuth() {
-  const cookieStore = await cookies();
-  cookieStore.set('admin_auth', 'true', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
-}
-
-/**
- * Clear admin authentication cookie
+ * Clear admin session cookie (plus the legacy unsigned cookies)
  */
 export async function clearAdminAuth() {
   const cookieStore = await cookies();
-  cookieStore.delete('admin_auth');
+  cookieStore.delete(ADMIN_SESSION_COOKIE);
+  LEGACY_COOKIES.forEach((name) => cookieStore.delete(name));
 }
 
 /**
- * Set staff authentication cookie
- */
-export async function setStaffAuth() {
-  const cookieStore = await cookies();
-  cookieStore.set('staff_auth', 'true', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
-}
-
-/**
- * Clear staff authentication cookie
+ * Clear staff session cookie (plus the legacy unsigned cookies)
  */
 export async function clearStaffAuth() {
   const cookieStore = await cookies();
-  cookieStore.delete('staff_auth');
+  cookieStore.delete(STAFF_SESSION_COOKIE);
+  LEGACY_COOKIES.forEach((name) => cookieStore.delete(name));
 }
 
 /**
@@ -138,11 +136,6 @@ export async function clearStaffAuth() {
  * Returns { type: 'admin' | 'staff' | null }
  */
 export async function getAuthType(): Promise<'admin' | 'staff' | null> {
-  const isAdmin = await verifyAdminAuth();
-  if (isAdmin) return 'admin';
-
-  const isStaff = await verifyStaffAuth();
-  if (isStaff) return 'staff';
-
-  return null;
+  const session = await getCurrentSession();
+  return session?.role ?? null;
 }
