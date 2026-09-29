@@ -6,9 +6,13 @@ import {
   getScanLogsByUserId,
   getScanStatistics
 } from '@/lib/db/repositories/nfc-scan-logs';
+import { requireAdmin, requireStaff } from '@/lib/middleware/auth';
 
 // GET scan logs
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const cardUid = searchParams.get('card_uid');
@@ -50,6 +54,9 @@ export async function GET(request: NextRequest) {
 
 // POST create scan log
 export async function POST(request: NextRequest) {
+  const denied = await requireStaff();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
 

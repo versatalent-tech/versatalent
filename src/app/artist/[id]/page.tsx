@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { sanitizeHtml } from "@/lib/utils/sanitize-html";
 import Image from "next/image";
 import { MainLayout } from "@/components/layout/MainLayout";
 import type { Talent } from "@/lib/data/talents";
@@ -177,7 +178,7 @@ export default function ArtistProfilePage() {
           <h2 className="text-3xl font-bold mb-6">About {talent.name}</h2>
           <div
             className="text-gray-700 leading-relaxed prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: talent.bio }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(talent.bio) }}
           />
 
           {talent.skills.length > 0 && (

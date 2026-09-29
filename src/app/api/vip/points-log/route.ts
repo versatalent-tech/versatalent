@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllPointsLogs, getPointsLogsByUserId } from '@/lib/db/repositories/vip-points-log';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET points log (all or by user_id)
 export async function GET(request: NextRequest) {
@@ -12,6 +13,10 @@ export async function GET(request: NextRequest) {
     if (userId) {
       logs = await getPointsLogsByUserId(userId, limit ? parseInt(limit) : 100);
     } else {
+      // Listing every member's points log is admin only
+      const denied = await requireAdmin();
+      if (denied) return denied;
+
       logs = await getAllPointsLogs();
     }
 

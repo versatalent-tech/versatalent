@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllVIPMemberships, createVIPMembership } from '@/lib/db/repositories/vip-memberships';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET all VIP memberships
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const memberships = await getAllVIPMemberships();
 
@@ -18,6 +22,9 @@ export async function GET(request: NextRequest) {
 
 // POST create new VIP membership
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
 

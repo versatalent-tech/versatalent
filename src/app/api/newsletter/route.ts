@@ -6,8 +6,12 @@ import {
   exportActiveSubscribers,
 } from '@/lib/db/repositories/newsletter';
 import type { CreateNewsletterSubscriberRequest } from '@/lib/db/types';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('activeOnly') !== 'false';

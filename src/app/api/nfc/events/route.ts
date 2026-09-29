@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEvents, createEvent, getUpcomingEvents } from '@/lib/db/repositories/events';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const filter = searchParams.get('filter');
@@ -25,6 +29,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
 

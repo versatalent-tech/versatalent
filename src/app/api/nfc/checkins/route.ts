@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllCheckIns, createCheckIn, getCheckInsByUserId, getCheckInsByEventId } from '@/lib/db/repositories/checkins';
 import { getUserById } from '@/lib/db/repositories/users';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('user_id');
     const eventId = searchParams.get('event_id');
+
+    // Per-user history backs the public VIP pass page; everything else is admin only
+    if (!userId) {
+      const denied = await requireAdmin();
+      if (denied) return denied;
+    }
 
     let checkins;
     if (userId) {

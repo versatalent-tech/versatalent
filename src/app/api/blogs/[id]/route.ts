@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBlogPost, updateBlogPost, deleteBlogPost } from '@/lib/db/repositories/blogs';
 import type { UpdateBlogPostRequest } from '@/lib/db/types';
+import { requireAdmin, verifyAdminAuth } from '@/lib/middleware/auth';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -11,7 +12,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const post = await getBlogPost(id);
 
-    if (!post) {
+    // Unpublished drafts are only visible to admins
+    if (!post || (!post.is_published && !(await verifyAdminAuth()))) {
       return NextResponse.json(
         { error: 'Blog post not found' },
         { status: 404 }
@@ -29,6 +31,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const data: UpdateBlogPostRequest = await request.json();
@@ -62,6 +67,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const deleted = await deleteBlogPost(id);

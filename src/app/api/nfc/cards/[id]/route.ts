@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNFCCardById, updateNFCCard, deleteNFCCard } from '@/lib/db/repositories/nfc-cards';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const card = await getNFCCardById(id);
@@ -30,6 +34,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const data = await request.json();
@@ -57,6 +64,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const success = await deleteNFCCard(id);

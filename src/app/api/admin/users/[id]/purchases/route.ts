@@ -3,6 +3,7 @@ import {
   getUserPurchaseHistory,
   getUserPurchaseStats
 } from '@/lib/db/repositories/purchase-history';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 /**
  * GET /api/admin/users/[id]/purchases
@@ -14,6 +15,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id: userId } = await params;
 

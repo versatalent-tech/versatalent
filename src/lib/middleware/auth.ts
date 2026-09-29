@@ -49,6 +49,23 @@ export async function verifyStaffAuth(request?: NextRequest): Promise<boolean> {
 }
 
 /**
+ * Inline guard for route handlers: returns a 401 response to send back,
+ * or null when the caller is an admin.
+ * Usage: const denied = await requireAdmin(); if (denied) return denied;
+ */
+export async function requireAdmin() {
+  return (await verifyAdminAuth()) ? null : ApiErrors.Unauthorized('Admin authentication required');
+}
+
+/**
+ * Inline guard for route handlers: returns a 401 response to send back,
+ * or null when the caller is staff or an admin.
+ */
+export async function requireStaff() {
+  return (await verifyStaffAuth()) ? null : ApiErrors.Unauthorized('Staff authentication required');
+}
+
+/**
  * Middleware wrapper to protect admin-only routes
  * Returns a higher-order function that wraps the route handler
  * Compatible with Next.js 14+ async params

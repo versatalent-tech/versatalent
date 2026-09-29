@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -36,7 +40,15 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 8);
-    const extension = file.name.split('.').pop();
+    // Derive the extension from the validated MIME type, never the client-supplied filename
+    const extensions: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    const extension = extensions[file.type];
 
     // Determine directory and filename based on type
     let uploadDir: string;
@@ -97,6 +109,9 @@ export async function POST(request: NextRequest) {
 
 // DELETE - Remove uploaded image
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const filename = searchParams.get('filename');
@@ -129,8 +144,9 @@ export async function DELETE(request: NextRequest) {
         break;
     }
 
-    // Security check: only allow deletion of files with correct prefix
-    if (!filename.startsWith(allowedPrefix)) {
+    // Security check: only allow deletion of files with correct prefix,
+    // and no path segments (e.g. "event-../../..")
+    if (!filename.startsWith(allowedPrefix) || filename !== path.basename(filename)) {
       return NextResponse.json(
         { error: `Can only delete ${type} images` },
         { status: 403 }

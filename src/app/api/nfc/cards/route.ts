@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllNFCCards, createNFCCard, getNFCCardByUID } from '@/lib/db/repositories/nfc-cards';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET all NFC cards (with optional card_uid filter)
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const cardUid = searchParams.get('card_uid');
@@ -30,6 +34,9 @@ export async function GET(request: NextRequest) {
 
 // POST create new NFC card
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
 

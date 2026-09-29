@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllPointRules, createPointRule, updatePointRule } from '@/lib/db/repositories/vip-point-rules';
 import type { VIPPointRuleRequest } from '@/lib/db/types';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET all point rules
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const rules = await getAllPointRules();
     return NextResponse.json(rules);
@@ -18,6 +22,9 @@ export async function GET(request: NextRequest) {
 
 // POST create or update point rule
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data: VIPPointRuleRequest = await request.json();
 
@@ -42,6 +49,9 @@ export async function POST(request: NextRequest) {
 
 // PUT update point rule
 export async function PUT(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data = await request.json();
 

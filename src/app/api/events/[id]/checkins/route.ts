@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 import { getEvent } from '@/lib/db/repositories/events';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET check-in stats for an event
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -59,6 +63,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -117,6 +124,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBlogPosts, createBlogPost, getBlogCategories } from '@/lib/db/repositories/blogs';
 import type { CreateBlogPostRequest } from '@/lib/db/types';
+import { requireAdmin, verifyAdminAuth } from '@/lib/middleware/auth';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const publishedOnly = searchParams.get('publishedOnly') !== 'false';
+    // Unpublished drafts are only visible to admins
+    const publishedOnly = searchParams.get('publishedOnly') !== 'false' || !(await verifyAdminAuth());
     const category = searchParams.get('category') || undefined;
     const featured = searchParams.get('featured') === 'true' ? true : searchParams.get('featured') === 'false' ? false : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
@@ -34,6 +36,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data: CreateBlogPostRequest = await request.json();
 
