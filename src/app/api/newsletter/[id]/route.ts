@@ -5,12 +5,16 @@ import {
   deleteSubscriber,
 } from '@/lib/db/repositories/newsletter';
 import type { UpdateNewsletterSubscriberRequest } from '@/lib/db/types';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const subscriber = await getSubscriberById(id);
@@ -33,6 +37,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const data: UpdateNewsletterSubscriberRequest = await request.json();
@@ -57,6 +64,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const deleted = await deleteSubscriber(id);

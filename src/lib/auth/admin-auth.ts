@@ -1,54 +1,57 @@
 import { cookies } from 'next/headers';
+import { createHash, timingSafeEqual } from 'crypto';
+import {
+  ADMIN_SESSION_COOKIE,
+  SESSION_COOKIE_OPTIONS,
+  signSession,
+  verifySession,
+} from '@/lib/auth/session';
 
-// Admin credentials from environment variables
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
-const SESSION_COOKIE_NAME = 'admin_session';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'default-secret-change-in-production';
+/**
+ * Whether admin credentials are configured. There are deliberately no
+ * defaults: without ADMIN_USERNAME and ADMIN_PASSWORD, admin login is disabled.
+ */
+export function isAdminLoginConfigured(): boolean {
+  return Boolean(process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD);
+}
 
-// Session duration: 24 hours
-const SESSION_DURATION = 24 * 60 * 60 * 1000;
+function safeEqual(a: string, b: string): boolean {
+  // Hash first so both buffers have equal length for timingSafeEqual
+  const hashA = createHash('sha256').update(a).digest();
+  const hashB = createHash('sha256').update(b).digest();
+  return timingSafeEqual(hashA, hashB);
+}
 
 /**
  * Verify admin credentials
  */
 export function verifyAdminCredentials(username: string, password: string): boolean {
-  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
-}
+  const expectedUsername = process.env.ADMIN_USERNAME;
+  const expectedPassword = process.env.ADMIN_PASSWORD;
 
-/**
- * Create a session token
- */
-export function createSessionToken(): string {
-  const timestamp = Date.now();
-  const randomPart = Math.random().toString(36).substring(2);
-  const token = `${timestamp}-${randomPart}`;
-
-  // In production, use proper JWT or encrypted tokens
-  return Buffer.from(JSON.stringify({
-    token,
-    created: timestamp,
-    expires: timestamp + SESSION_DURATION
-  })).toString('base64');
-}
-
-/**
- * Validate session token
- */
-export function validateSessionToken(token: string): boolean {
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    const now = Date.now();
-
-    // Check if token is expired
-    if (now > decoded.expires) {
-      return false;
-    }
-
-    return true;
-  } catch {
+  if (!expectedUsername || !expectedPassword) {
     return false;
   }
+
+  // Evaluate both so timing doesn't reveal which one was wrong
+  const usernameMatches = safeEqual(username, expectedUsername);
+  const passwordMatches = safeEqual(password, expectedPassword);
+  return usernameMatches && passwordMatches;
+}
+
+/**
+ * Create a signed admin session token
+ */
+export function createSessionToken(username: string): Promise<string> {
+  return signSession({ role: 'admin', name: username });
+}
+
+/**
+ * Validate an admin session token (signature, expiry and admin role)
+ */
+export async function validateSessionToken(token: string): Promise<boolean> {
+  const session = await verifySession(token);
+  return session?.role === 'admin';
 }
 
 /**
@@ -56,13 +59,7 @@ export function validateSessionToken(token: string): boolean {
  */
 export async function setSessionCookie(token: string) {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: SESSION_DURATION / 1000, // Convert to seconds
-    path: '/',
-  });
+  cookieStore.set(ADMIN_SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);
 }
 
 /**
@@ -70,17 +67,10 @@ export async function setSessionCookie(token: string) {
  */
 export async function getSessionCookie(): Promise<string | undefined> {
   try {
-    console.log('[getSessionCookie] Accessing cookies...');
     const cookieStore = await cookies();
-    console.log('[getSessionCookie] Cookie store obtained');
-
-    const cookie = cookieStore.get(SESSION_COOKIE_NAME);
-    console.log('[getSessionCookie] Cookie value:', cookie ? 'exists' : 'not found');
-
-    return cookie?.value;
+    return cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
   } catch (error) {
     console.error('[getSessionCookie] Error accessing cookies:', error);
-    // Return undefined instead of throwing
     return undefined;
   }
 }
@@ -90,7 +80,7 @@ export async function getSessionCookie(): Promise<string | undefined> {
  */
 export async function clearSessionCookie() {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  cookieStore.delete(ADMIN_SESSION_COOKIE);
 }
 
 /**
@@ -98,22 +88,15 @@ export async function clearSessionCookie() {
  */
 export async function isAuthenticated(): Promise<boolean> {
   try {
-    console.log('[isAuthenticated] Getting session cookie...');
     const token = await getSessionCookie();
-
-    console.log('[isAuthenticated] Token found:', !!token);
 
     if (!token) {
       return false;
     }
 
-    const isValid = validateSessionToken(token);
-    console.log('[isAuthenticated] Token valid:', isValid);
-
-    return isValid;
+    return await validateSessionToken(token);
   } catch (error) {
     console.error('[isAuthenticated] Error:', error);
-    // Return false instead of throwing - graceful degradation
     return false;
   }
 }

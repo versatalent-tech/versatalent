@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { ShareButtons } from '@/components/ui/ShareButtons';
+import { sanitizeHtml } from '@/lib/utils/sanitize-html';
 
 type BlogPost = {
   id: string;
@@ -82,7 +83,7 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
       );
     }

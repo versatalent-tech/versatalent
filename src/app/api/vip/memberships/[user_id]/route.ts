@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getVIPMembershipByUserId, updateVIPMembership } from '@/lib/db/repositories/vip-memberships';
 import { updateUserNFCCardsMetadata } from '@/lib/db/repositories/nfc-cards';
 import type { UpdateVIPMembershipRequest } from '@/lib/db/types';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET VIP membership by user_id
 export async function GET(
@@ -34,6 +35,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ user_id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { user_id } = await params;
     const data: UpdateVIPMembershipRequest = await request.json();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, updateUser, deleteUser } from '@/lib/db/repositories/users';
+import { verifyStaffAuth, withAdminAuth } from '@/lib/middleware/auth';
 
 // GET user by ID
 export async function GET(
@@ -15,6 +16,18 @@ export async function GET(
         { error: 'User not found' },
         { status: 404 }
       );
+    }
+
+    // Public VIP/artist pages use this endpoint, so anonymous callers only
+    // get public profile fields. Staff and admins get the full record.
+    if (!(await verifyStaffAuth())) {
+      return NextResponse.json({
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        avatar_url: user.avatar_url,
+        talent_id: user.talent_id,
+      });
     }
 
     // Remove sensitive data
@@ -39,13 +52,13 @@ export async function GET(
   }
 }
 
-// PUT update user
-export async function PUT(
+// PUT update user (admin only)
+export const PUT = withAdminAuth(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context?: { params: Promise<{ id: string }> }
+) => {
   try {
-    const { id } = await params;
+    const { id } = await context!.params;
     const data = await request.json();
 
     const user = await updateUser(id, data);
@@ -78,15 +91,15 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
-// DELETE user
-export async function DELETE(
+// DELETE user (admin only)
+export const DELETE = withAdminAuth(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context?: { params: Promise<{ id: string }> }
+) => {
   try {
-    const { id } = await params;
+    const { id } = await context!.params;
     const success = await deleteUser(id);
 
     if (!success) {
@@ -104,4 +117,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

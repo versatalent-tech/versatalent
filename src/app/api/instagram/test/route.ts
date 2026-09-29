@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 interface InstagramOEmbedResponse {
   version: string;
@@ -19,6 +20,9 @@ interface InstagramOEmbedResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { postUrl } = await request.json();
 

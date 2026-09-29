@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { STAFF_SESSION_COOKIE, verifySession } from '@/lib/auth/session';
 
 /**
  * Staff Auth Check API
@@ -8,7 +9,7 @@ import { cookies } from 'next/headers';
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('staff_session');
+    const sessionCookie = cookieStore.get(STAFF_SESSION_COOKIE);
 
     if (!sessionCookie) {
       return NextResponse.json(
@@ -17,46 +18,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate session token
-    try {
-      const decoded = JSON.parse(Buffer.from(sessionCookie.value, 'base64').toString());
-      const now = Date.now();
+    // Validate signature, expiry and role
+    const session = await verifySession(sessionCookie.value);
 
-      // Check if token is expired
-      if (now > decoded.expires) {
-        cookieStore.delete('staff_session');
-        return NextResponse.json(
-          { authenticated: false },
-          { status: 401 }
-        );
-      }
-
-      // Verify role
-      if (decoded.role !== 'staff' && decoded.role !== 'admin') {
-        cookieStore.delete('staff_session');
-        return NextResponse.json(
-          { authenticated: false },
-          { status: 403 }
-        );
-      }
-
-      return NextResponse.json({
-        authenticated: true,
-        user: {
-          id: decoded.userId,
-          name: decoded.name,
-          email: decoded.email,
-          role: decoded.role,
-        },
-      });
-
-    } catch {
-      cookieStore.delete('staff_session');
+    if (!session) {
+      cookieStore.delete(STAFF_SESSION_COOKIE);
       return NextResponse.json(
         { authenticated: false },
         { status: 401 }
       );
     }
+
+    return NextResponse.json({
+      authenticated: true,
+      user: {
+        id: session.userId,
+        name: session.name,
+        email: session.email,
+        role: session.role,
+      },
+    });
 
   } catch (error) {
     console.error('Auth check error:', error);

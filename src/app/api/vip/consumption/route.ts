@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createVIPConsumption, getAllVIPConsumptions } from '@/lib/db/repositories/vip-consumptions';
 import { processConsumption } from '@/lib/services/vip-points-service';
 import type { CreateVIPConsumptionRequest } from '@/lib/db/types';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // GET all consumptions (admin)
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('user_id');
@@ -24,6 +28,9 @@ export async function GET(request: NextRequest) {
 
 // POST create new consumption and award points
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data: CreateVIPConsumptionRequest = await request.json();
 

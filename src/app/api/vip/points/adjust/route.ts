@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adjustPointsManually } from '@/lib/services/vip-points-service';
 import type { ManualPointsAdjustmentRequest } from '@/lib/db/types';
+import { requireAdmin } from '@/lib/middleware/auth';
 
 // POST manual points adjustment (admin only)
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const data: ManualPointsAdjustmentRequest = await request.json();
 

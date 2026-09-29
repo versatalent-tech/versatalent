@@ -1,14 +1,16 @@
 import { NextRequest } from 'next/server';
 import { getAllUsers, getUserByTalentId } from '@/lib/db/repositories/users';
 import { successResponse, ApiErrors, logApiError } from '@/lib/utils/api-response';
+import { withAdminAuth } from '@/lib/middleware/auth';
 
 /**
  * GET /api/users
  * Fetch all users or filter by talent_id
  * Query params:
  * - talentId: Filter by talent ID (optional)
+ * Admin only.
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminAuth(async (request: NextRequest) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const talentId = searchParams.get('talentId');
@@ -37,4 +39,4 @@ export async function GET(request: NextRequest) {
     logApiError('/api/users', error, { query: request.nextUrl.search });
     return ApiErrors.ServerError('Failed to fetch users');
   }
-}
+});

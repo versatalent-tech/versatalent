@@ -25,7 +25,7 @@ import {
 interface VIPUser {
   id: string;
   name: string;
-  email: string;
+  email?: string; // only returned to logged-in staff/admins
   role: string;
   avatar_url?: string;
   created_at: string;
@@ -271,7 +271,7 @@ export default function VIPPassPage() {
                   <Award className="h-16 w-16 text-gold" />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">{vipUser.name}</h1>
-                <p className="text-gray-300">{vipUser.email}</p>
+                {vipUser.email && <p className="text-gray-300">{vipUser.email}</p>}
               </div>
 
               {/* Points Summary */}
