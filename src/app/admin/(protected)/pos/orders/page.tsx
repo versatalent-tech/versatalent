@@ -15,6 +15,7 @@ import { ShoppingCart, User, Calendar, CreditCard } from "lucide-react";
 import type { POSOrder, OrderStatus } from "@/lib/db/types";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { formatCurrency } from "@/lib/utils/formatting";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<POSOrder[]>([]);
@@ -195,7 +196,7 @@ export default function AdminOrdersPage() {
 
                       <div className="text-right">
                         <p className="text-2xl font-bold text-gold">
-                          €{(order.total_cents / 100).toFixed(2)}
+                          {formatCurrency(order.total_cents, order.currency)}
                         </p>
                         <p className="text-xs text-gray-500">{order.currency}</p>
                       </div>

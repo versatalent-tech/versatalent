@@ -25,6 +25,7 @@ import { Plus, Edit, Trash2, Save, X, Eye, EyeOff } from "lucide-react";
 import type { Product } from "@/lib/db/types";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -304,7 +305,7 @@ export default function AdminProductsPage() {
 
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-lg font-bold text-gold">
-                        €{(product.price_cents / 100).toFixed(2)}
+                        {formatCurrency(product.price_cents, product.currency || POS_CURRENCY)}
                       </span>
                       <span className="text-sm text-gray-600">
                         Stock: {product.stock_quantity}
@@ -383,7 +384,7 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Price (€) *</label>
+                <label className="text-sm font-medium mb-2 block">Price (£) *</label>
                 <Input
                   type="number"
                   step="0.01"
@@ -463,7 +464,7 @@ export default function AdminProductsPage() {
               <div className="bg-gray-50 rounded-lg p-4 my-4">
                 <p className="font-semibold">{selectedProduct.name}</p>
                 <p className="text-sm text-gray-600">
-                  €{(selectedProduct.price_cents / 100).toFixed(2)}
+                  {formatCurrency(selectedProduct.price_cents, selectedProduct.currency || POS_CURRENCY)}
                 </p>
               </div>
             )}

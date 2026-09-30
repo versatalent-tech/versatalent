@@ -25,6 +25,7 @@ import {
 import type { Product } from "@/lib/db/types";
 import { NFCReaderButton } from "@/components/pos/NFCReader";
 import { StripeCheckout } from "@/components/pos/StripeCheckout";
+import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
 interface CartItem {
   product: Product;
@@ -400,7 +401,7 @@ function StaffPOSContent() {
                       <CardContent>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-lg font-bold text-gold">
-                            €{(product.price_cents / 100).toFixed(2)}
+                            {formatCurrency(product.price_cents)}
                           </span>
                         </div>
 
@@ -485,7 +486,7 @@ function StaffPOSContent() {
                           <div className="flex-1">
                             <p className="font-semibold text-sm">{item.product.name}</p>
                             <p className="text-xs text-gray-600">
-                              €{(item.product.price_cents / 100).toFixed(2)} each
+                              {formatCurrency(item.product.price_cents)} each
                             </p>
                           </div>
                           <Button
@@ -523,7 +524,7 @@ function StaffPOSContent() {
                             </Button>
                           </div>
                           <span className="font-bold">
-                            €{((item.product.price_cents * item.quantity) / 100).toFixed(2)}
+                            {formatCurrency((item.product.price_cents * item.quantity))}
                           </span>
                         </div>
                       </div>
@@ -537,7 +538,7 @@ function StaffPOSContent() {
                     <div className="border-t pt-4 mb-4">
                       <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total:</span>
-                        <span className="text-gold">€{(getTotal() / 100).toFixed(2)}</span>
+                        <span className="text-gold">{formatCurrency(getTotal())}</span>
                       </div>
                     </div>
 
@@ -572,7 +573,7 @@ function StaffPOSContent() {
         <StripeCheckout
           orderId={currentOrderId}
           amount={getTotal()}
-          currency="EUR"
+          currency={POS_CURRENCY}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
         />

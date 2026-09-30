@@ -3,6 +3,7 @@ import { createVIPConsumption, getAllVIPConsumptions } from '@/lib/db/repositori
 import { processConsumption } from '@/lib/services/vip-points-service';
 import type { CreateVIPConsumptionRequest } from '@/lib/db/types';
 import { requireAdmin } from '@/lib/middleware/auth';
+import { POS_CURRENCY } from '@/lib/utils/formatting';
 
 // GET all consumptions (admin)
 export async function GET(request: NextRequest) {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
     const pointsResult = await processConsumption(
       data.user_id,
       data.amount,
-      data.currency || 'EUR',
+      data.currency || POS_CURRENCY,
       consumption.id
     );
 

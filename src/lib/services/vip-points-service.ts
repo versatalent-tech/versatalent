@@ -7,6 +7,7 @@ import {
 import { createPointsLogEntry } from '../db/repositories/vip-points-log';
 import { updateUserNFCCardsMetadata } from '../db/repositories/nfc-cards';
 import { sql } from '../db/client';
+import { POS_CURRENCY } from '../utils/formatting';
 import type { PointsSource, VIPTier } from '../db/types';
 // Default tier thresholds (used as fallback)
 export const DEFAULT_TIER_THRESHOLDS = {
@@ -258,7 +259,7 @@ export async function processEventCheckin(
 export async function processConsumption(
   userId: string,
   amount: number,
-  currency: string = 'EUR',
+  currency: string = POS_CURRENCY,
   consumptionId?: string
 ): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
   // Get point rule for consumption

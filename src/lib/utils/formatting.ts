@@ -5,6 +5,9 @@
 
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 
+/** Currency for all new POS sales, products and VIP spend */
+export const POS_CURRENCY = 'GBP';
+
 /**
  * Format currency with symbol
  */

@@ -1,5 +1,6 @@
 import { sql, query } from '../client';
 import type { Product, CreateProductRequest, UpdateProductRequest } from '../types';
+import { POS_CURRENCY } from '@/lib/utils/formatting';
 
 /**
  * Get all active products
@@ -71,7 +72,7 @@ export async function createProduct(data: CreateProductRequest): Promise<Product
     name,
     description,
     price_cents,
-    currency = 'EUR',
+    currency = POS_CURRENCY,
     category,
     image_url,
     is_active = true,
