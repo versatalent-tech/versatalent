@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import ClientBody from "./ClientBody";
 
 const geistSans = Inter({
   variable: "--font-geist-sans",
@@ -36,8 +35,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>
-        <ClientBody>{children}</ClientBody>
+      {/* suppressHydrationWarning: browser extensions often add attributes to <body> */}
+      <body className="antialiased" suppressHydrationWarning>
+        {children}
       </body>
     </html>
   );
