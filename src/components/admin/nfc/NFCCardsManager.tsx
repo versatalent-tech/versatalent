@@ -22,6 +22,9 @@ import {
 import { Plus, Edit, Trash2, CreditCard, Power, PowerOff, Ban, CheckCircle, UserX, RefreshCw, Nfc } from "lucide-react";
 import { NFCReaderStatusIndicator } from "./NFCReaderStatus";
 
+// Radix Select rejects an empty-string item value, so "no user" uses a sentinel
+const UNASSIGNED = "__unassigned__";
+
 interface NFCCard {
   id: string;
   card_uid: string;
@@ -94,6 +97,12 @@ export function NFCCardsManager() {
       setLoading(true);
       const response = await fetch('/api/nfc/cards');
       const data = await response.json();
+      // An error response (e.g. expired session) is an object, not a list
+      if (!response.ok || !Array.isArray(data)) {
+        setCards([]);
+        setError(response.status === 401 ? 'Your session has expired. Please log in again.' : 'Failed to load NFC cards');
+        return;
+      }
       // Ensure status field exists (backwards compatibility)
       const cardsWithStatus = data.map((card: NFCCard) => ({
         ...card,
@@ -112,7 +121,7 @@ export function NFCCardsManager() {
     try {
       const response = await fetch('/api/nfc/users');
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching users:', err);
     }
@@ -571,14 +580,14 @@ export function NFCCardsManager() {
             <div>
               <label className="text-sm font-medium mb-2 block">Assign to User</label>
               <Select
-                value={formData.user_id}
-                onValueChange={(value) => setFormData({ ...formData, user_id: value })}
+                value={formData.user_id || UNASSIGNED}
+                onValueChange={(value) => setFormData({ ...formData, user_id: value === UNASSIGNED ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a user (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No User (Unassigned)</SelectItem>
+                  <SelectItem value={UNASSIGNED}>No User (Unassigned)</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name} ({user.email})
@@ -668,14 +677,14 @@ export function NFCCardsManager() {
             <div>
               <label className="text-sm font-medium mb-2 block">Assigned User</label>
               <Select
-                value={formData.user_id}
-                onValueChange={(value) => setFormData({ ...formData, user_id: value })}
+                value={formData.user_id || UNASSIGNED}
+                onValueChange={(value) => setFormData({ ...formData, user_id: value === UNASSIGNED ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a user" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No User (Unassigned)</SelectItem>
+                  <SelectItem value={UNASSIGNED}>No User (Unassigned)</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name} ({user.email})

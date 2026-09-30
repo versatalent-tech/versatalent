@@ -56,7 +56,7 @@ export function CheckInsLog() {
       const data = await response.json();
       // An error response (e.g. expired session) is an object, not a list
       setCheckins(Array.isArray(data) ? data : []);
-      setFilteredCheckins(data);
+      setFilteredCheckins(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching check-ins:', error);
     } finally {

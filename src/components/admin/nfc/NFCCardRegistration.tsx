@@ -14,6 +14,9 @@ import {
 import { Nfc, User, CreditCard, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { NFCReaderStatusIndicator } from "./NFCReaderStatus";
 
+// Radix Select rejects an empty-string item value, so "no user" uses a sentinel
+const UNASSIGNED = "__unassigned__";
+
 interface NFCUser {
   id: string;
   name: string;
@@ -69,7 +72,7 @@ export function NFCCardRegistration() {
       const response = await fetch('/api/nfc/users');
       if (response.ok) {
         const data = await response.json();
-        setUsers(data);
+        setUsers(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -296,14 +299,14 @@ export function NFCCardRegistration() {
                 Assign to User (Optional)
               </label>
               <Select
-                value={formData.user_id}
-                onValueChange={(value) => setFormData({ ...formData, user_id: value })}
+                value={formData.user_id || UNASSIGNED}
+                onValueChange={(value) => setFormData({ ...formData, user_id: value === UNASSIGNED ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Leave unassigned" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Leave Unassigned</SelectItem>
+                  <SelectItem value={UNASSIGNED}>Leave Unassigned</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
