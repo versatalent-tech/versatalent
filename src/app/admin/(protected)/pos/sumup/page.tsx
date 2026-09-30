@@ -28,6 +28,8 @@ const SETTINGS: { key: keyof Config; env: string; label: string }[] = [
 export default function AdminSumUpPage() {
   const [config, setConfig] = useState<Config | null>(null);
   const [readers, setReaders] = useState<Reader[]>([]);
+  const [hints, setHints] = useState<string[]>([]);
+  const [connectionError, setConnectionError] = useState<{ error: string; help?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -45,7 +47,9 @@ export default function AdminSumUpPage() {
         return;
       }
       setConfig(data.config);
+      setHints(data.hints || []);
       setReaders(data.readers || []);
+      setConnectionError(data.error ? { error: data.error, help: data.help } : null);
     } finally {
       setLoading(false);
     }
@@ -145,6 +149,24 @@ export default function AdminSumUpPage() {
                   ))}
                 </ul>
               )}
+              {hints.length > 0 && (
+                <ul className="mt-4 space-y-1 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                  {hints.map((hint) => (
+                    <li key={hint}>{hint}</li>
+                  ))}
+                </ul>
+              )}
+              {connectionError && (
+                <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <p className="font-medium">{connectionError.error}</p>
+                  {connectionError.help && <p className="mt-1">{connectionError.help}</p>}
+                </div>
+              )}
+              {configured && !connectionError && (
+                <p className="mt-4 flex items-center gap-2 text-sm text-green-700">
+                  <CheckCircle2 className="h-4 w-4" /> Connected to SumUp
+                </p>
+              )}
             </div>
 
             {/* Readers */}
@@ -152,6 +174,8 @@ export default function AdminSumUpPage() {
               <h2 className="text-xl font-semibold mb-4">2. Card readers</h2>
               {!configured ? (
                 <p className="text-sm text-gray-600">Add the SumUp settings first.</p>
+              ) : connectionError ? (
+                <p className="text-sm text-gray-600">Fix the SumUp connection above first.</p>
               ) : readers.length === 0 ? (
                 <p className="text-sm text-gray-600">No readers paired yet.</p>
               ) : (
@@ -178,7 +202,7 @@ export default function AdminSumUpPage() {
             </div>
 
             {/* Pair */}
-            {configured && (
+            {configured && !connectionError && (
               <div className="bg-white rounded-lg border p-6">
                 <h2 className="text-xl font-semibold mb-1">3. Pair a Solo reader</h2>
                 <ol className="list-decimal pl-5 text-sm text-gray-600 space-y-1 mb-4">

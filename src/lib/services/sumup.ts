@@ -40,12 +40,23 @@ export class SumUpApiError extends Error {
   }
 }
 
+/**
+ * Read a setting, ignoring stray whitespace or quotes that often come along
+ * when pasting keys into Netlify.
+ */
+function readSetting(name: string): string | undefined {
+  const raw = process.env[name];
+  if (!raw) return undefined;
+  const cleaned = raw.trim().replace(/^["']+|["']+$/g, '').trim();
+  return cleaned || undefined;
+}
+
 function getConfig(): SumUpConfig {
   const values = {
-    SUMUP_API_KEY: process.env.SUMUP_API_KEY,
-    SUMUP_MERCHANT_CODE: process.env.SUMUP_MERCHANT_CODE,
-    SUMUP_AFFILIATE_KEY: process.env.SUMUP_AFFILIATE_KEY,
-    SUMUP_AFFILIATE_APP_ID: process.env.SUMUP_AFFILIATE_APP_ID,
+    SUMUP_API_KEY: readSetting('SUMUP_API_KEY'),
+    SUMUP_MERCHANT_CODE: readSetting('SUMUP_MERCHANT_CODE'),
+    SUMUP_AFFILIATE_KEY: readSetting('SUMUP_AFFILIATE_KEY'),
+    SUMUP_AFFILIATE_APP_ID: readSetting('SUMUP_AFFILIATE_APP_ID'),
   };
   const missing = Object.entries(values).filter(([, v]) => !v).map(([k]) => k);
   if (missing.length > 0) {
@@ -62,11 +73,37 @@ function getConfig(): SumUpConfig {
 /** Which settings are present, for the admin setup page (never the values) */
 export function getSumUpConfigStatus() {
   return {
-    apiKey: !!process.env.SUMUP_API_KEY,
-    merchantCode: !!process.env.SUMUP_MERCHANT_CODE,
-    affiliateKey: !!process.env.SUMUP_AFFILIATE_KEY,
-    affiliateAppId: !!process.env.SUMUP_AFFILIATE_APP_ID,
+    apiKey: !!readSetting('SUMUP_API_KEY'),
+    merchantCode: !!readSetting('SUMUP_MERCHANT_CODE'),
+    affiliateKey: !!readSetting('SUMUP_AFFILIATE_KEY'),
+    affiliateAppId: !!readSetting('SUMUP_AFFILIATE_APP_ID'),
   };
+}
+
+/**
+ * Hints for fixing the settings, for the admin setup page. Only reveals the
+ * key's type prefix, never the key itself.
+ */
+export function getSumUpConfigHints(): string[] {
+  const hints: string[] = [];
+  const rawKey = process.env.SUMUP_API_KEY;
+  const key = readSetting('SUMUP_API_KEY');
+
+  if (rawKey && key && rawKey !== key) {
+    hints.push('SUMUP_API_KEY had spaces or quotes around it. They are ignored, but it is worth removing them in Netlify.');
+  }
+  if (key) {
+    if (key.startsWith('sup_pk_')) {
+      hints.push('SUMUP_API_KEY is a public key (starts with sup_pk_). Use the secret key, which starts with sup_sk_.');
+    } else if (!key.startsWith('sup_sk_')) {
+      hints.push('SUMUP_API_KEY does not look like a SumUp secret key (these start with sup_sk_). Check you copied the right value.');
+    }
+  }
+  const merchantCode = readSetting('SUMUP_MERCHANT_CODE');
+  if (merchantCode && !/^[A-Z0-9]{6,12}$/.test(merchantCode)) {
+    hints.push('SUMUP_MERCHANT_CODE should be a short code of capital letters and numbers, e.g. MC0X0ABC.');
+  }
+  return hints;
 }
 
 async function sumupRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
