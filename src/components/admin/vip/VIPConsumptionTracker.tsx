@@ -79,7 +79,7 @@ export function VIPConsumptionTracker() {
     try {
       const response = await fetch('/api/nfc/users?role=vip');
       const data = await response.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
