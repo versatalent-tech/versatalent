@@ -168,7 +168,7 @@ export function FAQ() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="/contact.html"
+                href="/contact"
                 className="inline-block bg-gold hover:bg-gold/90 text-white px-8 py-3 rounded-lg font-semibold transition-all"
               >
                 Contact Us

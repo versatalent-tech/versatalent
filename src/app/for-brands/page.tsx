@@ -43,7 +43,7 @@ export default function ForBrandsPage() {
               </div>
               <div className="mt-10">
                 <Button asChild className="bg-gold hover:bg-gold/80 text-black px-8 py-6 text-lg">
-                  <Link href="/contact.html">
+                  <Link href="/contact">
                     Let's Collaborate
                   </Link>
                 </Button>
@@ -188,7 +188,7 @@ export default function ForBrandsPage() {
                 Whether you need actors for a commercial, models for a campaign, chefs for an event, or athletes for brand representation, we have the talent for you.
               </p>
               <Button asChild className="bg-gold hover:bg-gold/80 text-black px-8 py-6 text-lg">
-                <Link href="/contact.html">
+                <Link href="/contact">
                   Contact Us Today
                 </Link>
               </Button>

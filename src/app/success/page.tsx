@@ -27,7 +27,7 @@ export default function SuccessPage() {
               asChild
               className="bg-gold hover:bg-gold/90 text-white"
             >
-              <Link href="/contact.html">Send Another Message</Link>
+              <Link href="/contact">Send Another Message</Link>
             </Button>
             <Button
               asChild

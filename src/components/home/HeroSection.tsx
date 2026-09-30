@@ -104,7 +104,7 @@ export function HeroSection() {
               <Link href="/talents">Discover Our Talent</Link>
             </Button>
             <Button asChild variant="outline" className="border-gold text-gold hover:bg-gold/10">
-              <Link href="/join.html">Join VersaTalent</Link>
+              <Link href="/join">Join VersaTalent</Link>
             </Button>
           </div>
         </div>

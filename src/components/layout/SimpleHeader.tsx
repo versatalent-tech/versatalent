@@ -11,10 +11,10 @@ const navigation = [
   { name: "About Us", href: "/about" },
   { name: "Talent Directory", href: "/talents" },
   { name: "Events", href: "/events" },
-  { name: "Join Us", href: "/join.html" },
+  { name: "Join Us", href: "/join" },
   { name: "For Brands", href: "/for-brands" },
   { name: "Blog", href: "/blog" },
-  { name: "Contact", href: "/contact.html" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export function SimpleHeader() {
@@ -83,7 +83,7 @@ export function SimpleHeader() {
             variant="outline"
             className="border-gold text-gold hover:bg-gold hover:text-background"
           >
-            <Link href="/contact.html">Get in touch</Link>
+            <Link href="/contact">Get in touch</Link>
           </Button>
         </div>
       </nav>
@@ -104,7 +104,7 @@ export function SimpleHeader() {
             ))}
             <div className="pt-4 border-t border-gray-200">
               <Link
-                href="/contact.html"
+                href="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 text-base font-semibold text-gold hover:bg-gold-10 rounded-lg"
               >

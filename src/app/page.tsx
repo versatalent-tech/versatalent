@@ -51,7 +51,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
               <a
-                href="/join.html"
+                href="/join"
                 className="inline-block bg-gold hover:bg-gold/90 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 shadow-lg"
               >
                 Join as Talent
@@ -295,13 +295,13 @@ export default function Home() {
               <p className="text-gray-600 mb-6">Our team is here to help. Get in touch and we'll respond within 48 hours.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/contact.html"
+                  href="/contact"
                   className="inline-block bg-gold hover:bg-gold/90 text-white px-8 py-3 rounded-lg font-semibold transition-all"
                 >
                   Contact Us
                 </Link>
                 <Link
-                  href="/join.html"
+                  href="/join"
                   className="inline-block border-2 border-gold text-gold px-8 py-3 rounded-lg font-semibold hover:bg-gold hover:text-white transition-all"
                 >
                   Apply Now
@@ -324,13 +324,13 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="/contact.html"
+              href="/contact"
               className="inline-block bg-white text-gold px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all"
             >
               Contact Us
             </a>
             <a
-              href="/join.html"
+              href="/join"
               className="inline-block border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-gold transition-all"
             >
               Apply Now

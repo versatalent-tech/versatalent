@@ -242,7 +242,7 @@ export function TalentProfile({ talent }: TalentProfileProps) {
               <div
               >
                 <Button asChild className="bg-gold hover:bg-gold-80 text-white w-full">
-                  <Link href="/contact.html">
+                  <Link href="/contact">
                     Get in Touch
                   </Link>
                 </Button>
