@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { getAllTalents } from '@/lib/db/repositories/talents';
 import { getAllEvents } from '@/lib/db/repositories/events';
+import { getAllBlogPosts } from '@/lib/db/repositories/blogs';
+import { blogPostHref } from '@/lib/blog';
 import { SITE_URL } from '@/lib/site-url';
 
 // Regenerate at most once an hour
@@ -51,6 +53,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch (error) {
     console.error('[sitemap] Failed to load events:', error);
+  }
+
+  try {
+    const posts = await getAllBlogPosts({ publishedOnly: true });
+    for (const post of posts) {
+      entries.push({
+        url: `${SITE_URL}${blogPostHref(post)}`,
+        lastModified: post.updated_at,
+        changeFrequency: 'monthly',
+        priority: 0.5,
+      });
+    }
+  } catch (error) {
+    console.error('[sitemap] Failed to load blog posts:', error);
   }
 
   return entries;

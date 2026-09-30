@@ -1,5 +1,4 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,75 +6,33 @@ import { Badge } from "@/components/ui/badge";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { Mail } from "lucide-react";
+import { getAllBlogPosts } from "@/lib/db/repositories/blogs";
+import { blogPostHref, formatPostDate } from "@/lib/blog";
+import type { BlogPost } from "@/lib/db/types";
 
-// Sample blog posts data
-const blogPosts = [
-  {
-    id: "12",
-    title: "João Rodolfo Returns with Re-Release of Impactful Album 'Pedofilia'",
-    excerpt: "Singer João Rodolfo is back with a bold re-release of his powerful album 'Pedofilia', available August 1st on all platforms.",
-    date: "July 4, 2025",
-    author: "VersaTalent Team",
-    category: "Music",
-    image: "/joaorodolfo/Joao_Rodolfo_-_Album_Cover.png",
-  },
-  {
-    id: "11",
-    title: "Spotlight on Jessica Dias: From Runway to Content Creation",
-    excerpt: "Discover Jessica Dias' journey as a rising model and creator — from Uniquee Fashion Show to the 2025 Graduate Showcase.",
-    date: "June 28, 2025",
-    author: "VersaTalent Team",
-    category: "Modeling",
-    image: "/jessicadias/IMG_9412-altered.jpg",
-  },
-  {
-    id: "10",
-    title: "Antonio Monteiro: Resilience Beyond the Spot-Kick",
-    excerpt: "After Shirebrook Town’s penalty heartbreak, our versatile midfielder reflects on lessons learned and goals for next season.",
-    date: "June 6, 2025",
-    author: "VersaTalent Team",
-    category: "Sports",
-    image: "/antoniomonteiro/Tonecas_1.jpg",
-  },
-  {
-    id: "9",
-    title: "Jessica Dias: From Uniquee Runway to Graduate Fashion Showcase Star",
-    excerpt: "VersaTalent’s rising model discusses her runway wins, creative ambitions, and what’s next after landing a spot in the 2025 Graduate Fashion Comms Showcase.",
-    date: "June 6, 2025",
-    author: "VersaTalent Team",
-    category: "Modeling",
-    image: "/jessicadias/IMG_9193-altered.jpg",
-  },
-  {
-    id: "8",
-    title: "Deejay WG’s Travel Edition: A Genre-Blending Journey Around the Globe",
-    excerpt: "From Afrobeat sunsets to Amapiano nights, explore WG’s new mix series proving no dancefloor is too far.",
-    date: "June 6, 2025",
-    author: "VersaTalent Team",
-    category: "Music",
-    image: "/deejaywg/IMG_8999.jpg",
-  },
-  {
-    id: "7",
-    title: "João Rodolfo: From Gumbé Roots to Global Goals – Exclusive Interview",
-    excerpt: "In an intimate chat, João shares his journey from Guinea-Bissau to the UK, the cultural heartbeat behind his music, and where he hopes it takes him next.",
-    date: "June 5, 2025",
-    author: "VersaTalent Team",
-    category: "Music",
-    image: "/joaorodolfo/JROD_2.jpg",
-  },
-  {
-    id: "1",
-    title: "Behind the Scenes: Fashion Week with Our Models",
-    excerpt: "Go backstage with VersaTalent's models as they navigate the glamorous chaos of New York Fashion Week.",
-    date: "April 12, 2025",
-    author: "Emma Richards",
-    category: "Modeling",
-    image: "https://images.unsplash.com/photo-1520228504846-3762f4240df8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-  },
-];
+// Newly published posts show up within a minute
+export const revalidate = 60;
 
-export default function BlogPage() {
+export const metadata: Metadata = {
+  title: "Blog | VersaTalent",
+  description: "Insights, stories, and news from VersaTalent and our talent.",
+};
+
+async function getPublishedPosts(): Promise<BlogPost[]> {
+  try {
+    const posts = await getAllBlogPosts({ publishedOnly: true });
+    // Featured posts first, then newest
+    return [...posts.filter((p) => p.featured), ...posts.filter((p) => !p.featured)];
+  } catch (error) {
+    console.error("[blog] Failed to load posts:", error);
+    return [];
+  }
+}
+
+export default async function BlogPage() {
+  const blogPosts = await getPublishedPosts();
+  const [featuredPost, ...otherPosts] = blogPosts;
+
   return (
     <MainLayout>
       <div className="bg-white py-16 md:py-24">
@@ -91,78 +48,89 @@ export default function BlogPage() {
             </p>
           </div>
 
+          {!featuredPost && (
+            <p className="text-center text-gray-600 mb-16">
+              New posts are on their way. Subscribe below to hear when they&apos;re published.
+            </p>
+          )}
+
           {/* Featured Post */}
-          <div
-            className="mb-16"
-          >
-            <Link href={`/blog/${blogPosts[0].id}`} className="block">
-              <div className="relative rounded-lg overflow-hidden aspect-[16/9] shadow-lg">
-                <Image
-                  src={blogPosts[0].image}
-                  alt={blogPosts[0].title}
-                  fill
-                  className="object-cover transition-transform duration-500 hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-6 md:p-8">
-                  <Badge className="mb-4 bg-gold text-white border-none">
-                    {blogPosts[0].category}
-                  </Badge>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                    {blogPosts[0].title}
-                  </h2>
-                  <p className="text-gray-200 mb-4 max-w-3xl">
-                    {blogPosts[0].excerpt}
-                  </p>
-                  <div className="flex items-center text-sm text-gray-300">
-                    <span>{blogPosts[0].date}</span>
-                    <span className="mx-2">•</span>
-                    <span>By {blogPosts[0].author}</span>
+          {featuredPost && (
+            <div className="mb-16">
+              <Link href={blogPostHref(featuredPost)} className="block">
+                <div className="relative rounded-lg overflow-hidden aspect-[16/9] shadow-lg bg-gradient-to-br from-black via-gray-900 to-black">
+                  {featuredPost.image_url && (
+                    <Image
+                      src={featuredPost.image_url}
+                      alt={featuredPost.title}
+                      fill
+                      priority
+                      className="object-cover"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+                    {featuredPost.category && (
+                      <Badge className="mb-3 bg-gold text-white border-none">{featuredPost.category}</Badge>
+                    )}
+                    <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">{featuredPost.title}</h2>
+                    {featuredPost.excerpt && (
+                      <p className="text-gray-200 mb-4 max-w-3xl line-clamp-3">{featuredPost.excerpt}</p>
+                    )}
+                    <div className="flex items-center text-sm text-gray-300">
+                      <span>{formatPostDate(featuredPost)}</span>
+                      <span className="mx-2">•</span>
+                      <span>By {featuredPost.author}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          </div>
+              </Link>
+            </div>
+          )}
 
           {/* Blog Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.slice(1).map((post, index) => (
-              <div
-                key={post.id}
-              >
-                <Link href={`/blog/${post.id}`} className="block h-full">
+          {otherPosts.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {otherPosts.map((post) => (
+                <Link key={post.id} href={blogPostHref(post)} className="block h-full">
                   <Card className="overflow-hidden bg-white border-gray-200 h-full hover:border-gold hover:shadow-md transition-all duration-300">
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        fill
-                        className="object-cover"
-                      />
+                    <div className="relative h-48 w-full bg-gradient-to-br from-black via-gray-900 to-black">
+                      {post.image_url && (
+                        <Image
+                          src={post.image_url}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
                     </div>
                     <CardContent className="p-6">
-                      <div className="mb-3">
-                        <Badge variant="outline" className="text-gold border-gold-20">
-                          {post.category}
-                        </Badge>
-                      </div>
+                      {post.category && (
+                        <div className="mb-3">
+                          <Badge variant="outline" className="text-gold border-gold-20">
+                            {post.category}
+                          </Badge>
+                        </div>
+                      )}
                       <h3 className="font-bold text-foreground text-xl mb-2 line-clamp-2">
                         {post.title}
                       </h3>
-                      <p className="text-gray-600 mb-4 line-clamp-3">
-                        {post.excerpt}
-                      </p>
+                      {post.excerpt && (
+                        <p className="text-gray-600 mb-4 line-clamp-3">
+                          {post.excerpt}
+                        </p>
+                      )}
                       <div className="flex items-center text-xs text-gray-500">
-                        <span>{post.date}</span>
+                        <span>{formatPostDate(post)}</span>
                         <span className="mx-2">•</span>
                         <span>By {post.author}</span>
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Newsletter Subscription Section */}
           <div
