@@ -11,10 +11,10 @@ import { withPOSAuth } from '@/lib/auth/pos-auth';
 export const GET = withPOSAuth(async (
   request: NextRequest,
   auth,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const order = await getOrderWithDetails(id);
 
     if (!order) {
@@ -38,10 +38,10 @@ export const GET = withPOSAuth(async (
 export const PUT = withPOSAuth(async (
   request: NextRequest,
   auth,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const { status, stripe_payment_intent_id } = await request.json();
 
     if (!status) {
@@ -87,10 +87,10 @@ export const PUT = withPOSAuth(async (
 export const DELETE = withPOSAuth(async (
   request: NextRequest,
   auth,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const order = await cancelOrder(id);
 
     if (!order) {

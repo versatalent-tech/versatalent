@@ -537,7 +537,7 @@ export function TierBenefitsManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the benefit "{selectedBenefit?.title}".
+              This will permanently delete the benefit &quot;{selectedBenefit?.title}&quot;.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

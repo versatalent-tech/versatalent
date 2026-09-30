@@ -324,9 +324,11 @@ export function generateStaticParams() {
   }));
 }
 
-export default function BlogPostPage({ params }: { params: { id: string } }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   // Find the blog post by ID
-  const post = blogPosts.find((post) => post.id === params.id);
+  const post = blogPosts.find((post) => post.id === id);
 
   // If the post is not found, return 404
   if (!post) {

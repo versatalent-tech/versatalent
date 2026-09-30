@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Extract device and location info from request
     const userAgent = request.headers.get('user-agent') || '';
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : request.ip || '';
+    const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || '';
     const referer = request.headers.get('referer');
 
     // Create analytics event

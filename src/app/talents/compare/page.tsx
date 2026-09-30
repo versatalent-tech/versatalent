@@ -40,17 +40,11 @@ function StatBar({ label, value1, value2, max }: { label: string; value1: number
         <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden flex justify-end">
           <div
             className={`h-full ${winner === 1 ? 'bg-green-500' : 'bg-blue-400'}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${pct1}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </div>
         <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
           <div
             className={`h-full ${winner === 2 ? 'bg-green-500' : 'bg-orange-400'}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${pct2}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </div>
       </div>
@@ -73,9 +67,6 @@ function PlayerCard({
   return (
     <div
       className={`bg-white rounded-xl shadow-lg border-2 ${color} overflow-hidden`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
     >
       <div className="relative h-48 bg-gray-100">
         {imageSrc && (
@@ -204,8 +195,6 @@ export default function ComparePage() {
         <div className="container px-4 mx-auto">
           <div
             className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
           >
             <Badge className="bg-green-500/20 text-green-300 mb-4">
               Sports Comparison Tool
@@ -313,9 +302,6 @@ export default function ComparePage() {
               
                 {player1 && player2 && (
                   <div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
                     className="bg-white rounded-xl shadow-lg p-6 md:p-8"
                   >
                     {/* Header with Score */}

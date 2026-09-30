@@ -90,9 +90,6 @@ export default function DashboardPage() {
           <div className="container mx-auto px-4">
             <div
               className="max-w-md mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
             >
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -220,11 +217,7 @@ export default function DashboardPage() {
 
           {/* Tab Content */}
           {activeTab === 'overview' && (
-            <div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <AnalyticsDashboard
                 talentId={user.talentId}
                 talentName={user.name}
@@ -233,11 +226,7 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'portfolio' && (
-            <div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <Card>
                 <CardHeader>
                   <CardTitle>Portfolio Management</CardTitle>
@@ -260,11 +249,7 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'upload' && (
-            <div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <Card>
                 <CardHeader>
                   <CardTitle>Upload Content</CardTitle>
@@ -287,11 +272,7 @@ export default function DashboardPage() {
           )}
 
           {['profile', 'settings'].includes(activeTab) && (
-            <div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <Card>
                 <CardHeader>
                   <CardTitle>{activeTab === 'profile' ? 'Profile Settings' : 'Account Settings'}</CardTitle>

@@ -6,9 +6,18 @@ import { cn } from "@/lib/utils";
 
 interface ImageSkeletonProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function ImageSkeleton({ className }: ImageSkeletonProps) {
+interface SkeletonGridProps {
+  className?: string;
+  count?: number;
+}
+
+// Fixed heights (not Math.random) so server and client render the same markup
+const MASONRY_HEIGHTS = [260, 340, 220, 380, 300, 240, 360, 280, 320];
+
+export function ImageSkeleton({ className, style }: ImageSkeletonProps) {
   return (
     <div
       className={cn(
@@ -17,15 +26,16 @@ export function ImageSkeleton({ className }: ImageSkeletonProps) {
       )}
       style={{
         animation: "shimmer 1.5s ease-in-out infinite",
+        ...style,
       }}
     />
   );
 }
 
-export function GridSkeleton({ className }: ImageSkeletonProps) {
+export function GridSkeleton({ className, count = 6 }: SkeletonGridProps) {
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6", className)}>
-      {[1, 2, 3, 4, 5, 6].map((i) => (
+      {Array.from({ length: count }, (_, i) => (
         <div key={i} className="space-y-3">
           <ImageSkeleton className="h-64 w-full rounded-lg" />
           <ImageSkeleton className="h-4 w-3/4 rounded" />
@@ -36,14 +46,14 @@ export function GridSkeleton({ className }: ImageSkeletonProps) {
   );
 }
 
-export function MasonrySkeleton({ className }: ImageSkeletonProps) {
+export function MasonrySkeleton({ className, count = 9 }: SkeletonGridProps) {
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4", className)}>
-      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+      {Array.from({ length: count }, (_, i) => (
         <ImageSkeleton
           key={i}
           className="rounded-lg"
-          style={{ height: `${200 + Math.random() * 200}px` }}
+          style={{ height: `${MASONRY_HEIGHTS[i % MASONRY_HEIGHTS.length]}px` }}
         />
       ))}
     </div>

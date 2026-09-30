@@ -131,7 +131,6 @@ export function DynamicInstagramFeed({ className = "" }: DynamicInstagramFeedPro
               <div
                 key={artistKey}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
-                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 {/* Post Header */}
                 <div className="p-4 flex items-center gap-3">

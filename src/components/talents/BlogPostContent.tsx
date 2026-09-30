@@ -51,9 +51,6 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
           sections.push(
             <div
               key={`heading-${i}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 * i }}
             >
               <h2 className="text-2xl font-bold text-foreground mt-8 mb-4 border-b border-gray-200 pb-2">{headingText}</h2>
               <p className="text-gray-600 mb-4">{remaining.replace('</p>', '')}</p>
@@ -65,9 +62,6 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
             <p
               key={`paragraph-${i}`}
               className="text-gray-600 mb-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.05 * i }}
             >
               {paragraph.replace('</p>', '')}
             </p>
@@ -80,9 +74,6 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
         <div
           key="content"
           className="text-gray-600 mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
       );
@@ -106,11 +97,7 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
 
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
           <div className="container mx-auto">
-            <div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div>
               <Badge className="mb-4 bg-gold text-white border-none">
                 {post.category}
               </Badge>
@@ -139,9 +126,6 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
             {/* Author Info */}
             <div
               className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200 shadow-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
             >
               <div className="flex items-center">
                 <div className="relative w-16 h-16 rounded-full overflow-hidden mr-4">
@@ -164,18 +148,12 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
             {relatedPosts.length > 0 && (
               <div
                 className="mb-8"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
               >
                 <h2 className="text-xl font-semibold text-foreground mb-4">Related Articles</h2>
                 <div className="space-y-4">
                   {relatedPosts.map((relatedPost, index) => (
                     <div
                       key={relatedPost.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.1 * (index + 1) }}
                     >
                       <Link href={`/blog/${relatedPost.id}`} className="block">
                         <div className="flex items-start p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm">
@@ -202,9 +180,6 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
             {/* Categories */}
             <div
               className="mb-8"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
             >
               <h2 className="text-xl font-semibold text-foreground mb-4">Categories</h2>
               <div className="flex flex-wrap gap-2">
@@ -236,18 +211,12 @@ export function BlogPostContent({ post, relatedPosts }: BlogPostContentProps) {
             {relatedPosts.length > 0 && (
               <div
                 className="mb-8"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
               >
                 <h2 className="text-xl font-semibold text-foreground mb-4">Related Articles</h2>
                 <div className="space-y-4">
                   {relatedPosts.map((relatedPost, index) => (
                     <div
                       key={relatedPost.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.1 * (index + 1) }}
                     >
                       <Link href={`/blog/${relatedPost.id}`} className="block">
                         <div className="flex items-start p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm">

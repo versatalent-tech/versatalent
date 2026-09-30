@@ -49,8 +49,8 @@ export function NFCReader({ onCustomerLinked, onCancel }: NFCReaderProps) {
       setReading(true);
       setError(null);
 
-      // @ts-ignore - Web NFC API
-      const ndef = new NDEFReader();
+      // Web NFC API (not in TypeScript's DOM types)
+      const ndef = new (window as any).NDEFReader();
       await ndef.scan();
 
       ndef.addEventListener("reading", async ({ serialNumber }: any) => {
@@ -131,7 +131,7 @@ export function NFCReader({ onCustomerLinked, onCancel }: NFCReaderProps) {
             Link Customer via NFC
           </DialogTitle>
           <DialogDescription>
-            Tap the customer's NFC card or enter the card UID manually
+            Tap the customer&apos;s NFC card or enter the card UID manually
           </DialogDescription>
         </DialogHeader>
 

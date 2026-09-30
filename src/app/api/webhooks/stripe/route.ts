@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { updateOrderStatus } from '@/lib/db/repositories/pos-orders';
 import { processPOSOrderForVIP } from '@/lib/services/pos-vip-integration';
+import { STRIPE_API_VERSION } from '@/lib/services/stripe';
 
 // Lazy initialize Stripe (only when needed)
 function getStripe() {
@@ -11,7 +12,7 @@ function getStripe() {
     throw new Error('STRIPE_SECRET_KEY is not configured');
   }
   return new Stripe(secretKey, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: STRIPE_API_VERSION,
   });
 }
 

@@ -662,7 +662,7 @@ export default function AdminBlogsPage() {
                 <ImageUpload
                   value={formData.image_url}
                   onChange={(url) => handleFormChange("image_url", url || "")}
-                  type="blog"
+                  type="event"
                 />
               </div>
 

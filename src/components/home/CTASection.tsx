@@ -89,7 +89,7 @@ export function CTASection() {
             </p>
             <div className="transition-transform hover:scale-105 duration-300">
               <Button asChild variant="outline" className="border-gold text-gold hover:bg-gold hover:text-white">
-                <Link href="/for-brands">Let's Collaborate</Link>
+                <Link href="/for-brands">Let&apos;s Collaborate</Link>
               </Button>
             </div>
           </div>

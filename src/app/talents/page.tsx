@@ -101,7 +101,6 @@ export default function TalentsPage() {
         <div className="container px-4 mx-auto">
           <div
             className="max-w-3xl mx-auto text-center mb-12"
-            transition={{ duration: 0.5 }}
           >
             <h1 className="text-4xl font-bold text-foreground mb-4">
               Talent <span className="text-gold">Directory</span>
@@ -115,7 +114,6 @@ export default function TalentsPage() {
           {/* Search and Filters */}
           <div
             className="mb-12"
-            transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="flex-1">

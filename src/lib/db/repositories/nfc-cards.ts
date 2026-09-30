@@ -204,7 +204,8 @@ export async function updateNFCCard(id: string, data: UpdateNFCCardRequest): Pro
     RETURNING *
   `;
 
-  const cards = await sql<NFCCard[]>(query, values);
+  // Dynamic SQL: neon 1.x only accepts sql`...` templates when called directly
+  const cards = (await sql.query(query, values)) as NFCCard[];
   return cards[0];
 }
 

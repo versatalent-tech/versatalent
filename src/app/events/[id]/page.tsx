@@ -98,7 +98,7 @@ export default function EventDetailPage() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Event Not Found</h1>
-            <p className="text-gray-600 mb-6">The event you're looking for doesn't exist.</p>
+            <p className="text-gray-600 mb-6">The event you&apos;re looking for doesn&apos;t exist.</p>
             <Link href="/events">
               <Button className="bg-gold hover:bg-gold/90 text-white">
                 Back to Events
@@ -128,9 +128,6 @@ export default function EventDetailPage() {
         <div className="relative z-10 container px-4 mx-auto py-32">
           <div
             className="max-w-4xl"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
           >
             <Link
               href="/events"
@@ -180,11 +177,7 @@ export default function EventDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              <div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
+              <div>
                 <h2 className="text-3xl font-bold text-foreground mb-6">Event Details</h2>
 
                 <div className="bg-gray-50 rounded-lg p-6 mb-8">
@@ -258,9 +251,6 @@ export default function EventDetailPage() {
             <div className="lg:col-span-1">
               <div
                 className="sticky top-8"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
               >
                 {/* Pricing */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">

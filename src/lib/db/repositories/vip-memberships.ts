@@ -91,7 +91,8 @@ export async function updateVIPMembership(
     RETURNING *
   `;
 
-  const memberships = await sql<VIPMembership[]>(query, values);
+  // Dynamic SQL: neon 1.x only accepts sql`...` templates when called directly
+  const memberships = (await sql.query(query, values)) as VIPMembership[];
   return memberships[0];
 }
 

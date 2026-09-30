@@ -404,14 +404,14 @@ The simulation mode allows you to test the full workflow without hardware.`,
 declare global {
   interface Navigator {
     usb?: {
-      requestDevice: (options: { filters: Array<{ vendorId: number; productId?: number }> }) => Promise<USBDevice>;
-      getDevices: () => Promise<USBDevice[]>;
+      requestDevice: (options: { filters: Array<{ vendorId: number; productId?: number }> }) => Promise<any>;
+      getDevices: () => Promise<any[]>;
       addEventListener: (type: string, listener: (event: any) => void) => void;
       removeEventListener: (type: string, listener: (event: any) => void) => void;
     };
     hid?: {
-      requestDevice: (options: { filters: Array<{ vendorId: number; productId: number }> }) => Promise<HIDDevice[]>;
-      getDevices: () => Promise<HIDDevice[]>;
+      requestDevice: (options: { filters: Array<{ vendorId: number; productId: number }> }) => Promise<any[]>;
+      getDevices: () => Promise<any[]>;
       addEventListener: (type: string, listener: (event: any) => void) => void;
       removeEventListener: (type: string, listener: (event: any) => void) => void;
     };

@@ -44,7 +44,7 @@ export default function ForBrandsPage() {
               <div className="mt-10">
                 <Button asChild className="bg-gold hover:bg-gold/80 text-black px-8 py-6 text-lg">
                   <Link href="/contact">
-                    Let's Collaborate
+                    Let&apos;s Collaborate
                   </Link>
                 </Button>
               </div>
@@ -116,7 +116,7 @@ export default function ForBrandsPage() {
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-white mb-4">Our <span className="text-gold">Process</span></h2>
               <p className="text-gray-300 max-w-2xl mx-auto">
-                We make working with top talent simple and effective. Here's how our collaboration process works:
+                We make working with top talent simple and effective. Here&apos;s how our collaboration process works:
               </p>
             </div>
 

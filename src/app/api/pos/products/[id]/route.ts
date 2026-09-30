@@ -11,10 +11,10 @@ import { withPOSAuth } from '@/lib/auth/pos-auth';
 export const GET = withPOSAuth(async (
   request: NextRequest,
   auth,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const product = await getProductById(id);
 
     if (!product) {
@@ -38,10 +38,10 @@ export const GET = withPOSAuth(async (
 export const PUT = withPOSAuth(async (
   request: NextRequest,
   auth,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const data: UpdateProductRequest = await request.json();
 
     if (data.price_cents !== undefined && data.price_cents < 0) {
@@ -74,10 +74,10 @@ export const PUT = withPOSAuth(async (
 export const DELETE = withPOSAuth(async (
   request: NextRequest,
   auth,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const success = await deleteProduct(id);
 
     if (!success) {

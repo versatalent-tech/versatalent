@@ -151,10 +151,9 @@ export function NFCCardRegistration() {
 
         {/* Progress Steps */}
         <div className="flex items-center gap-4 mt-6">
-          <div className={`flex items-center gap-2 ${registrationStep === 'scan' ? 'text-gold' : registrationStep !== 'scan' ? 'text-green-600' : 'text-gray-400'}`}>
+          <div className={`flex items-center gap-2 ${registrationStep === 'scan' ? 'text-gold' : 'text-green-600'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              registrationStep === 'scan' ? 'bg-gold text-white' :
-              registrationStep !== 'scan' ? 'bg-green-600 text-white' : 'bg-gray-200'
+              registrationStep === 'scan' ? 'bg-gold text-white' : 'bg-green-600 text-white'
             }`}>
               {registrationStep !== 'scan' ? <CheckCircle className="h-5 w-5" /> : '1'}
             </div>
@@ -382,7 +381,7 @@ export function NFCCardRegistration() {
           <li>• Make sure the NFC reader is connected before scanning</li>
           <li>• Place the card flat on the reader for best results</li>
           <li>• Cards can be assigned to users later from the Cards tab</li>
-          <li>• Use the "Test Scan" button to simulate a card for testing</li>
+          <li>• Use the &quot;Test Scan&quot; button to simulate a card for testing</li>
         </ul>
       </div>
     </div>

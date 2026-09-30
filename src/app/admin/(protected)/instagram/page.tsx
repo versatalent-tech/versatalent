@@ -299,7 +299,7 @@ export default function InstagramAdminPage() {
                   <h4 className="font-medium text-gray-900 mb-2">Limitations:</h4>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>Only works with public Instagram posts</li>
-                    <li>oEmbed API doesn't provide like/comment counts</li>
+                    <li>oEmbed API doesn&apos;t provide like/comment counts</li>
                     <li>Rate limiting may apply for high-frequency requests</li>
                     <li>Post URLs must be in exact Instagram format</li>
                   </ul>

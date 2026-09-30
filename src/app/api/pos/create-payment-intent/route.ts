@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrderById } from '@/lib/db/repositories/pos-orders';
 import { getUserById, updateUser } from '@/lib/db/repositories/users';
 import { withPOSAuth } from '@/lib/auth/pos-auth';
-import { ensureStripeCustomer } from '@/lib/services/stripe';
+import { ensureStripeCustomer, STRIPE_API_VERSION } from '@/lib/services/stripe';
 import Stripe from 'stripe';
 
 // Initialize Stripe with secret key
@@ -14,7 +14,7 @@ const getStripe = () => {
   }
 
   return new Stripe(secretKey, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: STRIPE_API_VERSION,
     typescript: true,
   });
 };

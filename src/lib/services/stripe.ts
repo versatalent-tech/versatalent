@@ -1,6 +1,11 @@
 import Stripe from 'stripe';
 import type { User } from '@/lib/db/types';
 
+// Pinned to the Stripe API version this integration was built against.
+// The SDK's types only accept the SDK's own latest version, hence the cast;
+// upgrading means reviewing Stripe's changelog, not just bumping this string.
+export const STRIPE_API_VERSION = '2024-11-20.acacia' as unknown as Stripe.LatestApiVersion;
+
 /**
  * Initialize Stripe client with API key from environment
  * @returns Stripe instance
@@ -16,7 +21,7 @@ export function getStripeClient(): Stripe {
   }
 
   return new Stripe(secretKey, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: STRIPE_API_VERSION,
     typescript: true,
   });
 }

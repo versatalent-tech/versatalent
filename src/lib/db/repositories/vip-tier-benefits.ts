@@ -124,7 +124,8 @@ export async function updateTierBenefit(
     RETURNING *
   `;
 
-  const benefits = await sql<VIPTierBenefit[]>(query, values);
+  // Dynamic SQL: neon 1.x only accepts sql`...` templates when called directly
+  const benefits = (await sql.query(query, values)) as VIPTierBenefit[];
 
   if (benefits.length === 0) {
     throw new Error('Tier benefit not found');
