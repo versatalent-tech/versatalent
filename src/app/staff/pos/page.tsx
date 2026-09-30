@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import type { Product } from "@/lib/db/types";
 import { NFCReaderButton } from "@/components/pos/NFCReader";
+import { CardTapListener } from "@/components/pos/CardTapListener";
 import { StripeCheckout } from "@/components/pos/StripeCheckout";
 import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
@@ -439,7 +440,9 @@ function StaffPOSContent() {
               </CardHeader>
               <CardContent>
                 {/* Customer Info */}
-                <div className="mb-4">
+                <div className="mb-4 space-y-3">
+                  {/* Links the customer automatically when their card is tapped on the reader */}
+                  <CardTapListener onCustomerLinked={handleCustomerLinked} paused={showCheckout} />
                   {customer ? (
                     <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-3">
                       <div className="flex items-start justify-between">
