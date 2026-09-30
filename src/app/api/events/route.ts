@@ -7,7 +7,7 @@ import {
   searchEvents
 } from '@/lib/db/repositories/events';
 import type { CreateEventRequest, EventType } from '@/lib/db/types';
-import { withAdminAuth } from '@/lib/middleware/auth';
+import { verifyAdminAuth, withAdminAuth } from '@/lib/middleware/auth';
 
 // GET all events with optional filters
 export async function GET(request: NextRequest) {
@@ -17,10 +17,14 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') as EventType | null;
     const talentId = searchParams.get('talentId');
     const searchQuery = searchParams.get('q');
+    // Unpublished events are only listed for admins (admin events page)
+    const includeAll = searchParams.get('includeAll') === 'true' && (await verifyAdminAuth());
 
-    // Add cache headers for better performance
+    // Don't let the CDN cache this: Netlify's cache key ignores the query
+    // string, so every filter (featured, industry, status...) would get
+    // whichever response was cached first.
     const headers = {
-      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+      'Cache-Control': 'no-store',
     };
 
     // Handle search query
@@ -45,7 +49,7 @@ export async function GET(request: NextRequest) {
       status: status || 'all',
       type: type || undefined,
       talentId: talentId || undefined,
-      publishedOnly: true
+      publishedOnly: !includeAll
     });
 
     return NextResponse.json(events, { headers });
