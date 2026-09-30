@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
           checkin,
           points: {
             awarded: pointsResult.pointsAwarded,
+            already_awarded: pointsResult.alreadyAwarded,
             new_balance: pointsResult.newBalance,
             new_tier: pointsResult.newTier
           }
