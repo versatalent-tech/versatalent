@@ -1,5 +1,5 @@
 import { sql, query } from '../client';
-import type { POSOrder, POSOrderItem, POSOrderWithDetails, OrderStatus, CreatePOSOrderRequest } from '../types';
+import type { POSOrder, POSOrderItem, POSOrderWithDetails, OrderStatus, CreatePOSOrderRequest, PaymentMethod } from '../types';
 import { getProductsByIds } from './products';
 import { checkStockAvailability, deductStockForOrder, restoreStockForOrder } from './inventory';
 import { POS_CURRENCY } from '@/lib/utils/formatting';
@@ -53,6 +53,50 @@ export async function getOrderById(id: string): Promise<POSOrder | null> {
     SELECT * FROM pos_orders WHERE id = ${id} LIMIT 1
   `;
   return rows[0] as POSOrder || null;
+}
+
+/**
+ * Mark a pending order as paid. The status check makes this a one-time
+ * transition: concurrent or repeated calls (webhook retries, double clicks)
+ * get transitioned = false, so callers only award VIP points once.
+ */
+export async function markOrderPaid(
+  id: string,
+  payment: {
+    method: PaymentMethod;
+    sumupTransactionCode?: string | null;
+  }
+): Promise<{ order: POSOrder | null; transitioned: boolean }> {
+  const rows = await sql`
+    UPDATE pos_orders
+    SET status = 'paid',
+        payment_method = ${payment.method},
+        sumup_transaction_code = COALESCE(${payment.sumupTransactionCode ?? null}, sumup_transaction_code)
+    WHERE id = ${id} AND status = 'pending'
+    RETURNING *
+  `;
+  if (rows.length > 0) {
+    return { order: rows[0] as POSOrder, transitioned: true };
+  }
+  return { order: await getOrderById(id), transitioned: false };
+}
+
+/**
+ * Record the SumUp client transaction id of a checkout sent to a reader
+ */
+export async function setOrderSumUpCheckout(id: string, clientTransactionId: string): Promise<void> {
+  await sql`
+    UPDATE pos_orders
+    SET sumup_client_transaction_id = ${clientTransactionId}
+    WHERE id = ${id} AND status = 'pending'
+  `;
+}
+
+export async function getOrderBySumUpClientTransactionId(clientTransactionId: string): Promise<POSOrder | null> {
+  const rows = await sql`
+    SELECT * FROM pos_orders WHERE sumup_client_transaction_id = ${clientTransactionId} LIMIT 1
+  `;
+  return (rows[0] as POSOrder) || null;
 }
 
 /**

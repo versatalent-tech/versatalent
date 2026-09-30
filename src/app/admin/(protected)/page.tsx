@@ -72,6 +72,14 @@ export default function AdminPage() {
       bgColor: "bg-emerald-50",
     },
     {
+      title: "Card Payments (SumUp)",
+      description: "Connect SumUp and pair card readers for the tills",
+      icon: CreditCard,
+      href: "/admin/pos/sumup",
+      color: "text-sky-600",
+      bgColor: "bg-sky-50",
+    },
+    {
       title: "Blog Management",
       description: "Create and manage blog posts with images and videos",
       icon: PenLine,
