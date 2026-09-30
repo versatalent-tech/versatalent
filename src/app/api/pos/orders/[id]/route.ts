@@ -4,7 +4,7 @@ import {
   updateOrderStatus,
   cancelOrder
 } from '@/lib/db/repositories/pos-orders';
-import { processPOSOrderForVIP } from '@/lib/services/pos-vip-integration';
+import { completeOrderPayment } from '@/lib/services/pos-payments';
 import { withPOSAuth } from '@/lib/auth/pos-auth';
 
 // GET single order with details (requires staff/admin auth)
@@ -42,7 +42,7 @@ export const PUT = withPOSAuth(async (
 ) => {
   try {
     const { id } = await context.params;
-    const { status, stripe_payment_intent_id } = await request.json();
+    const { status, payment_method } = await request.json();
 
     if (!status) {
       return NextResponse.json(
@@ -51,26 +51,29 @@ export const PUT = withPOSAuth(async (
       );
     }
 
-    const order = await updateOrderStatus(id, status, stripe_payment_intent_id);
+    // Card payments are only marked paid after SumUp confirms them
+    // (/api/pos/sumup/*). Staff can mark an order paid directly only for cash.
+    if (status === 'paid') {
+      if (payment_method !== 'cash') {
+        return NextResponse.json(
+          { error: 'Card payments are confirmed through SumUp. Use payment_method "cash" for cash sales.' },
+          { status: 400 }
+        );
+      }
+      const result = await completeOrderPayment(id, { method: 'cash' });
+      return NextResponse.json({
+        order: result.order,
+        loyalty: { pointsAwarded: result.pointsAwarded }
+      });
+    }
+
+    const order = await updateOrderStatus(id, status);
 
     if (!order) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       );
-    }
-
-    // If order is paid and has a customer, award VIP points
-    if (status === 'paid' && order.customer_user_id) {
-      const vipResult = await processPOSOrderForVIP(order);
-
-      return NextResponse.json({
-        order,
-        loyalty: vipResult.success ? {
-          pointsAwarded: vipResult.pointsAwarded,
-          consumptionId: vipResult.consumptionId
-        } : null
-      });
     }
 
     return NextResponse.json({ order });

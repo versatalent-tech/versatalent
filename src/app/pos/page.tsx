@@ -10,7 +10,7 @@ import { ShoppingCart, Search, User, X, Plus, Minus, CreditCard, Trash2 } from "
 import type { Product } from "@/lib/db/types";
 import { NFCReaderButton } from "@/components/pos/NFCReader";
 import { CardTapListener } from "@/components/pos/CardTapListener";
-import { StripeCheckout } from "@/components/pos/StripeCheckout";
+import { SumUpCheckout } from "@/components/pos/SumUpCheckout";
 import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
 interface CartItem {
@@ -161,30 +161,8 @@ export default function POSPage() {
       const order = await orderResponse.json();
       setCurrentOrderId(order.id);
 
-      // Check if Stripe is configured
-      const hasStripe = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-
-      if (hasStripe) {
-        // Show Stripe checkout
-        setShowCheckout(true);
-      } else {
-        // Development mode: Mark order as paid immediately
-        console.log('Stripe not configured, marking order as paid for development');
-
-        const updateResponse = await fetch(`/api/pos/orders/${order.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'paid' })
-        });
-
-        if (!updateResponse.ok) {
-          throw new Error('Failed to update order');
-        }
-
-        // Success!
-        handlePaymentSuccess('dev-mode');
-      }
+      // Take payment: SumUp card reader, SumUp app (Tap to Pay) or cash
+      setShowCheckout(true);
 
     } catch (err: any) {
       console.error('Checkout error:', err);
@@ -204,6 +182,12 @@ export default function POSPage() {
   };
 
   const handlePaymentCancel = () => {
+    // Stock is reserved when the order is created; cancelling releases it
+    if (currentOrderId) {
+      fetch(`/api/pos/orders/${currentOrderId}`, { method: 'DELETE', credentials: 'include' })
+        .catch((err) => console.error('Failed to cancel order:', err));
+      setCurrentOrderId(null);
+    }
     setShowCheckout(false);
     setProcessingPayment(false);
     setError('Payment cancelled');
@@ -442,9 +426,9 @@ export default function POSPage() {
         </div>
       </div>
 
-      {/* Stripe Checkout Dialog */}
+      {/* Payment Dialog */}
       {showCheckout && currentOrderId && (
-        <StripeCheckout
+        <SumUpCheckout
           orderId={currentOrderId}
           amount={getTotal()}
           currency={POS_CURRENCY}

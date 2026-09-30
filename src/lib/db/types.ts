@@ -538,9 +538,14 @@ export interface POSOrder {
   stripe_payment_intent_id?: string;
   status: OrderStatus;
   notes?: string;
+  payment_method?: PaymentMethod | null;
+  sumup_client_transaction_id?: string | null;
+  sumup_transaction_code?: string | null;
   created_at: Date;
   updated_at: Date;
 }
+
+export type PaymentMethod = 'stripe' | 'sumup_reader' | 'sumup_app' | 'cash';
 
 export interface POSOrderItem {
   id: string;
