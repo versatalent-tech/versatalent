@@ -13,15 +13,43 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Loader2, User, CheckCircle2, X } from "lucide-react";
 
+export interface LinkedCustomer {
+  id: string;
+  name: string;
+  email: string;
+  tier?: string;
+  points?: number;
+}
+
 interface NFCReaderProps {
-  onCustomerLinked: (customer: {
-    id: string;
-    name: string;
-    email: string;
-    tier?: string;
-    points?: number;
-  }) => void;
+  onCustomerLinked: (customer: LinkedCustomer) => void;
   onCancel: () => void;
+}
+
+/**
+ * Look up the customer registered to an NFC card (staff/admin only).
+ * Throws with a readable message if the card is unknown or inactive.
+ */
+export async function lookupCustomerByCard(uid: string): Promise<LinkedCustomer> {
+  const response = await fetch('/api/pos/nfc/read', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ card_uid: uid })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to read card');
+  }
+
+  return {
+    id: data.customer.id,
+    name: data.customer.name,
+    email: data.customer.email,
+    tier: data.vip?.tier,
+    points: data.vip?.points_balance
+  };
 }
 
 export function NFCReader({ onCustomerLinked, onCancel }: NFCReaderProps) {
@@ -86,26 +114,7 @@ export function NFCReader({ onCustomerLinked, onCancel }: NFCReaderProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/pos/nfc/read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ card_uid: uid })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to read card');
-      }
-
-      // Success - link customer
-      onCustomerLinked({
-        id: data.customer.id,
-        name: data.customer.name,
-        email: data.customer.email,
-        tier: data.vip?.tier,
-        points: data.vip?.points_balance
-      });
+      onCustomerLinked(await lookupCustomerByCard(uid));
 
       setIsOpen(false);
 
@@ -131,7 +140,7 @@ export function NFCReader({ onCustomerLinked, onCancel }: NFCReaderProps) {
             Link Customer via NFC
           </DialogTitle>
           <DialogDescription>
-            Tap the customer&apos;s NFC card or enter the card UID manually
+            Tap the customer&apos;s card on the reader, or enter the card ID manually
           </DialogDescription>
         </DialogHeader>
 
@@ -254,7 +263,7 @@ export function NFCReaderButton({ onCustomerLinked }: {
         onClick={() => setShowReader(true)}
       >
         <CreditCard className="h-4 w-4 mr-2" />
-        Link Customer (NFC)
+        Enter card manually
       </Button>
 
       {showReader && (
