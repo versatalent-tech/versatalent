@@ -1,5 +1,6 @@
 "use client";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { NetlifyForm } from "@/components/forms/NetlifyForm";
 import { Badge } from "@/components/ui/badge";
 
 export default function JoinPage() {
@@ -67,10 +68,8 @@ export default function JoinPage() {
 
             <div className="bg-zinc-900 p-8 rounded-lg border border-zinc-800">
               <h2 className="text-2xl font-semibold text-white mb-6">Application Form</h2>
-              <form
+              <NetlifyForm
                 name="versatalent-talent"
-                method="POST"
-                data-netlify="true"
                 className="space-y-6"
               >
                 <input type="hidden" name="form-name" value="versatalent-talent" />
@@ -160,7 +159,7 @@ export default function JoinPage() {
                 <button type="submit" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-gold hover:bg-gold/90 text-black h-9 px-4 py-2 w-full md:w-auto">
                   Submit Application
                 </button>
-              </form>
+              </NetlifyForm>
             </div>
           </div>
         </div>

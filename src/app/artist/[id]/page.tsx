@@ -267,7 +267,7 @@ export default function ArtistProfilePage() {
             Contact us to discuss availability and custom performance packages.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact.html">
+            <Link href="/contact">
               <Button className="bg-white text-gold hover:bg-gray-100">
                 <Mail className="h-4 w-4 mr-2" />
                 Get in Touch

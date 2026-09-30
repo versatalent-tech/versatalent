@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { NetlifyForm } from "@/components/forms/NetlifyForm";
 import {
   Mail,
   Phone,
@@ -167,10 +168,8 @@ export default function ContactPage() {
                   </div>
 
                   {/* General Contact Form */}
-                  <form
+                  <NetlifyForm
                     name="versatalent-contact"
-                    method="POST"
-                    data-netlify="true"
                     style={{ display: formType === 'contact' ? 'block' : 'none' }}
                   >
                     <input type="hidden" name="form-name" value="versatalent-contact" />
@@ -227,13 +226,11 @@ export default function ContactPage() {
                         Send Message
                       </button>
                     </div>
-                  </form>
+                  </NetlifyForm>
 
                   {/* Talent Application Form */}
-                  <form
+                  <NetlifyForm
                     name="versatalent-talent"
-                    method="POST"
-                    data-netlify="true"
                     style={{ display: formType === 'talent' ? 'block' : 'none' }}
                   >
                     <input type="hidden" name="form-name" value="versatalent-talent" />
@@ -294,13 +291,11 @@ export default function ContactPage() {
                         Send Message
                       </button>
                     </div>
-                  </form>
+                  </NetlifyForm>
 
                   {/* Brand Partnership Form */}
-                  <form
+                  <NetlifyForm
                     name="versatalent-brand"
-                    method="POST"
-                    data-netlify="true"
                     style={{ display: formType === 'brand' ? 'block' : 'none' }}
                   >
                     <input type="hidden" name="form-name" value="versatalent-brand" />
@@ -364,7 +359,7 @@ export default function ContactPage() {
                         Send Message
                       </button>
                     </div>
-                  </form>
+                  </NetlifyForm>
 
                   <p className="text-xs text-gray-500 text-center mt-4">
                     We'll respond within 48 hours. Your information is kept confidential.
