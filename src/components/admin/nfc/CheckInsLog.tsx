@@ -54,7 +54,8 @@ export function CheckInsLog() {
       setLoading(true);
       const response = await fetch('/api/nfc/checkins');
       const data = await response.json();
-      setCheckins(data);
+      // An error response (e.g. expired session) is an object, not a list
+      setCheckins(Array.isArray(data) ? data : []);
       setFilteredCheckins(data);
     } catch (error) {
       console.error('Error fetching check-ins:', error);

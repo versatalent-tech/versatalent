@@ -41,7 +41,8 @@ export function NFCEventsManager() {
       setLoading(true);
       const response = await fetch('/api/nfc/events');
       const data = await response.json();
-      setEvents(data);
+      // An error response (e.g. expired session) is an object, not a list
+      setEvents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
