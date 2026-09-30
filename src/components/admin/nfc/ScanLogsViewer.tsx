@@ -47,7 +47,7 @@ export function ScanLogsViewer() {
       const response = await fetch('/api/nfc/scan-logs?limit=100');
       if (response.ok) {
         const data = await response.json();
-        setLogs(data);
+        setLogs(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('Error fetching scan logs:', err);

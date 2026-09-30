@@ -19,8 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit, Trash2, User, Mail, Receipt } from "lucide-react";
+import { Plus, Edit, Trash2, User, Mail, Receipt, Download } from "lucide-react";
 import PurchaseHistory from "@/components/admin/PurchaseHistory";
+import { VIPDetailsFields, EMPTY_VIP_PROFILE } from "@/components/admin/nfc/VIPDetailsFields";
+import { AGE_RANGES, type VIPProfileInput } from "@/lib/vip-profile";
 
 interface NFCUser {
   id: string;
@@ -51,6 +53,9 @@ export function UsersManager() {
     avatar_url: "",
     talent_id: ""
   });
+  const [vipProfile, setVipProfile] = useState<VIPProfileInput>(EMPTY_VIP_PROFILE);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportFilters, setExportFilters] = useState({ consent: "any", age_range: "any", city: "" });
 
   useEffect(() => {
     fetchUsers();
@@ -61,6 +66,12 @@ export function UsersManager() {
       setLoading(true);
       const response = await fetch('/api/nfc/users');
       const data = await response.json();
+      // An error response (e.g. expired session) is an object, not a list
+      if (!response.ok || !Array.isArray(data)) {
+        setUsers([]);
+        setError(response.status === 401 ? 'Your session has expired. Please log in again.' : 'Failed to load users');
+        return;
+      }
       setUsers(data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -68,6 +79,24 @@ export function UsersManager() {
     } finally {
       setLoading(false);
     }
+  }
+
+  /**
+   * Save VIP details after the user itself is saved. Returns false (and
+   * shows an error) if it failed.
+   */
+  async function saveVipProfile(userId: string): Promise<boolean> {
+    const response = await fetch(`/api/vip/profiles/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vipProfile)
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setError(`User saved, but VIP details failed: ${data.error || 'unknown error'}`);
+      return false;
+    }
+    return true;
   }
 
   async function handleCreate() {
@@ -81,6 +110,11 @@ export function UsersManager() {
       });
 
       if (response.ok) {
+        const created = await response.json();
+        if (formData.role === 'vip' && !(await saveVipProfile(created.id))) {
+          await fetchUsers();
+          return;
+        }
         setSuccess('User created successfully');
         setIsCreateDialogOpen(false);
         resetForm();
@@ -111,6 +145,10 @@ export function UsersManager() {
       });
 
       if (response.ok) {
+        if (formData.role === 'vip' && !(await saveVipProfile(selectedUser.id))) {
+          await fetchUsers();
+          return;
+        }
         setSuccess('User updated successfully');
         setIsEditDialogOpen(false);
         setSelectedUser(null);
@@ -156,6 +194,7 @@ export function UsersManager() {
   }
 
   function resetForm() {
+    setVipProfile(EMPTY_VIP_PROFILE);
     setFormData({
       name: "",
       email: "",
@@ -166,7 +205,7 @@ export function UsersManager() {
     });
   }
 
-  function openEditDialog(user: NFCUser) {
+  async function openEditDialog(user: NFCUser) {
     setSelectedUser(user);
     setFormData({
       name: user.name,
@@ -176,7 +215,52 @@ export function UsersManager() {
       avatar_url: user.avatar_url || "",
       talent_id: user.talent_id || ""
     });
+    setVipProfile(EMPTY_VIP_PROFILE);
     setIsEditDialogOpen(true);
+
+    if (user.role === 'vip') {
+      try {
+        const response = await fetch(`/api/vip/profiles/${user.id}`);
+        if (response.ok) {
+          const { profile } = await response.json();
+          if (profile) setVipProfile({ ...EMPTY_VIP_PROFILE, ...profile });
+        }
+      } catch (error) {
+        console.error('Error loading VIP details:', error);
+        setError('Failed to load VIP details');
+      }
+    }
+  }
+
+  async function exportVips() {
+    const params = new URLSearchParams();
+    if (exportFilters.consent !== 'any') params.set('consent', exportFilters.consent);
+    if (exportFilters.age_range !== 'any') params.set('age_range', exportFilters.age_range);
+    if (exportFilters.city.trim()) params.set('city', exportFilters.city.trim());
+
+    // Download in the background so a failure shows an error instead of leaving the page
+    try {
+      setError(null);
+      const response = await fetch(`/api/vip/profiles/export?${params.toString()}`);
+      if (!response.ok) {
+        setError(response.status === 401 ? 'Your session has expired. Please log in again.' : 'Failed to export VIPs');
+        setIsExportDialogOpen(false);
+        return;
+      }
+      const blob = await response.blob();
+      const filename = response.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] || 'versatalent-vips.csv';
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+      setIsExportDialogOpen(false);
+    } catch (error) {
+      console.error('Export error:', error);
+      setError('Failed to export VIPs');
+      setIsExportDialogOpen(false);
+    }
   }
 
   function openPurchaseHistory(user: NFCUser) {
@@ -188,6 +272,14 @@ export function UsersManager() {
     <div className="bg-white rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Users ({users.length})</h2>
+        <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setIsExportDialogOpen(true)}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Export VIPs
+        </Button>
         <Button
           onClick={() => {
             resetForm();
@@ -198,6 +290,7 @@ export function UsersManager() {
           <Plus className="h-4 w-4 mr-2" />
           Add User
         </Button>
+        </div>
       </div>
 
       {error && (
@@ -297,7 +390,7 @@ export function UsersManager() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {isCreateDialogOpen ? 'Add New User' : 'Edit User'}
@@ -367,6 +460,10 @@ export function UsersManager() {
                 placeholder="Link to existing talent profile"
               />
             </div>
+
+            {formData.role === 'vip' && (
+              <VIPDetailsFields value={vipProfile} onChange={setVipProfile} />
+            )}
           </div>
 
           <DialogFooter>
@@ -386,6 +483,60 @@ export function UsersManager() {
               className="bg-gold hover:bg-gold/90 text-white"
             >
               {isCreateDialogOpen ? 'Create User' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export VIPs Dialog */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export VIPs</DialogTitle>
+            <DialogDescription>
+              Download VIP details as a CSV for marketing campaigns. Only contact people through
+              channels they consented to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Consented to</label>
+              <Select value={exportFilters.consent} onValueChange={(v) => setExportFilters({ ...exportFilters, consent: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Everyone (no consent filter)</SelectItem>
+                  <SelectItem value="email">Email marketing</SelectItem>
+                  <SelectItem value="sms">SMS marketing</SelectItem>
+                  <SelectItem value="post">Postal marketing</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Age range</label>
+              <Select value={exportFilters.age_range} onValueChange={(v) => setExportFilters({ ...exportFilters, age_range: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any</SelectItem>
+                  {AGE_RANGES.map((range) => (
+                    <SelectItem key={range} value={range}>{range}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">City</label>
+              <Input
+                value={exportFilters.city}
+                onChange={(e) => setExportFilters({ ...exportFilters, city: e.target.value })}
+                placeholder="Any city"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>Cancel</Button>
+            <Button onClick={exportVips} className="bg-gold hover:bg-gold/90 text-white">
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
             </Button>
           </DialogFooter>
         </DialogContent>
