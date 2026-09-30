@@ -6,6 +6,7 @@ import {
 } from '../db/repositories/vip-memberships';
 import { createPointsLogEntry } from '../db/repositories/vip-points-log';
 import { updateUserNFCCardsMetadata } from '../db/repositories/nfc-cards';
+import { sql } from '../db/client';
 import type { PointsSource, VIPTier } from '../db/types';
 // Default tier thresholds (used as fallback)
 export const DEFAULT_TIER_THRESHOLDS = {
@@ -161,34 +162,96 @@ export async function awardPoints(
   }
 }
 /**
- * Process event check-in and award points
+ * Claim the check-in award for this member. Returns the award key, or null
+ * if points were already awarded for it.
+ *
+ * A check-in to an event happening today (UK time) is keyed to that event;
+ * anything else (no event, or a past/future event) is keyed to the day.
+ * The (user_id, award_key) primary key makes the claim atomic.
+ */
+async function claimCheckinAward(
+  userId: string,
+  eventId?: string | null,
+  checkinId?: string
+): Promise<string | null> {
+  const rows = await sql`
+    INSERT INTO vip_checkin_awards (user_id, award_key, checkin_id)
+    SELECT
+      ${userId},
+      COALESCE(
+        (
+          SELECT 'event:' || id
+          FROM nfc_events
+          WHERE id = ${eventId || null}::uuid
+            AND (date AT TIME ZONE 'Europe/London')::date = (NOW() AT TIME ZONE 'Europe/London')::date
+        ),
+        'day:' || (NOW() AT TIME ZONE 'Europe/London')::date
+      ),
+      ${checkinId || null}::uuid
+    ON CONFLICT (user_id, award_key) DO NOTHING
+    RETURNING award_key
+  `;
+  return rows.length > 0 ? rows[0].award_key : null;
+}
+
+async function releaseCheckinAward(userId: string, awardKey: string) {
+  await sql`DELETE FROM vip_checkin_awards WHERE user_id = ${userId} AND award_key = ${awardKey}`;
+}
+
+/**
+ * Process event check-in and award points (at most once per event today,
+ * or once per day when there's no event today)
  */
 export async function processEventCheckin(
   userId: string,
   eventId?: string,
   checkinId?: string
-): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
+): Promise<{ success: boolean; pointsAwarded: number; alreadyAwarded: boolean; newBalance: number; newTier: VIPTier }> {
+  const awardKey = await claimCheckinAward(userId, eventId, checkinId);
+
+  if (!awardKey) {
+    const membership = await getVIPMembershipByUserId(userId);
+    return {
+      success: true,
+      pointsAwarded: 0,
+      alreadyAwarded: true,
+      newBalance: membership?.points_balance ?? 0,
+      newTier: membership?.tier ?? 'silver',
+    };
+  }
+
   // Get point rule for event check-in
   const rule = await getPointRuleByActionType('event_checkin');
   const pointsToAward = rule ? Math.floor(rule.points_per_unit) : 10; // Default 10 points
-  const result = await awardPoints(
-    userId,
-    'event_checkin',
-    pointsToAward,
-    {
-      event_id: eventId,
-      checkin_id: checkinId,
-      timestamp: new Date().toISOString()
-    },
-    checkinId
-  );
-  return {
-    success: result.success,
-    pointsAwarded: pointsToAward,
-    newBalance: result.newBalance,
-    newTier: result.newTier
-  };
+
+  try {
+    const result = await awardPoints(
+      userId,
+      'event_checkin',
+      pointsToAward,
+      {
+        event_id: eventId,
+        checkin_id: checkinId,
+        award_key: awardKey,
+        timestamp: new Date().toISOString()
+      },
+      checkinId
+    );
+
+    return {
+      success: result.success,
+      pointsAwarded: pointsToAward,
+      alreadyAwarded: false,
+      newBalance: result.newBalance,
+      newTier: result.newTier
+    };
+  } catch (error) {
+    // Let a later check-in try again
+    await releaseCheckinAward(userId, awardKey);
+    throw error;
+  }
 }
+
 /**
  * Process consumption and award points
  */

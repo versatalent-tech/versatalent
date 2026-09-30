@@ -87,6 +87,8 @@ export default function VIPPassPage() {
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
+  // Points from the last check-in: null when the response had no points info
+  const [checkinPoints, setCheckinPoints] = useState<{ awarded: number; alreadyAwarded: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const eventId = searchParams.get('event');
@@ -174,6 +176,7 @@ export default function VIPPassPage() {
       if (response.ok) {
         const data = await response.json();
         setCheckedIn(true);
+        setCheckinPoints(data.points ? { awarded: data.points.awarded, alreadyAwarded: !!data.points.already_awarded } : null);
 
         // If points were awarded, refresh membership data
         if (data.points) {
@@ -339,7 +342,12 @@ export default function VIPPassPage() {
                   <div className="bg-green-500 text-white rounded-lg p-6 text-center">
                     <Check className="h-12 w-12 mx-auto mb-2" />
                     <h3 className="text-2xl font-bold">Check-in Successful!</h3>
-                    <p className="mt-2">+10 points awarded</p>
+                    {checkinPoints && checkinPoints.awarded > 0 && (
+                      <p className="mt-2">+{checkinPoints.awarded} points awarded</p>
+                    )}
+                    {checkinPoints?.alreadyAwarded && (
+                      <p className="mt-2">You&apos;ve already collected your check-in points for today.</p>
+                    )}
                   </div>
                 ) : (
                   <Button
