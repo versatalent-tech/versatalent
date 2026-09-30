@@ -173,7 +173,7 @@ export function PortfolioManager({ portfolio, onChange }: PortfolioManagerProps)
           <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-600 mb-1">No portfolio items yet</p>
           <p className="text-xs text-gray-500 mb-4">
-            Add photos and videos to showcase this talent's work
+            Add photos and videos to showcase this talent&apos;s work
           </p>
           <Button
             type="button"
@@ -275,7 +275,7 @@ export function PortfolioManager({ portfolio, onChange }: PortfolioManagerProps)
               {isAddDialogOpen ? "Add Portfolio Item" : "Edit Portfolio Item"}
             </DialogTitle>
             <DialogDescription>
-              Add photos or videos to showcase the talent's work
+              Add photos or videos to showcase the talent&apos;s work
             </DialogDescription>
           </DialogHeader>
 

@@ -44,21 +44,29 @@ export default function ArtistProfilePage() {
           if (userResponse.ok) {
             const userData = await userResponse.json();
             // Convert user data to talent format
+            const imageSrc = userData.avatar_url || '/placeholder-artist.jpg';
+            const now = new Date();
             setTalent({
               id: userData.id,
               name: userData.name,
-              industry: 'music' as any,
-              gender: 'male' as any,
-              ageGroup: 'adult' as any,
+              industry: 'music',
+              gender: 'male',
+              age_group: 'adult',
+              ageGroup: 'adult',
               profession: 'Artist',
               location: 'Leeds, UK',
               bio: `Professional artist and performer. Member of VersaTalent.`,
               tagline: 'Creating amazing experiences',
               skills: [],
-              imageSrc: userData.avatar_url || '/placeholder-artist.jpg',
+              image_src: imageSrc,
+              imageSrc,
               featured: false,
+              is_active: true,
+              social_links: {},
               socialLinks: {},
-              portfolio: []
+              portfolio: [],
+              created_at: now,
+              updated_at: now,
             });
           }
         }

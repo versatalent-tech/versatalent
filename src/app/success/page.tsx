@@ -11,16 +11,13 @@ export default function SuccessPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div
           className="text-center max-w-md mx-auto p-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
         >
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-foreground mb-4">
             Thank You!
           </h1>
           <p className="text-gray-600 mb-6">
-            Your message has been sent successfully. We'll get back to you within 48 hours.
+            Your message has been sent successfully. We&apos;ll get back to you within 48 hours.
           </p>
           <div className="flex gap-4 justify-center">
             <Button

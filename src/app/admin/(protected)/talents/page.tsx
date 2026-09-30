@@ -1524,7 +1524,7 @@ export default function AdminTalentsPage() {
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-3">Cover Image (Landscape)</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Upload a wide landscape image for the talent's profile banner (recommended: 1920x600px or similar 16:5 ratio)
+                  Upload a wide landscape image for the talent&apos;s profile banner (recommended: 1920x600px or similar 16:5 ratio)
                 </p>
                 <ImageUpload
                   value={formData.cover_image}

@@ -81,13 +81,11 @@ export function UpcomingEvents() {
         <div className="max-w-xl mx-auto text-center mb-16">
           <h2
             className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-            transition={{ duration: 0.5 }}
           >
             Featured <span className="text-gold">Events</span>
           </h2>
           <p
             className="mt-4 text-lg leading-8 text-gray-600"
-            transition={{ duration: 0.5, delay: 0.1 }}
           >
             Check out our latest performances and upcoming events featuring our talented artists
           </p>
@@ -114,7 +112,6 @@ export function UpcomingEvents() {
               <div
                 key={event.id}
                 className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300"
-                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <div className="relative h-48 w-full">
                   <Image

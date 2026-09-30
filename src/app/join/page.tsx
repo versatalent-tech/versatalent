@@ -11,7 +11,7 @@ export default function JoinPage() {
           <div className="max-w-3xl mx-auto">
             <h1 className="text-4xl font-bold text-white mb-2">Join <span className="text-gold">VersaTalent</span></h1>
             <p className="text-xl text-gray-300 mb-10">
-              We're always looking for exceptional talent to join our roster.
+              We&apos;re always looking for exceptional talent to join our roster.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
@@ -61,7 +61,7 @@ export default function JoinPage() {
                   </Badge>
                 </div>
                 <p className="mt-6 text-gray-300">
-                  Don't see your specific talent listed? We're always open to expanding our roster with exceptional individuals from various fields. Tell us about your unique abilities!
+                  Don&apos;t see your specific talent listed? We&apos;re always open to expanding our roster with exceptional individuals from various fields. Tell us about your unique abilities!
                 </p>
               </div>
             </div>

@@ -186,7 +186,7 @@ export interface UpdateNFCCardRequest {
   metadata?: Record<string, any>;
 }
 
-export interface CreateEventRequest {
+export interface CreateNFCEventRequest {
   name: string;
   date: Date | string;
   location?: string;
@@ -194,7 +194,7 @@ export interface CreateEventRequest {
   metadata?: Record<string, any>;
 }
 
-export interface UpdateEventRequest {
+export interface UpdateNFCEventRequest {
   name?: string;
   date?: Date | string;
   location?: string;
@@ -363,11 +363,16 @@ export interface PortfolioItem {
   professional?: boolean;
   tags?: string[];
   downloadUrl?: string;
+  downloadable?: boolean;
+  width?: number;
+  height?: number;
   metadata?: {
     camera?: string;
     lens?: string;
     iso?: string;
     aperture?: string;
+    date?: string;
+    location?: string;
   };
 }
 
@@ -455,6 +460,13 @@ export interface Talent {
   industry_details?: IndustryDetails; // Industry-specific fields
   created_at: Date;
   updated_at: Date;
+  // camelCase aliases the repository still returns for older components
+  /** @deprecated use age_group */
+  ageGroup?: AgeGroup;
+  /** @deprecated use image_src */
+  imageSrc?: string;
+  /** @deprecated use social_links */
+  socialLinks?: SocialLinks;
 }
 
 // API request types for Talents
@@ -752,4 +764,73 @@ export interface UpdatePOSOrderRequest {
 export interface CartItem {
   product: Product;
   quantity: number;
+}
+
+// ============================================
+// Blog
+// ============================================
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  author: string;
+  category?: string;
+  image_url?: string;
+  video_url?: string;
+  tags: string[];
+  featured: boolean;
+  is_published: boolean;
+  published_at?: Date;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateBlogPostRequest {
+  title: string;
+  slug?: string;
+  excerpt?: string;
+  content: string;
+  author?: string;
+  category?: string;
+  image_url?: string;
+  video_url?: string;
+  tags?: string[];
+  featured?: boolean;
+  is_published?: boolean;
+  published_at?: Date | string;
+}
+
+export type UpdateBlogPostRequest = Partial<CreateBlogPostRequest>;
+
+// ============================================
+// Newsletter
+// ============================================
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  name?: string;
+  is_active: boolean;
+  subscribed_at: Date;
+  unsubscribed_at?: Date;
+  source: string;
+  metadata: Record<string, any>;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateNewsletterSubscriberRequest {
+  email: string;
+  name?: string;
+  source?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateNewsletterSubscriberRequest {
+  name?: string;
+  is_active?: boolean;
+  metadata?: Record<string, any>;
 }

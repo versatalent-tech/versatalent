@@ -121,14 +121,14 @@ export class AnalyticsDatabase {
 
     if (filters.countries) {
       events = events.filter(e => {
-        const location = JSON.parse(e.locationInfo as string);
+        const location = typeof e.locationInfo === 'string' ? JSON.parse(e.locationInfo) : e.locationInfo;
         return filters.countries!.includes(location.country);
       });
     }
 
     if (filters.deviceTypes) {
       events = events.filter(e => {
-        const device = JSON.parse(e.deviceInfo as string);
+        const device = typeof e.deviceInfo === 'string' ? JSON.parse(e.deviceInfo) : e.deviceInfo;
         return filters.deviceTypes!.includes(device.deviceType);
       });
     }
@@ -479,7 +479,7 @@ export class AnalyticsDatabase {
   }
 
   private getRandomEventType(): AnalyticsEventType {
-    const types = ['profile_view', 'portfolio_view', 'portfolio_item_click', 'contact_inquiry', 'booking_request', 'social_share', 'download', 'like'];
+    const types: AnalyticsEventType[] = ['profile_view', 'portfolio_view', 'portfolio_item_click', 'contact_inquiry', 'booking_request', 'social_share', 'download', 'like'];
     return types[Math.floor(Math.random() * types.length)];
   }
 

@@ -97,7 +97,8 @@ export async function updatePointRule(
     RETURNING *
   `;
 
-  const rules = await sql<any[]>(query, values);
+  // Dynamic SQL: neon 1.x only accepts sql`...` templates when called directly
+  const rules = (await sql.query(query, values)) as any[];
 
   return {
     ...rules[0],

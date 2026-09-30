@@ -66,17 +66,11 @@ export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
   return (
     <section
       className="py-12"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
     >
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div
           className="text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Portfolio Gallery
@@ -87,11 +81,7 @@ export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
         </div>
 
         {/* Filter Tabs */}
-        <div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
+        <div>
           <FilterTabs
             portfolioItems={portfolioItems}
             activeFilter={activeFilter}
@@ -104,9 +94,6 @@ export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
         {/* Portfolio Grid/Masonry */}
         <div
           className="mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
         >
           {isLoading ? (
             viewMode === 'grid' ? (
@@ -127,9 +114,6 @@ export function PortfolioSection({ portfolioItems }: PortfolioSectionProps) {
         {!isLoading && (
           <div
             className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
           >
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className="text-2xl font-bold text-foreground">

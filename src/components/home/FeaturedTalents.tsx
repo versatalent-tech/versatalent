@@ -62,7 +62,6 @@ export function FeaturedTalents() {
       <div className="container px-4 mx-auto">
         <div
           className="text-center mb-12"
-          transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             VersaTalent <span className="text-gold">Artists</span>
@@ -74,7 +73,6 @@ export function FeaturedTalents() {
 
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-          initial="hidden"
         >
           {talents.map((talent, index) => (
             <div
@@ -124,7 +122,6 @@ export function FeaturedTalents() {
 
         <div
           className="text-center mt-12"
-          transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Link
             href="/talents"

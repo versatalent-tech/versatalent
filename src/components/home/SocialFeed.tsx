@@ -124,9 +124,6 @@ export function SocialFeed() {
             <div
               key={post.id}
               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
               onMouseEnter={() => setHoveredPost(post.id)}
               onMouseLeave={() => setHoveredPost(null)}
             >
@@ -160,8 +157,6 @@ export function SocialFeed() {
                 {hoveredPost === post.id && (
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
                       className="flex items-center gap-4 text-white"
                     >
                       <div className="flex items-center gap-1">

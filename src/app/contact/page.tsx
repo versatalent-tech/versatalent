@@ -21,19 +21,13 @@ export default function ContactPage() {
         <div className="container px-4 mx-auto text-center">
           <h1
             className="text-4xl md:text-6xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
           >
             Get in <span className="text-gold">Touch</span>
           </h1>
           <p
             className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Ready to work with exceptional talent or join our roster? Let's start the conversation.
+            Ready to work with exceptional talent or join our roster? Let&apos;s start the conversation.
           </p>
         </div>
       </section>
@@ -44,11 +38,7 @@ export default function ContactPage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Contact Information */}
-              <div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-              >
+              <div>
                 <h2 className="text-3xl font-bold text-foreground mb-8">
                   Contact Information
                 </h2>
@@ -119,11 +109,7 @@ export default function ContactPage() {
               </div>
 
               {/* Contact Form */}
-              <div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
+              <div>
                 <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
                   {/* Form Type Selector */}
                   <div className="mb-6">
@@ -362,7 +348,7 @@ export default function ContactPage() {
                   </NetlifyForm>
 
                   <p className="text-xs text-gray-500 text-center mt-4">
-                    We'll respond within 48 hours. Your information is kept confidential.
+                    We&apos;ll respond within 48 hours. Your information is kept confidential.
                   </p>
                 </div>
               </div>

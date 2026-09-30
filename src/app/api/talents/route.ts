@@ -77,7 +77,7 @@ export const POST = withAdminAuth(async (request: Request) => {
     const data: CreateTalentRequest = await request.json();
 
     // Validate required fields using new Validator
-    const validator = new Validator(data as Record<string, unknown>)
+    const validator = new Validator(data as unknown as Record<string, unknown>)
       .required('name', 'Talent name is required')
       .required('industry', 'Industry is required')
       .required('profession', 'Profession is required')
@@ -85,12 +85,12 @@ export const POST = withAdminAuth(async (request: Request) => {
       .custom('industry', (val) => isValidIndustry(String(val)), 'Invalid industry type');
 
     const validation = validator.validate();
-    if (!validation.valid) {
+    if ('errors' in validation) {
       return ApiErrors.ValidationError(validation.errors);
     }
 
     // Create the talent profile
-    const talent = await createTalent(validation.data as CreateTalentRequest);
+    const talent = await createTalent(validation.data as unknown as CreateTalentRequest);
 
     // Generate user credentials for the talent
     const defaultPassword = generateSecurePassword(12);

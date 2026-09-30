@@ -133,7 +133,8 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
     RETURNING *
   `;
 
-  const users = await sql<User[]>(query, values);
+  // Dynamic SQL: neon 1.x only accepts sql`...` templates when called directly
+  const users = (await sql.query(query, values)) as User[];
   return users[0];
 }
 

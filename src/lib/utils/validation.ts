@@ -481,7 +481,7 @@ export class Validator<T extends Record<string, unknown>> {
 
   positive(field: keyof T, message?: string): this {
     const value = this.data[field];
-    if (value !== undefined && !isPositiveInteger(value)) {
+    if (value !== undefined && !isPositiveInteger(value as string | number)) {
       this.addError(String(field), message || 'Must be a positive number');
     }
     return this;

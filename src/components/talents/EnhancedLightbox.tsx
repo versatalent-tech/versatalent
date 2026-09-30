@@ -208,17 +208,11 @@ export function EnhancedLightbox({
       <div
         ref={lightboxRef}
         className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
         onClick={onClose}
       >
         {/* Controls Bar */}
         <div
           className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/50 to-transparent z-10"
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.1 }}
         >
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -309,9 +303,6 @@ export function EnhancedLightbox({
             /* Video Player */
             <div
               className="relative w-full max-w-4xl"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
             >
               {videoLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg z-10">
@@ -346,7 +337,6 @@ export function EnhancedLightbox({
                 y: position.y,
                 cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
               }}
-              transition={isDragging ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 30 }}
               onMouseDown={handleMouseDown}
             >
               {imageLoading && (
@@ -391,9 +381,6 @@ export function EnhancedLightbox({
         {/* Image Counter */}
         <div
           className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm bg-black/50 px-3 py-1 rounded-full"
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.1 }}
         >
           {currentIndex + 1} / {items.length}
         </div>
@@ -403,9 +390,6 @@ export function EnhancedLightbox({
           {showMetadata && (
             <div
               className="absolute right-0 top-20 bottom-20 w-80 bg-black/80 backdrop-blur-md p-6 overflow-y-auto"
-              initial={{ x: 320 }}
-              animate={{ x: 0 }}
-              exit={{ x: 320 }}
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-white font-semibold text-lg mb-4">{currentItem.title}</h3>
@@ -484,16 +468,9 @@ export function EnhancedLightbox({
           {showShareDialog && (
             <div
               className="absolute top-20 right-4 bg-white rounded-lg p-4 shadow-xl"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <ShareButtons
-                url={typeof window !== 'undefined' ? window.location.href : ''}
-                title={currentItem.title}
-                description={currentItem.description}
-              />
+              <ShareButtons title={currentItem.title} />
             </div>
           )}
         

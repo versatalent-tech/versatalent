@@ -31,7 +31,7 @@ interface StripeCheckoutProps {
   onCancel: () => void;
 }
 
-function CheckoutForm({ orderId, amount, onSuccess, onCancel }: StripeCheckoutProps) {
+function CheckoutForm({ orderId, amount, onSuccess, onCancel }: Omit<StripeCheckoutProps, 'currency'>) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);

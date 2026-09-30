@@ -164,7 +164,7 @@ export function FAQ() {
               Still have questions?
             </h3>
             <p className="text-gray-600 mb-6">
-              Our team is here to help. Get in touch and we'll respond within 48 hours.
+              Our team is here to help. Get in touch and we&apos;ll respond within 48 hours.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

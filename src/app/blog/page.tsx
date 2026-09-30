@@ -82,7 +82,6 @@ export default function BlogPage() {
         <div className="container px-4 mx-auto">
           <div
             className="max-w-3xl mx-auto text-center mb-12"
-            transition={{ duration: 0.5 }}
           >
             <h1 className="text-4xl font-bold text-foreground mb-4">
               VersaTalent <span className="text-gold">Blog</span>
@@ -95,7 +94,6 @@ export default function BlogPage() {
           {/* Featured Post */}
           <div
             className="mb-16"
-            transition={{ duration: 0.6, delay: 0.2 }}
           >
             <Link href={`/blog/${blogPosts[0].id}`} className="block">
               <div className="relative rounded-lg overflow-hidden aspect-[16/9] shadow-lg">
@@ -131,7 +129,6 @@ export default function BlogPage() {
             {blogPosts.slice(1).map((post, index) => (
               <div
                 key={post.id}
-                transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
               >
                 <Link href={`/blog/${post.id}`} className="block h-full">
                   <Card className="overflow-hidden bg-white border-gray-200 h-full hover:border-gold hover:shadow-md transition-all duration-300">
@@ -170,7 +167,6 @@ export default function BlogPage() {
           {/* Newsletter Subscription Section */}
           <div
             className="mt-16 mb-8"
-            transition={{ duration: 0.5, delay: 0.5 }}
           >
             <div className="max-w-2xl mx-auto">
               <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-8 md:p-12 text-center">
@@ -199,7 +195,6 @@ export default function BlogPage() {
           {/* Call to action */}
           <div
             className="mt-8 text-center"
-            transition={{ duration: 0.5, delay: 0.6 }}
           >
             <p className="text-gray-600 mb-2">Have a story to share?</p>
             <Link

@@ -68,9 +68,6 @@ export function HeroSection({ talent }: HeroSectionProps) {
       {/* Hero Image with Progressive Loading and Parallax */}
       <div
         className="absolute inset-0"
-        initial={{ scale: 1.1, opacity: 0 }}
-        animate={{ scale: 1, opacity: isLoaded ? 1 : 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
@@ -111,26 +108,13 @@ export function HeroSection({ talent }: HeroSectionProps) {
       {/* Dynamic lighting effect */}
       <div
         className="absolute inset-0 bg-gradient-radial from-gold/20 via-transparent to-transparent"
-        animate={{
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
       />
 
       {/* Content Overlay */}
       <div className="absolute inset-0 flex items-end">
         <div className="container mx-auto px-4 pb-8 md:pb-12">
           <div className="max-w-4xl">
-            <div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
+            <div>
               {/* Industry Badge */}
               <Badge className="mb-4 bg-gold/90 text-black font-medium px-3 py-1.5 text-sm">
                 <Star className="w-3 h-3 mr-1" />
@@ -150,9 +134,6 @@ export function HeroSection({ talent }: HeroSectionProps) {
               <div className="flex flex-wrap gap-4 md:gap-8 text-white/90">
                 <div
                   className="flex items-center gap-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
                 >
                   <MapPin className="w-4 h-4 text-gold" />
                   <span className="text-sm md:text-base">{talent.location}</span>
@@ -160,9 +141,6 @@ export function HeroSection({ talent }: HeroSectionProps) {
 
                 <div
                   className="flex items-center gap-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
                 >
                   <Award className="w-4 h-4 text-gold" />
                   <span className="text-sm md:text-base">{stats.professionalShots} Professional Shots</span>
@@ -170,9 +148,6 @@ export function HeroSection({ talent }: HeroSectionProps) {
 
                 <div
                   className="flex items-center gap-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
                 >
                   <Calendar className="w-4 h-4 text-gold" />
                   <span className="text-sm md:text-base">{stats.recentWork} Recent Projects</span>
@@ -181,9 +156,6 @@ export function HeroSection({ talent }: HeroSectionProps) {
                 {stats.collaborations > 0 && (
                   <div
                     className="flex items-center gap-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
                   >
                     <Star className="w-4 h-4 text-gold" />
                     <span className="text-sm md:text-base">{stats.collaborations} Brand Collaborations</span>

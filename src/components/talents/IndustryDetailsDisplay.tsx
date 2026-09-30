@@ -79,7 +79,6 @@ function ModelingDetailsDisplay({ details }: { details: ModelingDetails }) {
   return (
     <div
       className="bg-gradient-to-br from-pink-50 to-rose-50 p-6 rounded-xl border border-pink-200"
-      transition={{ duration: 0.4 }}
     >
       <h3 className="text-lg font-semibold text-pink-900 mb-4 flex items-center gap-2">
         <Ruler className="h-5 w-5" />
@@ -149,7 +148,6 @@ function SportsDetailsDisplay({ details }: { details: SportsDetails }) {
   return (
     <div
       className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200"
-      transition={{ duration: 0.4 }}
     >
       <h3 className="text-lg font-semibold text-green-900 mb-4 flex items-center gap-2">
         <Trophy className="h-5 w-5" />
@@ -244,7 +242,6 @@ function MusicDetailsDisplay({ details }: { details: MusicDetails }) {
   return (
     <div
       className="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-200"
-      transition={{ duration: 0.4 }}
     >
       <h3 className="text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2">
         <Music className="h-5 w-5" />
@@ -348,7 +345,6 @@ function ActingDetailsDisplay({ details }: { details: ActingDetails }) {
   return (
     <div
       className="bg-gradient-to-br from-amber-50 to-yellow-50 p-6 rounded-xl border border-amber-200"
-      transition={{ duration: 0.4 }}
     >
       <h3 className="text-lg font-semibold text-amber-900 mb-4 flex items-center gap-2">
         <Film className="h-5 w-5" />
@@ -427,7 +423,6 @@ function CulinaryDetailsDisplay({ details }: { details: CulinaryDetails }) {
   return (
     <div
       className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-xl border border-orange-200"
-      transition={{ duration: 0.4 }}
     >
       <h3 className="text-lg font-semibold text-orange-900 mb-4 flex items-center gap-2">
         <ChefHat className="h-5 w-5" />

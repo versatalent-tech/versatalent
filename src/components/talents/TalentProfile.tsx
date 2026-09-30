@@ -25,12 +25,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
         <div className="container px-4 mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Talent Image and Quick Stats */}
-          <div
-            transition={{ duration: 0.5 }}
-          >
+          <div>
             <div
               className="aspect-[3/4] relative rounded-lg overflow-hidden mb-6 shadow-md"
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <Image
                 src={imageSrc}
@@ -44,28 +41,24 @@ export function TalentProfile({ talent }: TalentProfileProps) {
             <div className="grid grid-cols-2 gap-4 text-center">
               <div
                 className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm"
-                transition={{ duration: 0.3, delay: 0.1 }}
               >
                 <p className="text-xs text-gray-500 uppercase">Industry</p>
                 <p className="text-foreground font-medium mt-1 capitalize">{talent.industry}</p>
               </div>
               <div
                 className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm"
-                transition={{ duration: 0.3, delay: 0.2 }}
               >
                 <p className="text-xs text-gray-500 uppercase">Profession</p>
                 <p className="text-foreground font-medium mt-1 capitalize">{talent.profession}</p>
               </div>
               <div
                 className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm"
-                transition={{ duration: 0.3, delay: 0.3 }}
               >
                 <p className="text-xs text-gray-500 uppercase">Gender</p>
                 <p className="text-foreground font-medium mt-1 capitalize">{talent.gender}</p>
               </div>
               <div
                 className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm"
-                transition={{ duration: 0.3, delay: 0.4 }}
               >
                 <p className="text-xs text-gray-500 uppercase">Location</p>
                 <p className="text-foreground font-medium mt-1">{talent.location}</p>
@@ -76,7 +69,6 @@ export function TalentProfile({ talent }: TalentProfileProps) {
             {socialLinks && (
               <div
                 className="mt-6"
-                transition={{ duration: 0.3, delay: 0.5 }}
               >
                 <h3 className="text-foreground text-lg font-semibold mb-3">Connect</h3>
                 <div className="flex gap-3">
@@ -168,12 +160,9 @@ export function TalentProfile({ talent }: TalentProfileProps) {
           </div>
 
           {/* Talent Info */}
-          <div
-            transition={{ duration: 0.5 }}
-          >
+          <div>
             <div
               className="mb-8"
-              transition={{ duration: 0.3 }}
             >
               <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">{talent.name}</h1>
               <p className="text-gold text-lg mb-4">{talent.tagline}</p>
@@ -188,7 +177,6 @@ export function TalentProfile({ talent }: TalentProfileProps) {
 
             <div
               className="mb-8"
-              transition={{ duration: 0.3, delay: 0.1 }}
             >
               <h2 className="text-xl font-semibold text-foreground mb-3">Bio</h2>
               <p className="text-gray-600 leading-relaxed">{talent.bio}</p>
@@ -196,14 +184,12 @@ export function TalentProfile({ talent }: TalentProfileProps) {
 
             <div
               className="mb-8"
-              transition={{ duration: 0.3, delay: 0.2 }}
             >
               <h2 className="text-xl font-semibold text-foreground mb-4">Skills & Specialties</h2>
               <div className="flex flex-wrap gap-2">
                 {talent.skills.map((skill, index) => (
                   <div
                     key={skill}
-                    transition={{ duration: 0.2, delay: 0.1 + index * 0.05 }}
                   >
                     <Badge className="bg-gold-10 text-gold hover:bg-gold-20 border border-gold-20">
                       {skill}
@@ -217,7 +203,6 @@ export function TalentProfile({ talent }: TalentProfileProps) {
             {talent.industry_details && (
               <div
                 className="mb-8"
-                transition={{ duration: 0.3, delay: 0.25 }}
               >
                 <IndustryDetailsDisplay
                   industry={talent.industry as Industry}
@@ -233,14 +218,12 @@ export function TalentProfile({ talent }: TalentProfileProps) {
 
             <div
               className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm"
-              transition={{ duration: 0.5, delay: 0.3 }}
             >
               <h2 className="text-xl font-semibold text-foreground mb-4">Book This Talent</h2>
               <p className="text-gray-600 mb-6">
                 Interested in working with {talent.name}? Contact our team to discuss availability and booking details.
               </p>
-              <div
-              >
+              <div>
                 <Button asChild className="bg-gold hover:bg-gold-80 text-white w-full">
                   <Link href="/contact">
                     Get in Touch

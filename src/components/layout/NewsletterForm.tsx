@@ -88,13 +88,11 @@ export function NewsletterForm({
   return (
     <div
       className={className}
-      transition={{ duration: 0.5 }}
     >
       {title && <h3 className="text-lg font-semibold text-foreground mb-3">{title}</h3>}
 
       {isSubmitted ? (
         <div
-          transition={{ type: "spring", duration: 0.5 }}
           className="text-center py-4"
         >
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gold-10 text-gold mb-3">
@@ -114,7 +112,7 @@ export function NewsletterForm({
             </svg>
           </div>
           <p className="text-gray-600 mb-3">
-            Thanks for subscribing! We'll keep you updated with our latest news.
+            Thanks for subscribing! We&apos;ll keep you updated with our latest news.
           </p>
           <Button
             variant="outline"
@@ -159,8 +157,7 @@ export function NewsletterForm({
                 )}
               />
 
-              <div
-              >
+              <div>
                 <Button
                   type="submit"
                   className="w-full bg-gold hover:bg-gold-80 text-white"

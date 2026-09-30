@@ -214,7 +214,7 @@ export function NFCReaderStatusIndicator({
           <div className="flex-1">
             <p className="text-sm text-green-800 font-medium">NFC Bridge Server Detected</p>
             <p className="text-xs text-green-700 mt-1">
-              A local NFC bridge server is available. Click "Connect Bridge" to use your physical NFC reader.
+              A local NFC bridge server is available. Click &quot;Connect Bridge&quot; to use your physical NFC reader.
             </p>
           </div>
         </div>
@@ -301,7 +301,7 @@ export function NFCReaderStatusIndicator({
       {status.connectionMethod === 'simulation' && (
         <div className="mt-3 pt-3 border-t border-gray-200">
           <p className="text-xs text-gray-500">
-            <strong>Simulation Mode:</strong> Click "Test Scan" to generate simulated NFC card UIDs.
+            <strong>Simulation Mode:</strong> Click &quot;Test Scan&quot; to generate simulated NFC card UIDs.
             This allows you to test the full registration workflow without physical hardware.
           </p>
         </div>

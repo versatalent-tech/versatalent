@@ -206,9 +206,9 @@ export async function updateOrderStatus(
 
   const updatedOrder = rows[0] as POSOrder || null;
 
-  // Restore stock if order is cancelled or refunded
+  // Restore stock if order is cancelled
   // Only restore if the previous status was 'pending' or 'paid' (meaning stock was deducted)
-  if (updatedOrder && (status === 'cancelled' || status === 'refunded')) {
+  if (updatedOrder && status === 'cancelled') {
     if (currentOrder.status === 'pending' || currentOrder.status === 'paid') {
       try {
         // Get order items to restore stock
