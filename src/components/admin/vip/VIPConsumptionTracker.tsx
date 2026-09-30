@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, ShoppingCart, TrendingUp } from "lucide-react";
+import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
 interface VIPUser {
   id: string;
@@ -52,7 +53,7 @@ export function VIPConsumptionTracker() {
   const [formData, setFormData] = useState({
     user_id: '',
     amount: '',
-    currency: 'EUR',
+    currency: POS_CURRENCY,
     description: ''
   });
 
@@ -123,7 +124,7 @@ export function VIPConsumptionTracker() {
     setFormData({
       user_id: '',
       amount: '',
-      currency: 'EUR',
+      currency: POS_CURRENCY,
       description: ''
     });
   }
@@ -165,13 +166,13 @@ export function VIPConsumptionTracker() {
         <div className="bg-green-50 rounded-lg p-4">
           <div className="text-sm text-gray-600">Total Amount</div>
           <div className="text-2xl font-bold text-green-600">
-            €{stats.totalAmount.toFixed(2)}
+            {formatCurrency(Math.round(stats.totalAmount * 100))}
           </div>
         </div>
         <div className="bg-purple-50 rounded-lg p-4">
           <div className="text-sm text-gray-600">Average Spending</div>
           <div className="text-2xl font-bold text-purple-600">
-            €{stats.avgAmount.toFixed(2)}
+            {formatCurrency(Math.round(stats.avgAmount * 100))}
           </div>
         </div>
       </div>
@@ -218,7 +219,7 @@ export function VIPConsumptionTracker() {
                     {consumption.description || '-'}
                   </td>
                   <td className="py-3 px-4 text-right font-semibold text-green-600">
-                    €{consumption.amount.toFixed(2)}
+                    {formatCurrency(Math.round(consumption.amount * 100), consumption.currency)}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <span className="inline-flex items-center gap-1 text-gold font-semibold">
@@ -264,7 +265,7 @@ export function VIPConsumptionTracker() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Amount * (€)</label>
+              <label className="text-sm font-medium mb-2 block">Amount * (£)</label>
               <Input
                 type="number"
                 step="0.01"

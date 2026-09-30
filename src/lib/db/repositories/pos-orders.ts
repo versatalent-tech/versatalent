@@ -2,6 +2,7 @@ import { sql, query } from '../client';
 import type { POSOrder, POSOrderItem, POSOrderWithDetails, OrderStatus, CreatePOSOrderRequest } from '../types';
 import { getProductsByIds } from './products';
 import { checkStockAvailability, deductStockForOrder, restoreStockForOrder } from './inventory';
+import { POS_CURRENCY } from '@/lib/utils/formatting';
 
 /**
  * Get all orders with optional filters
@@ -142,7 +143,7 @@ export async function createOrder(data: CreatePOSOrderRequest): Promise<POSOrder
       ${staff_user_id || null},
       ${customer_user_id || null},
       ${totalCents},
-      'EUR',
+      ${POS_CURRENCY},
       'pending',
       ${notes || null}
     )

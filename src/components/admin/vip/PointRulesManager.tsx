@@ -19,6 +19,7 @@ import {
   Edit3,
 } from "lucide-react";
 import type { VIPPointRule } from "@/lib/db/types";
+import { POS_CURRENCY } from "@/lib/utils/formatting";
 interface PointRulesManagerProps {
   className?: string;
 }
@@ -27,7 +28,7 @@ const DEFAULT_RULES: Partial<VIPPointRule>[] = [
   {
     action_type: "consumption",
     points_per_unit: 0.333333,
-    unit: "EUR",
+    unit: POS_CURRENCY,
     is_active: true,
   },
   {
@@ -147,7 +148,7 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
       await saveRule(
         "consumption",
         eurosPerPointToPointsPerUnit(eurosPerPoint),
-        "EUR",
+        POS_CURRENCY,
         consumptionActive
       );
       // Save event check-in rule
@@ -254,7 +255,7 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Euros per Point
+                  Pounds per Point
                 </label>
                 <div className="flex items-center gap-3">
                   <Input
@@ -265,18 +266,18 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
                     onChange={(e) => setEurosPerPoint(parseFloat(e.target.value) || 0)}
                     className="w-32"
                   />
-                  <span className="text-gray-600">EUR = 1 point</span>
+                  <span className="text-gray-600">£ = 1 point</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Current: <strong>1 point per {eurosPerPoint} euros</strong> spent
+                  Current: <strong>1 point per £{eurosPerPoint}</strong> spent
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">Example Calculations:</p>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p>10 EUR purchase = <strong>{Math.floor(10 / eurosPerPoint)} points</strong></p>
-                  <p>25 EUR purchase = <strong>{Math.floor(25 / eurosPerPoint)} points</strong></p>
-                  <p>100 EUR purchase = <strong>{Math.floor(100 / eurosPerPoint)} points</strong></p>
+                  <p>£10 purchase = <strong>{Math.floor(10 / eurosPerPoint)} points</strong></p>
+                  <p>£25 purchase = <strong>{Math.floor(25 / eurosPerPoint)} points</strong></p>
+                  <p>£100 purchase = <strong>{Math.floor(100 / eurosPerPoint)} points</strong></p>
                 </div>
               </div>
             </div>
@@ -456,7 +457,7 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
             <div className="bg-gray-50 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600 mb-1">Purchase Points</p>
               <p className="text-2xl font-bold text-gold">
-                1 pt / {eurosPerPoint} EUR
+                1 pt / £{eurosPerPoint}
               </p>
               <Badge variant={consumptionActive ? "default" : "secondary"} className="mt-2">
                 {consumptionActive ? "Active" : "Inactive"}

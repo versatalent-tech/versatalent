@@ -17,6 +17,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { POS_CURRENCY } from "@/lib/utils/formatting";
 
 interface PurchaseHistoryProps {
   userId: string;
@@ -114,7 +115,7 @@ export default function PurchaseHistory({ userId }: PurchaseHistoryProps) {
     setExpandedOrders(newExpanded);
   };
 
-  const formatCurrency = (cents: number, currency: string = 'EUR') => {
+  const formatCurrency = (cents: number, currency: string = POS_CURRENCY) => {
     return new Intl.NumberFormat('en-IE', {
       style: 'currency',
       currency: currency,

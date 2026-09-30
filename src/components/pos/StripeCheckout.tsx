@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2, CreditCard, CheckCircle2, X } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/formatting";
 
 // Initialize Stripe only if publishable key exists
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -118,7 +119,7 @@ function CheckoutForm({ orderId, amount, onSuccess, onCancel }: Omit<StripeCheck
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium text-blue-900">Total Amount:</span>
           <span className="text-xl font-bold text-blue-900">
-            €{(amount / 100).toFixed(2)}
+            {formatCurrency(amount)}
           </span>
         </div>
       </div>
@@ -147,7 +148,7 @@ function CheckoutForm({ orderId, amount, onSuccess, onCancel }: Omit<StripeCheck
           ) : (
             <>
               <CreditCard className="h-4 w-4 mr-2" />
-              Pay €{(amount / 100).toFixed(2)}
+              Pay {formatCurrency(amount)}
             </>
           )}
         </Button>

@@ -5,6 +5,7 @@ import type {
   PurchaseHistoryItem,
   PurchaseHistoryStats
 } from '../types';
+import { POS_CURRENCY } from '@/lib/utils/formatting';
 
 /**
  * Get complete purchase history for a user
@@ -93,7 +94,7 @@ export async function getUserPurchaseHistory(
       stripe_customer_id: user.stripe_customer_id,
       total_orders: totalOrders,
       total_spent_cents: totalSpentCents,
-      currency: ordersResult[0]?.currency || 'EUR',
+      currency: ordersResult[0]?.currency || POS_CURRENCY,
       orders,
     };
   } catch (error) {

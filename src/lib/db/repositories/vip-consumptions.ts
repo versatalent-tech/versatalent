@@ -1,5 +1,6 @@
 import { sql } from '../client';
 import type { VIPConsumption, VIPConsumptionWithDetails, CreateVIPConsumptionRequest } from '../types';
+import { POS_CURRENCY } from '@/lib/utils/formatting';
 
 export async function getAllVIPConsumptions(): Promise<VIPConsumptionWithDetails[]> {
   const consumptions = await sql<any[]>`
@@ -88,7 +89,7 @@ export async function createVIPConsumption(
       ${data.user_id},
       ${data.event_id || null},
       ${data.amount},
-      ${data.currency || 'EUR'},
+      ${data.currency || POS_CURRENCY},
       ${data.description || null}
     )
     RETURNING *

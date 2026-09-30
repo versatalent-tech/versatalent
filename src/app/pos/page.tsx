@@ -10,6 +10,7 @@ import { ShoppingCart, Search, User, X, Plus, Minus, CreditCard, Trash2 } from "
 import type { Product } from "@/lib/db/types";
 import { NFCReaderButton } from "@/components/pos/NFCReader";
 import { StripeCheckout } from "@/components/pos/StripeCheckout";
+import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
 interface CartItem {
   product: Product;
@@ -296,7 +297,7 @@ export default function POSPage() {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-gold">
-                          €{(product.price_cents / 100).toFixed(2)}
+                          {formatCurrency(product.price_cents)}
                         </span>
                         <Plus className="h-5 w-5 text-gray-400" />
                       </div>
@@ -362,7 +363,7 @@ export default function POSPage() {
                           <div className="flex-1">
                             <p className="font-semibold text-sm">{item.product.name}</p>
                             <p className="text-xs text-gray-600">
-                              €{(item.product.price_cents / 100).toFixed(2)} each
+                              {formatCurrency(item.product.price_cents)} each
                             </p>
                           </div>
                           <Button
@@ -394,7 +395,7 @@ export default function POSPage() {
                             </Button>
                           </div>
                           <span className="font-bold">
-                            €{((item.product.price_cents * item.quantity) / 100).toFixed(2)}
+                            {formatCurrency((item.product.price_cents * item.quantity))}
                           </span>
                         </div>
                       </div>
@@ -408,7 +409,7 @@ export default function POSPage() {
                     <div className="border-t pt-4 mb-4">
                       <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total:</span>
-                        <span className="text-gold">€{(getTotal() / 100).toFixed(2)}</span>
+                        <span className="text-gold">{formatCurrency(getTotal())}</span>
                       </div>
                     </div>
 
@@ -443,7 +444,7 @@ export default function POSPage() {
         <StripeCheckout
           orderId={currentOrderId}
           amount={getTotal()}
-          currency="EUR"
+          currency={POS_CURRENCY}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
         />

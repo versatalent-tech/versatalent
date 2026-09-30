@@ -4,6 +4,10 @@ import { getUserById, updateUser } from '@/lib/db/repositories/users';
 import { withPOSAuth } from '@/lib/auth/pos-auth';
 import { ensureStripeCustomer, STRIPE_API_VERSION } from '@/lib/services/stripe';
 import Stripe from 'stripe';
+import { formatCurrency } from '@/lib/utils/formatting';
+
+// Stripe's minimum charge amounts (smallest currency unit)
+const STRIPE_MINIMUM_CHARGE_CENTS: Record<string, number> = { GBP: 30, EUR: 50 };
 
 // Initialize Stripe with secret key
 const getStripe = () => {
@@ -47,10 +51,11 @@ export const POST = withPOSAuth(async (request: NextRequest) => {
       );
     }
 
-    // Validate amount (Stripe minimum is 50 cents)
-    if (order.total_cents < 50) {
+    // Validate amount against Stripe's minimum charge for the currency
+    const minimumCents = STRIPE_MINIMUM_CHARGE_CENTS[order.currency.toUpperCase()] ?? 50;
+    if (order.total_cents < minimumCents) {
       return NextResponse.json(
-        { error: 'Order total must be at least €0.50' },
+        { error: `Order total must be at least ${formatCurrency(minimumCents, order.currency)}` },
         { status: 400 }
       );
     }
