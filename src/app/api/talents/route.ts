@@ -10,7 +10,7 @@ import { createUser } from '@/lib/db/repositories/users';
 import { generateSecurePassword, generateDefaultEmail } from '@/lib/utils';
 import { successResponse, ApiErrors, logApiError } from '@/lib/utils/api-response';
 import { Validator, isValidIndustry } from '@/lib/utils/validation';
-import { withAdminAuth } from '@/lib/middleware/auth';
+import { verifyAdminAuth, withAdminAuth } from '@/lib/middleware/auth';
 import type { CreateTalentRequest, Industry } from '@/lib/db/types';
 
 /**
@@ -20,7 +20,7 @@ import type { CreateTalentRequest, Industry } from '@/lib/db/types';
  * - industry: Filter by industry (optional)
  * - featured: true to get only featured talents (optional)
  * - q: Search query (optional)
- * - activeOnly: false to include inactive talents (default: true)
+ * - activeOnly: false to include inactive talents (admin only; default: true)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -28,11 +28,14 @@ export async function GET(request: NextRequest) {
     const industry = searchParams.get('industry') as Industry | null;
     const featured = searchParams.get('featured');
     const searchQuery = searchParams.get('q');
-    const activeOnly = searchParams.get('activeOnly') !== 'false'; // Default to true
+    // Inactive talents are only listed for admins
+    const activeOnly = searchParams.get('activeOnly') !== 'false' || !(await verifyAdminAuth());
 
-    // Cache headers for better performance
+    // Don't let the CDN cache this: Netlify's cache key ignores the query
+    // string, so every filter (featured, industry, status...) would get
+    // whichever response was cached first.
     const headers = {
-      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+      'Cache-Control': 'no-store',
     };
 
     // Handle search query
