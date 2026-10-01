@@ -617,7 +617,7 @@ export default function AdminBlogsPage() {
                 <Textarea
                   value={formData.content}
                   onChange={(e) => handleFormChange("content", e.target.value)}
-                  placeholder="Write your blog post content here... (Supports Markdown)"
+                  placeholder="Write your blog post content here... Links like https://example.com or [link text](https://example.com) become clickable."
                   rows={10}
                   className="font-mono text-sm"
                 />
