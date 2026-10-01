@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/repositories/pos-orders';
 import { processPOSOrderForVIP } from '@/lib/services/pos-vip-integration';
 import {
+  checkAppPaymentTiming,
   checkTransactionPaysOrder,
   getTransaction,
   SumUpNotConfiguredError,
@@ -118,6 +119,9 @@ export async function confirmAppPayment(
 
   const check = checkTransactionPaysOrder(transaction, order);
   if (!check.ok) return { ok: false, reason: check.reason };
+
+  const timing = checkAppPaymentTiming(transaction, order.created_at);
+  if (!timing.ok) return { ok: false, reason: timing.reason };
 
   try {
     const result = await completeOrderPayment(order.id, {

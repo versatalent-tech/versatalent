@@ -271,3 +271,44 @@ export function checkTransactionPaysOrder(
   }
   return { ok: true };
 }
+
+// A SumUp app payment must be taken after the sale started on the till,
+// and not long after: stops a code from an older or unrelated payment of
+// the same amount being used by mistake.
+const APP_PAYMENT_CLOCK_SKEW_MS = 2 * 60 * 1000;
+export const APP_PAYMENT_WINDOW_MS = 30 * 60 * 1000;
+
+function ukTime(date: Date, relativeTo?: Date): string {
+  const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+  const day = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+  // Add the date when it isn't the same day as the sale
+  return relativeTo && day(date) !== day(relativeTo) ? `${time} on ${day(date)}` : time;
+}
+
+/**
+ * Whether a SumUp app payment was taken while this sale was open.
+ */
+export function checkAppPaymentTiming(
+  transaction: Pick<SumUpTransaction, 'timestamp'>,
+  saleStartedAt: Date | string
+): TransactionCheck {
+  const paidAt = new Date(transaction.timestamp);
+  const startedAt = new Date(saleStartedAt);
+  if (isNaN(paidAt.getTime()) || isNaN(startedAt.getTime())) {
+    return { ok: false, reason: 'Could not read the payment time from SumUp' };
+  }
+  if (paidAt.getTime() < startedAt.getTime() - APP_PAYMENT_CLOCK_SKEW_MS) {
+    return {
+      ok: false,
+      reason: `That payment was taken at ${ukTime(paidAt, startedAt)}, before this sale started at ${ukTime(startedAt)}. Check the transaction code.`,
+    };
+  }
+  if (paidAt.getTime() > startedAt.getTime() + APP_PAYMENT_WINDOW_MS) {
+    return {
+      ok: false,
+      reason: `That payment was taken at ${ukTime(paidAt, startedAt)}, more than ${APP_PAYMENT_WINDOW_MS / 60000} minutes after this sale started at ${ukTime(startedAt)}. Check the code, or cancel this sale and ring it up again.`,
+    };
+  }
+  return { ok: true };
+}
+
