@@ -20,10 +20,11 @@ export const metadata: Metadata = {
     "talent agency, acting, modeling, music, culinary arts, sports, VersaTalent",
   icons: {
     icon: [
-      { url: '/favicon.png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/favicon.png' },
+      { url: '/apple-touch-icon.png', sizes: '180x180' },
     ],
   },
 };
