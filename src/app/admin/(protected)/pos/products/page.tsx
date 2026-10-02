@@ -26,6 +26,7 @@ import type { Product } from "@/lib/db/types";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -224,6 +225,7 @@ export default function AdminProductsPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl font-bold text-white mb-2">
                   Product <span className="text-gold">Management</span>
                 </h1>

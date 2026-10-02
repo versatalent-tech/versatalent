@@ -29,6 +29,7 @@ import {
 import type { NewsletterSubscriber } from "@/lib/db/types";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 export default function AdminNewsletterPage() {
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -217,6 +218,7 @@ export default function AdminNewsletterPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
                   Newsletter <span className="text-gold">Subscribers</span>
                 </h1>

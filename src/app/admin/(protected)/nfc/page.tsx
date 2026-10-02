@@ -10,6 +10,7 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { InlineLoader } from "@/components/admin/DynamicLoader";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 // Dynamically import NFC management components with ssr: false since they use browser-only APIs
 const UsersManager = dynamic(
@@ -71,6 +72,7 @@ export default function AdminNFCPage() {
           <div className="container px-4 mx-auto">
             <div className="mb-8 flex items-start justify-between">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
                   NFC <span className="text-gold">Management</span>
                 </h1>

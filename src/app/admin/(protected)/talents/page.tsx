@@ -61,6 +61,7 @@ import { CredentialsDialog } from "@/components/admin/CredentialsDialog";
 import { PasswordResetDialog } from "@/components/admin/PasswordResetDialog";
 import { validateIndustryDetails } from "@/lib/utils/validation";
 import { AlertTriangle, CheckCircle } from "lucide-react";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 // Validation warnings display component
 function IndustryValidationWarnings({ industry, details }: { industry: string; details: IndustryDetails | undefined }) {
@@ -1048,6 +1049,7 @@ export default function AdminTalentsPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
                   Talent <span className="text-gold">Management</span>
                 </h1>

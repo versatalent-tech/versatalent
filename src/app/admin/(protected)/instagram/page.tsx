@@ -20,6 +20,7 @@ import { InstagramService } from '@/lib/services/instagram-service';
 import { useInstagramFeed } from '@/lib/hooks/useInstagramFeed';
 import { AdminAuthGuard } from '@/components/auth/AdminAuthGuard';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { AdminBackLink } from '@/components/admin/AdminBackLink';
 
 // Dynamically import Instagram configuration to prevent SSR issues
 const InstagramConfiguration = dynamic(
@@ -88,6 +89,7 @@ export default function InstagramAdminPage() {
           <div className="container px-4 mx-auto">
             {/* Header */}
             <div className="mb-8">
+              <AdminBackLink tone="light" />
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-100 rounded-lg">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Download,
@@ -66,11 +67,11 @@ export default function ArchitecturePage() {
             Print / Save as PDF
           </Button>
           <Button
+            asChild
             variant="outline"
             className="border-white text-white hover:bg-white hover:text-black"
-            onClick={() => window.history.back()}
           >
-            Back to Admin
+            <Link href="/admin">Back to Admin</Link>
           </Button>
         </div>
       </div>

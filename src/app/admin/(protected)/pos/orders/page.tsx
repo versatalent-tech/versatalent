@@ -16,6 +16,7 @@ import type { POSOrder, OrderStatus } from "@/lib/db/types";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { formatCurrency } from "@/lib/utils/formatting";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<POSOrder[]>([]);
@@ -92,6 +93,7 @@ export default function AdminOrdersPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl font-bold text-white mb-2">
                   POS <span className="text-gold">Orders</span>
                 </h1>

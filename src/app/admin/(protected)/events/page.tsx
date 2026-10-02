@@ -48,6 +48,7 @@ import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TalentMultiSelect } from "@/components/admin/TalentMultiSelect";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 // Helper function to check if an event should be auto-completed
 function shouldAutoComplete(event: Partial<Event>): boolean {
@@ -483,6 +484,7 @@ export default function AdminEventsPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
                   Event <span className="text-gold">Management</span>
                 </h1>
