@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { CheckCircle2, CircleAlert, Loader2, Trash2 } from "lucide-react";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 interface Reader {
   id: string;
@@ -105,6 +106,7 @@ export default function AdminSumUpPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl font-bold text-white mb-2">
                   SumUp <span className="text-gold">Card Payments</span>
                 </h1>

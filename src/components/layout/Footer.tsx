@@ -14,6 +14,7 @@ const navigation = {
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/contact" },
     { name: "Dashboard", href: "/dashboard" },
+    { name: "Admin", href: "/admin" },
   ],
   industries: [
     { name: "Acting", href: "/talents?industry=acting" },
