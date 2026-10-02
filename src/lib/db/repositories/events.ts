@@ -362,6 +362,15 @@ export async function updateEvent(
     throw new Error('Event not found');
   }
 
+  // Keep the linked check-in event in step: check-in points are keyed to the
+  // nfc_events date, so a rescheduled event must carry its new date across
+  await sql`
+    UPDATE nfc_events
+    SET name = ${result[0].title}, date = ${result[0].start_time}
+    WHERE event_id = ${result[0].id}
+      AND (name IS DISTINCT FROM ${result[0].title} OR date IS DISTINCT FROM ${result[0].start_time})
+  `;
+
   return mapRowToEvent(result[0]);
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ import {
   CheckCircle,
   XCircle,
   Info,
+  Nfc,
 } from "lucide-react";
 import type { Event, EventType, EventStatus, CreateEventRequest, EventVenue, EventPrice, Talent } from "@/lib/db/types";
 import { ImageUpload } from "@/components/admin/ImageUpload";
@@ -741,6 +743,14 @@ export default function AdminEventsPage() {
                           <><CheckCircle className="h-3 w-3 mr-1" /> Enable Check-ins</>
                         )}
                       </Button>
+
+                      {checkinStats[event.id]?.enabled && (
+                        <Button asChild size="sm" className="w-full text-xs mt-2 bg-gold hover:bg-gold/90 text-white">
+                          <Link href={`/staff/event-day/${event.id}`} target="_blank">
+                            <Nfc className="h-3 w-3 mr-1" /> Open Event Day Check-in
+                          </Link>
+                        </Button>
+                      )}
                     </div>
 
                     {/* Actions */}
