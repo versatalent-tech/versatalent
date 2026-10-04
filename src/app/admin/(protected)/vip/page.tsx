@@ -7,6 +7,7 @@ import { Trophy, ShoppingCart, TrendingUp, Settings, Award } from "lucide-react"
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { DynamicLoader, InlineLoader } from "@/components/admin/DynamicLoader";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 // Dynamically import heavy components to reduce initial bundle size
 const VIPMembershipsManager = dynamic(
   () => import("@/components/admin/vip/VIPMembershipsManager").then(mod => ({ default: mod.VIPMembershipsManager })),
@@ -50,6 +51,7 @@ export default function AdminVIPPage() {
           <div className="container px-4 mx-auto">
             <div className="mb-8 flex items-start justify-between">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
                   VIP <span className="text-gold">Management</span>
                 </h1>

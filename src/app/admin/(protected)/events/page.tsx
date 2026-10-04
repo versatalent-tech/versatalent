@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,12 +41,14 @@ import {
   CheckCircle,
   XCircle,
   Info,
+  Nfc,
 } from "lucide-react";
 import type { Event, EventType, EventStatus, CreateEventRequest, EventVenue, EventPrice, Talent } from "@/lib/db/types";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TalentMultiSelect } from "@/components/admin/TalentMultiSelect";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 // Helper function to check if an event should be auto-completed
 function shouldAutoComplete(event: Partial<Event>): boolean {
@@ -481,6 +484,7 @@ export default function AdminEventsPage() {
           <div className="container px-4 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
+                <AdminBackLink />
                 <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
                   Event <span className="text-gold">Management</span>
                 </h1>
@@ -741,6 +745,14 @@ export default function AdminEventsPage() {
                           <><CheckCircle className="h-3 w-3 mr-1" /> Enable Check-ins</>
                         )}
                       </Button>
+
+                      {checkinStats[event.id]?.enabled && (
+                        <Button asChild size="sm" className="w-full text-xs mt-2 bg-gold hover:bg-gold/90 text-white">
+                          <Link href={`/staff/event-day/${event.id}`} target="_blank">
+                            <Nfc className="h-3 w-3 mr-1" /> Open Event Day Check-in
+                          </Link>
+                        </Button>
+                      )}
                     </div>
 
                     {/* Actions */}
