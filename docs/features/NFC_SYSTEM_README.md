@@ -225,9 +225,11 @@ Get check-ins
 - **Query Params**: `?user_id={id}` or `?event_id={id}`
 
 #### `POST /api/nfc/checkins`
-Create check-in
-- **Body**: `{ user_id, source, nfc_card_id?, event_id?, metadata? }`
+Create check-in (awards check-in points to VIP and artist members)
+- **Public (card tap)**: `{ card_uid }` — the member, card and source are taken from the card; the card must be active. Earns the once-a-day check-in points.
+- **Staff/admin session**: `{ user_id, source, nfc_card_id?, event_id?, metadata? }`
 - **Source**: `artist_profile | vip_pass | event_checkin | admin`
+- Door check-ins at an event use the staff event-day page (`/staff/event-day`) instead.
 
 ---
 
@@ -509,7 +511,7 @@ Navigate to: `https://yourdomain.com/admin/nfc`
    ```bash
    curl -X POST http://localhost:3000/api/nfc/checkins \
      -H "Content-Type: application/json" \
-     -d '{"user_id":"USER-ID","source":"artist_profile"}'
+     -d '{"card_uid":"CARD-UID"}'
    ```
 
 3. Check database connection

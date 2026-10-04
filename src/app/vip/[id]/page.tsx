@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +18,8 @@ import {
   ShoppingCart,
   History,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Nfc
 } from "lucide-react";
 
 interface VIPUser {
@@ -77,7 +77,6 @@ interface TierBenefit {
 
 export default function VIPPassPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const [vipUser, setVipUser] = useState<VIPUser | null>(null);
   const [membership, setMembership] = useState<VIPMembership | null>(null);
   const [pointsLog, setPointsLog] = useState<PointsLog[]>([]);
@@ -85,13 +84,7 @@ export default function VIPPassPage() {
   const [checkins, setCheckins] = useState<CheckIn[]>([]);
   const [benefits, setBenefits] = useState<TierBenefit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [checkingIn, setCheckingIn] = useState(false);
-  const [checkedIn, setCheckedIn] = useState(false);
-  // Points from the last check-in: null when the response had no points info
-  const [checkinPoints, setCheckinPoints] = useState<{ awarded: number; alreadyAwarded: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const eventId = searchParams.get('event');
 
   useEffect(() => {
     async function fetchData() {
@@ -152,52 +145,6 @@ export default function VIPPassPage() {
       fetchData();
     }
   }, [params.id]);
-
-  async function handleCheckIn() {
-    if (!vipUser) return;
-
-    try {
-      setCheckingIn(true);
-      setError(null);
-
-      const response = await fetch('/api/nfc/checkins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: vipUser.id,
-          event_id: eventId || null,
-          source: 'vip_pass',
-          metadata: {
-            check_in_time: new Date().toISOString()
-          }
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCheckedIn(true);
-        setCheckinPoints(data.points ? { awarded: data.points.awarded, alreadyAwarded: !!data.points.already_awarded } : null);
-
-        // If points were awarded, refresh membership data
-        if (data.points) {
-          const membershipResponse = await fetch(`/api/vip/memberships/${params.id}`);
-          if (membershipResponse.ok) {
-            const membershipData = await membershipResponse.json();
-            setMembership(membershipData);
-          }
-        }
-
-        setTimeout(() => setCheckedIn(false), 3000);
-      } else {
-        setError('Failed to check in. Please try again.');
-      }
-    } catch (error) {
-      console.error('Check-in error:', error);
-      setError('Failed to check in. Please try again.');
-    } finally {
-      setCheckingIn(false);
-    }
-  }
 
   function getTierColor(tier: string) {
     switch (tier) {
@@ -336,38 +283,12 @@ export default function VIPPassPage() {
                 </div>
               )}
 
-              {/* Check-in Section */}
+              {/* Check-in info: check-ins happen by tapping the card */}
               <div className="p-8 border-t">
-                {checkedIn ? (
-                  <div className="bg-green-500 text-white rounded-lg p-6 text-center">
-                    <Check className="h-12 w-12 mx-auto mb-2" />
-                    <h3 className="text-2xl font-bold">Check-in Successful!</h3>
-                    {checkinPoints && checkinPoints.awarded > 0 && (
-                      <p className="mt-2">+{checkinPoints.awarded} points awarded</p>
-                    )}
-                    {checkinPoints?.alreadyAwarded && (
-                      <p className="mt-2">You&apos;ve already collected your check-in points for today.</p>
-                    )}
-                  </div>
-                ) : (
-                  <Button
-                    onClick={handleCheckIn}
-                    disabled={checkingIn}
-                    className="w-full bg-gold hover:bg-gold/90 text-white text-lg py-6"
-                  >
-                    {checkingIn ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Checking in...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="h-5 w-5 mr-2" />
-                        Check-in & Earn Points
-                      </>
-                    )}
-                  </Button>
-                )}
+                <div className="flex items-center gap-3 rounded-lg bg-gold/10 p-4 text-gray-700">
+                  <Nfc className="h-6 w-6 shrink-0 text-gold" />
+                  <p>Tap your VersaTalent card at the door of an event to check in and earn your points.</p>
+                </div>
               </div>
             </div>
 

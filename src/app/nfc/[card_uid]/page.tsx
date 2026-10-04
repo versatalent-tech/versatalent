@@ -27,19 +27,11 @@ export default function NFCRoutePage() {
           return;
         }
 
-        // Log the check-in
+        // Log the check-in (the server works out the member from the card)
         await fetch('/api/nfc/checkins', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: data.user.id,
-            nfc_card_id: data.id,
-            source: data.type === 'artist' ? 'artist_profile' : 'vip_pass',
-            metadata: {
-              card_uid: cardUid,
-              redirect_type: data.type
-            }
-          })
+          body: JSON.stringify({ card_uid: cardUid })
         });
 
         // Redirect based on card type
