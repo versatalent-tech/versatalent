@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const BRIDGE_URL = "ws://localhost:9876";
+export const BRIDGE_URL = "ws://localhost:9876";
 const RECONNECT_DELAY_MS = 5000;
 
 export type BridgeState = "connecting" | "ready" | "no-reader" | "unavailable";

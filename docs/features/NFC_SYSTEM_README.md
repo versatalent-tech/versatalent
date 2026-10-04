@@ -119,13 +119,23 @@ You should see: `users`, `nfc_cards`, `nfc_events`, `checkins`
 
 ### Programming NFC Tags
 
-#### iOS (iPhone 7+)
+#### From the admin (recommended)
+With the NFC Bridge app (v1.1.0 or later) running and the USB reader plugged in:
+1. Go to Admin → NFC → Register Card and place the card on the reader
+2. Register it, keep it on the reader, and click **Write to card**
+3. The address `https://<site>/nfc/<card UID>` is written and read back to check it
+
+Tapping a card that's already registered offers **Write to card** too. Use NTAG213, NTAG215 or NTAG216 cards (MIFARE Classic cards can't be written this way and many iPhones can't read them).
+
+#### With a phone app instead
+
+##### iOS (iPhone 7+)
 1. Download "NFC Tools" app from App Store
 2. Open app → Write → Add a Record → URL/URI
 3. Enter: `https://yourdomain.com/nfc/YOUR-CARD-UID`
 4. Tap "Write" and hold NFC tag near phone
 
-#### Android
+##### Android
 1. Download "NFC Tools" app from Play Store
 2. Same process as iOS
 

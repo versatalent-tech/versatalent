@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Nfc, User, CreditCard, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { NFCReaderStatusIndicator } from "./NFCReaderStatus";
+import { WriteCardUrl } from "./WriteCardUrl";
 
 // Radix Select rejects an empty-string item value, so "no user" uses a sentinel
 const UNASSIGNED = "__unassigned__";
@@ -25,6 +26,12 @@ interface NFCUser {
 }
 
 type CardType = 'artist' | 'vip' | 'staff' | 'guest';
+
+interface ExistingCard {
+  type: CardType;
+  is_active: boolean;
+  user?: { name?: string | null } | null;
+}
 
 const CARD_TYPE_CONFIG: Record<CardType, { label: string; description: string; color: string }> = {
   artist: {
@@ -55,7 +62,9 @@ export function NFCCardRegistration() {
   const [scannedUID, setScannedUID] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [registrationStep, setRegistrationStep] = useState<'scan' | 'configure' | 'complete'>('scan');
+  // 'existing': the scanned card is already registered (it can still be written)
+  const [registrationStep, setRegistrationStep] = useState<'scan' | 'configure' | 'complete' | 'existing'>('scan');
+  const [existingCard, setExistingCard] = useState<ExistingCard | null>(null);
 
   const [formData, setFormData] = useState({
     card_uid: "",
@@ -79,12 +88,27 @@ export function NFCCardRegistration() {
     }
   }
 
-  function handleCardScanned(uid: string) {
+  async function handleCardScanned(uid: string) {
     setScannedUID(uid);
     setFormData(prev => ({ ...prev, card_uid: uid }));
-    setRegistrationStep('configure');
-    setSuccess(`Card detected: ${uid}`);
-    setTimeout(() => setSuccess(null), 3000);
+    setError(null);
+
+    // An already-registered card goes to the write step instead of failing registration
+    let existing: ExistingCard | null = null;
+    try {
+      const response = await fetch(`/api/nfc/cards?card_uid=${encodeURIComponent(uid)}`);
+      if (response.ok) {
+        const cards = await response.json();
+        existing = Array.isArray(cards) && cards.length > 0 ? cards[0] : null;
+      }
+    } catch (err) {
+      console.error('Error checking card:', err);
+    }
+
+    setExistingCard(existing);
+    setRegistrationStep(existing ? 'existing' : 'configure');
+    setSuccess(existing ? null : `Card detected: ${uid}`);
+    if (!existing) setTimeout(() => setSuccess(null), 3000);
   }
 
   async function handleRegisterCard() {
@@ -134,6 +158,7 @@ export function NFCCardRegistration() {
       type: "vip",
     });
     setRegistrationStep('scan');
+    setExistingCard(null);
     setError(null);
     setSuccess(null);
   }
@@ -236,9 +261,8 @@ export function NFCCardRegistration() {
                 />
                 <Button
                   onClick={() => {
-                    if (formData.card_uid) {
-                      setScannedUID(formData.card_uid);
-                      setRegistrationStep('configure');
+                    if (formData.card_uid.trim()) {
+                      handleCardScanned(formData.card_uid.trim());
                     }
                   }}
                   disabled={!formData.card_uid}
@@ -366,12 +390,49 @@ export function NFCCardRegistration() {
                 </span>
               )}
             </p>
+            {scannedUID && (
+              <div className="max-w-md mx-auto mb-6">
+                <WriteCardUrl cardUid={scannedUID} />
+              </div>
+            )}
             <Button
               onClick={resetRegistration}
               className="bg-gold hover:bg-gold/90 text-white"
             >
               <Nfc className="h-4 w-4 mr-2" />
               Register Another Card
+            </Button>
+          </div>
+        )}
+
+        {registrationStep === 'existing' && existingCard && scannedUID && (
+          <div className="max-w-md mx-auto">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Card Already Registered
+            </h3>
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">Card UID</label>
+                <code className="text-lg font-mono font-semibold">{scannedUID}</code>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge className={CARD_TYPE_CONFIG[existingCard.type]?.color}>
+                  {CARD_TYPE_CONFIG[existingCard.type]?.label ?? existingCard.type}
+                </Badge>
+                <span className="text-gray-700">
+                  {existingCard.user?.name ? `Assigned to ${existingCard.user.name}` : 'Not assigned to a user'}
+                </span>
+                {!existingCard.is_active && <Badge className="bg-red-100 text-red-800">Inactive</Badge>}
+              </div>
+              <p className="text-xs text-gray-500">To change the type or user, use the Cards tab.</p>
+            </div>
+            <div className="mb-6">
+              <WriteCardUrl cardUid={scannedUID} />
+            </div>
+            <Button variant="outline" onClick={resetRegistration} className="w-full">
+              <Nfc className="h-4 w-4 mr-2" />
+              Scan Another Card
             </Button>
           </div>
         )}
@@ -384,6 +445,8 @@ export function NFCCardRegistration() {
           <li>• Make sure the NFC reader is connected before scanning</li>
           <li>• Place the card flat on the reader for best results</li>
           <li>• Cards can be assigned to users later from the Cards tab</li>
+          <li>• Keep the card on the reader after registering to write its address (needs NFC Bridge v1.1.0+ and NTAG213/215/216 cards)</li>
+          <li>• Tap an already-registered card to write its address again</li>
           <li>• Use the &quot;Test Scan&quot; button to simulate a card for testing</li>
         </ul>
       </div>
