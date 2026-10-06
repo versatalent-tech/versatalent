@@ -7,7 +7,7 @@ The VersaTalent Staff POS (Point of Sale) system is a comprehensive solution tha
 - **Real-time inventory management** with stock tracking
 - **NFC card integration** for instant customer linking
 - **VIP loyalty points** automatically awarded on purchases
-- **Stripe payment processing** with complete order lifecycle
+- **SumUp payments** (card reader, SumUp app, cash) with complete order lifecycle
 - **Admin tools** for product, stock, and order management
 
 ---
@@ -113,7 +113,7 @@ GET /api/staff/auth/check
 - Product browsing with search and category filters
 - Shopping cart with quantity management
 - NFC customer linking
-- Stripe payment integration
+- SumUp payments (card reader, SumUp app, cash)
 - Real-time stock indicators
 - VIP points display
 
@@ -148,7 +148,7 @@ GET /api/staff/auth/check
    - If stock available → Payment dialog opens
 
 5. **Process Payment**
-   - Enter payment details (Stripe)
+   - Take payment on the SumUp reader, in the SumUp app, or as cash
    - On success:
      - Order status → `paid`
      - Stock automatically deducted
@@ -238,28 +238,30 @@ The system validates:
 
 ## Payment Processing
 
-### Stripe Integration
+### SumUp Payments
 
 **When staff clicks "Checkout":**
 
 1. Order created with `status = 'pending'`
-2. Stripe Payment Intent created
-3. Payment dialog shown to customer
-4. Customer enters card details
-5. Stripe processes payment
+2. Staff choose how the customer pays:
+   - **Card reader:** the total is sent to the chosen SumUp Solo reader and the customer pays on it
+   - **SumUp app:** the payment is taken in the SumUp app (e.g. Tap to Pay) and staff enter its transaction code
+   - **Cash:** staff confirm the cash was taken
+3. The payment is confirmed with SumUp (card payments)
+
+Stock is reserved when the order is created.
 
 **On successful payment:**
-- Payment Intent status → `succeeded`
-- Webhook received (if configured)
-- Order status → `paid`
-- **Inventory deducted automatically**
+- Order status → `paid`, with how it was paid and the SumUp transaction code
 - **VIP points awarded automatically**
 
-**On failed payment:**
-- Payment Intent status → `failed`
-- Order status → `failed`
-- No inventory changes
+**On a failed card payment:**
+- The sale stays open: staff can try again or use another method
 - No points awarded
+
+**If staff close the checkout without payment:**
+- Order status → `cancelled`
+- Reserved stock is put back
 
 ### Payment Workflow
 
@@ -695,7 +697,7 @@ LIMIT 5;
 2. **Monitor low stock** - Check low stock report daily
 3. **Set appropriate thresholds** - Adjust `low_stock_threshold` per product
 4. **Backup database** - Regular backups before migrations
-5. **Test payments** - Use Stripe test cards in development
+5. **Test payments** - Make a small real payment on the SumUp reader and refund it in SumUp
 
 ---
 

@@ -14,10 +14,11 @@ import {
   Euro,
   Calendar,
   User,
-  ExternalLink
+  CreditCard
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { POS_CURRENCY } from "@/lib/utils/formatting";
+import { POS_CURRENCY, PAYMENT_METHOD_LABELS } from "@/lib/utils/formatting";
+import type { PaymentMethod } from "@/lib/db/types";
 
 interface PurchaseHistoryProps {
   userId: string;
@@ -38,7 +39,8 @@ interface Order {
   total_cents: number;
   currency: string;
   status: string;
-  stripe_payment_intent_id?: string;
+  payment_method?: PaymentMethod | null;
+  sumup_transaction_code?: string | null;
   items: PurchaseItem[];
   notes?: string;
   staff_user?: {
@@ -65,7 +67,6 @@ interface PurchaseHistoryData {
   user_id: string;
   user_name: string;
   user_email: string;
-  stripe_customer_id?: string;
   total_orders: number;
   total_spent_cents: number;
   currency: string;
@@ -226,35 +227,6 @@ export default function PurchaseHistory({ userId }: PurchaseHistoryProps) {
         </Card>
       </div>
 
-      {/* Stripe Customer Info */}
-      {data.stripe_customer_id && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Stripe Customer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <code className="text-sm bg-muted px-2 py-1 rounded">
-                {data.stripe_customer_id}
-              </code>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  window.open(
-                    `https://dashboard.stripe.com/customers/${data.stripe_customer_id}`,
-                    '_blank'
-                  );
-                }}
-              >
-                View in Stripe
-                <ExternalLink className="ml-2 h-3 w-3" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Most Purchased Items */}
       {data.stats && data.stats.most_purchased_items.length > 0 && (
         <Card>
@@ -377,17 +349,15 @@ export default function PurchaseHistory({ userId }: PurchaseHistoryProps) {
                               </span>
                             </div>
                           )}
-                          {order.stripe_payment_intent_id && (
+                          {order.payment_method && (
                             <div className="flex items-center gap-2">
-                              <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                              <a
-                                href={`https://dashboard.stripe.com/payments/${order.stripe_payment_intent_id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                View in Stripe
-                              </a>
+                              <CreditCard className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}
+                                {order.sumup_transaction_code && (
+                                  <> · <span className="font-mono">{order.sumup_transaction_code}</span></>
+                                )}
+                              </span>
                             </div>
                           )}
                           {order.notes && (

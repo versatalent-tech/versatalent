@@ -150,7 +150,7 @@ export default function ArchitecturePage() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 <h4 className="font-semibold text-green-800">PCI-Compliant Payments</h4>
               </div>
-              <p className="text-sm text-green-700">Stripe handles all card data, no PCI certification required</p>
+              <p className="text-sm text-green-700">SumUp card readers and app handle all card data, no PCI certification required</p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-5">
               <div className="flex items-center gap-2 mb-3">
@@ -197,7 +197,7 @@ export default function ArchitecturePage() {
                 <CreditCard className="h-6 w-6 text-gold flex-shrink-0 mt-1" />
                 <div>
                   <h4 className="font-semibold">Payment Processing</h4>
-                  <p className="text-sm text-gray-600">Full POS system with Stripe integration for events and retail</p>
+                  <p className="text-sm text-gray-600">Full POS system with SumUp card readers, Tap to Pay and cash for events and retail</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
@@ -295,7 +295,7 @@ export default function ArchitecturePage() {
         │                       │                       │
         ▼                       ▼                       ▼
 ┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│     NEON      │     │    STRIPE     │     │  INSTAGRAM    │
+│     NEON      │     │     SUMUP     │     │  INSTAGRAM    │
 │  PostgreSQL   │     │   Payments    │     │     API       │
 │  (Serverless) │     │   Webhooks    │     │  Social Feed  │
 └───────────────┘     └───────────────┘     └───────────────┘`}
@@ -320,7 +320,7 @@ export default function ArchitecturePage() {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Serverless API Routes</li>
                 <li>• Neon PostgreSQL</li>
-                <li>• Stripe Integration</li>
+                <li>• SumUp Integration</li>
                 <li>• bcryptjs Auth</li>
                 <li>• Zod Validation</li>
               </ul>
@@ -456,7 +456,7 @@ export default function ArchitecturePage() {
                   <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">PCI Compliance</p>
-                    <p className="text-sm text-gray-600">Stripe handles all card data</p>
+                    <p className="text-sm text-gray-600">SumUp handles all card data</p>
                   </div>
                 </div>
               </div>
@@ -522,8 +522,8 @@ export default function ArchitecturePage() {
                 </tr>
                 <tr className="border-b">
                   <td className="p-2 font-medium">Payments</td>
-                  <td className="p-2 text-gray-600">Stripe</td>
-                  <td className="p-2 text-gray-600">Square, Adyen, PayPal</td>
+                  <td className="p-2 text-gray-600">SumUp</td>
+                  <td className="p-2 text-gray-600">Stripe, Square, Adyen, PayPal</td>
                 </tr>
                 <tr className="border-b">
                   <td className="p-2 font-medium">Hosting</td>

@@ -18,7 +18,7 @@ export async function getUserPurchaseHistory(
   try {
     // Get user details
     const userRows = await sql`
-      SELECT id, name, email, stripe_customer_id
+      SELECT id, name, email
       FROM users
       WHERE id = ${userId}
       LIMIT 1
@@ -38,7 +38,8 @@ export async function getUserPurchaseHistory(
         o.total_cents,
         o.currency,
         o.status,
-        o.stripe_payment_intent_id,
+        o.payment_method,
+        o.sumup_transaction_code,
         o.notes,
         o.staff_user_id,
         u.name as staff_name,
@@ -58,7 +59,7 @@ export async function getUserPurchaseHistory(
       WHERE o.customer_user_id = ${userId}
         AND o.status = 'paid'
       GROUP BY o.id, o.created_at, o.total_cents, o.currency,
-               o.status, o.stripe_payment_intent_id, o.notes,
+               o.status, o.payment_method, o.sumup_transaction_code, o.notes,
                o.staff_user_id, u.name
       ORDER BY o.created_at DESC
     `;
@@ -76,7 +77,8 @@ export async function getUserPurchaseHistory(
       total_cents: order.total_cents,
       currency: order.currency,
       status: order.status,
-      stripe_payment_intent_id: order.stripe_payment_intent_id,
+      payment_method: order.payment_method,
+      sumup_transaction_code: order.sumup_transaction_code,
       items: order.items as PurchaseHistoryItem[],
       notes: order.notes,
       staff_user: order.staff_user_id
@@ -91,7 +93,6 @@ export async function getUserPurchaseHistory(
       user_id: user.id,
       user_name: user.name,
       user_email: user.email,
-      stripe_customer_id: user.stripe_customer_id,
       total_orders: totalOrders,
       total_spent_cents: totalSpentCents,
       currency: ordersResult[0]?.currency || POS_CURRENCY,
@@ -187,7 +188,8 @@ export async function getUserPurchaseHistoryByDateRange(
         o.total_cents,
         o.currency,
         o.status,
-        o.stripe_payment_intent_id,
+        o.payment_method,
+        o.sumup_transaction_code,
         o.notes,
         o.staff_user_id,
         u.name as staff_name,
@@ -209,7 +211,7 @@ export async function getUserPurchaseHistoryByDateRange(
         AND o.created_at >= ${startDate.toISOString()}
         AND o.created_at <= ${endDate.toISOString()}
       GROUP BY o.id, o.created_at, o.total_cents, o.currency,
-               o.status, o.stripe_payment_intent_id, o.notes,
+               o.status, o.payment_method, o.sumup_transaction_code, o.notes,
                o.staff_user_id, u.name
       ORDER BY o.created_at DESC
     `;
@@ -220,7 +222,8 @@ export async function getUserPurchaseHistoryByDateRange(
       total_cents: order.total_cents,
       currency: order.currency,
       status: order.status,
-      stripe_payment_intent_id: order.stripe_payment_intent_id,
+      payment_method: order.payment_method,
+      sumup_transaction_code: order.sumup_transaction_code,
       items: order.items as PurchaseHistoryItem[],
       notes: order.notes,
       staff_user: order.staff_user_id

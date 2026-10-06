@@ -10,7 +10,7 @@ The POS system is a lightweight, efficient point of sale solution integrated int
 - ✅ **Staff POS Interface** - Clean, fast interface for processing sales
 - ✅ **VIP Integration** - Automatically award loyalty points for purchases
 - ✅ **NFC Card Support** - Link customers via NFC membership cards
-- ✅ **Stripe Payments** - Secure payment processing (ready for integration)
+- ✅ **SumUp Payments** - Solo card readers, SumUp app (Tap to Pay) and cash
 - ✅ **Order Tracking** - View all orders with status and customer info
 - ✅ **Real-time Updates** - Live cart and inventory management
 - ✅ **Admin Dashboard** - Full product and order management
@@ -50,15 +50,16 @@ This creates:
 
 ### 2. Environment Variables
 
-Add Stripe credentials to your `.env` file:
+Add the SumUp settings (Netlify → Environment variables, or `.env.local` for development):
 
 ```bash
-# Stripe Configuration
-STRIPE_SECRET_KEY=sk_test_your_key_here
-STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+SUMUP_API_KEY=sup_sk_...
+SUMUP_MERCHANT_CODE=MC0X0ABC
+SUMUP_AFFILIATE_KEY=...
+SUMUP_AFFILIATE_APP_ID=...
 ```
 
-Get your Stripe keys from: https://dashboard.stripe.com/test/apikeys
+See `docs/setup/SUMUP_SETUP_GUIDE.md` for where to find them.
 
 ### 3. Access the POS
 
@@ -182,41 +183,15 @@ Example:
 - Customer search by email/phone
 - QR code scanning
 
-## Stripe Payment Integration
+## Card Payments (SumUp)
 
-### Current Status
+Staff take payment in one of three ways:
 
-The POS is **ready for Stripe integration** but uses a simplified payment flow for development.
+- **Card reader:** the till sends the total to a paired SumUp Solo reader; the sale completes when SumUp reports the payment.
+- **SumUp app:** staff take the payment in the SumUp app (e.g. Tap to Pay) and enter the transaction code, which is checked with SumUp.
+- **Cash:** staff confirm the cash was taken.
 
-### Enabling Stripe (Production)
-
-1. **Install Stripe SDK:**
-   ```bash
-   cd versatalent
-   bun add stripe
-   ```
-
-2. **Update Payment Intent API:**
-   - Edit: `src/app/api/pos/create-payment-intent/route.ts`
-   - Uncomment Stripe code
-   - Remove placeholder response
-
-3. **Add Stripe Elements to POS UI:**
-   - Install: `bun add @stripe/stripe-js @stripe/react-stripe-js`
-   - Add payment form to POS page
-   - Handle payment confirmation
-
-4. **Test with Stripe Test Cards:**
-   - Success: `4242 4242 4242 4242`
-   - Failure: `4000 0000 0000 0002`
-
-### Development Mode (Current)
-
-Without Stripe configured:
-- Orders marked as `paid` directly
-- No actual payment processing
-- For testing VIP points integration
-- Safe for development/staging
+Setup (keys, reader pairing, migration): see `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 ## API Reference
 
@@ -305,13 +280,13 @@ fetch('/api/pos/orders', {
 
 **PUT /api/pos/orders/[id]**
 ```javascript
-// Update order status (process payment)
+// Mark a cash sale as paid (card payments are completed through SumUp)
 fetch('/api/pos/orders/order-id', {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     status: 'paid',
-    stripe_payment_intent_id: 'pi_xxx' // optional
+    payment_method: 'cash'
   })
 })
 ```
@@ -343,7 +318,8 @@ fetch('/api/pos/orders/order-id', {
 | customer_user_id | UUID | Customer (VIP member) |
 | total_cents | INTEGER | Total amount in cents |
 | currency | TEXT | Currency code |
-| stripe_payment_intent_id | TEXT | Stripe payment ID |
+| payment_method | TEXT | `sumup_reader`, `sumup_app`, `cash` (or `stripe` for orders before SumUp) |
+| sumup_transaction_code | TEXT | SumUp transaction code |
 | status | TEXT | Order status |
 | notes | TEXT | Additional notes |
 | created_at | TIMESTAMP | Order time |
@@ -391,8 +367,8 @@ fetch('/api/pos/orders/order-id', {
 
 ### Payment Security
 
-- ✅ Stripe handles sensitive card data
-- ✅ Payment intents created server-side only
+- ✅ SumUp handles sensitive card data
+- ✅ Payments are confirmed server-side with SumUp before an order is marked paid
 - ✅ No card details stored in database
 - ✅ HTTPS required in production
 
@@ -420,7 +396,7 @@ fetch('/api/pos/orders/order-id', {
 **Problem**: Checkout button doesn't work
 
 **Solutions**:
-1. Check Stripe configuration
+1. Check Admin → Card Payments (SumUp) shows "Connected to SumUp"
 2. Verify API route is accessible
 3. Check browser network tab for errors
 4. Test with simple order first
@@ -449,7 +425,6 @@ fetch('/api/pos/orders/order-id', {
 
 ### Planned Features
 
-- [ ] **Stripe Full Integration** - Complete payment flow
 - [ ] **NFC Reader Support** - Hardware integration
 - [ ] **Receipt Printing** - Generate and print receipts
 - [ ] **Inventory Management** - Auto-decrement stock
@@ -492,4 +467,4 @@ When reporting POS issues, include:
 
 **Version**: 1.0.0
 **Last Updated**: December 2025
-**Status**: ✅ Production Ready (pending Stripe configuration)
+**Status**: ✅ Production Ready

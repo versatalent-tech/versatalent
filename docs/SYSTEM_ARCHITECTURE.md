@@ -136,7 +136,7 @@ VersaTalent is a comprehensive **talent management and event platform** that con
 │  │                         BUSINESS LOGIC SERVICES                           │   │
 │  │                                                                           │   │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
-│  │  │  VIP Points │  │  Analytics  │  │  Stripe     │  │  Instagram  │     │   │
+│  │  │  VIP Points │  │  Analytics  │  │  SumUp      │  │  Instagram  │     │   │
 │  │  │  Service    │  │  Service    │  │  Service    │  │  Service    │     │   │
 │  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │   │
 │  │                                                                           │   │
@@ -191,10 +191,10 @@ VersaTalent is a comprehensive **talent management and event platform** that con
            │                           │                           │
            ▼                           ▼                           ▼
 ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
-│       STRIPE        │  │     INSTAGRAM       │  │     NFC HARDWARE    │
+│        SUMUP        │  │     INSTAGRAM       │  │     NFC HARDWARE    │
 │  Payment Processing │  │    Graph API        │  │    Card Readers     │
-│  • Payments         │  │  • Social Feed      │  │  • Event Check-in   │
-│  • Customers        │  │  • Media Display    │  │  • VIP Identification│
+│  • Solo Readers     │  │  • Social Feed      │  │  • Event Check-in   │
+│  • SumUp App        │  │  • Media Display    │  │  • VIP Identification│
 │  • Webhooks         │  │  • Engagement       │  │  • Staff Access     │
 └─────────────────────┘  └─────────────────────┘  └─────────────────────┘
 ```
@@ -286,7 +286,8 @@ src/app/
 
 ```
 src/lib/services/
-├── stripe.ts                  # Payment processing service
+├── sumup.ts                   # SumUp API client (readers, transactions)
+├── pos-payments.ts            # Completes POS payments (reader, app, cash)
 ├── vip-points-service.ts      # VIP loyalty point calculations
 ├── pos-loyalty.ts             # POS-VIP integration
 ├── pos-vip-integration.ts     # VIP rewards at checkout
@@ -330,14 +331,14 @@ The platform uses **Next.js API Routes** as a lightweight API gateway:
 ├── analytics/         # Metrics and tracking
 ├── upload/            # File upload handling
 ├── webhooks/          # External service webhooks
-│   └── stripe/        # Stripe payment webhooks
+│   └── sumup/         # SumUp reader payment results
 └── instagram/         # Instagram API proxy
 ```
 
 ### Background Jobs / Workers
 
 Currently handled via:
-- **Stripe Webhooks** - Payment status updates, customer sync
+- **SumUp Webhook** - Card reader payment results (verified with SumUp before use)
 - **Scheduled Cleanup** - In-memory cache TTL expiration
 - **Event Auto-Complete** - Events marked "completed" when date passes
 
@@ -370,7 +371,9 @@ Currently handled via:
 | `/api/pos/products/[id]` | GET, PUT, DELETE | Single product ops | Admin |
 | `/api/pos/orders` | GET, POST | Order management | POS, Admin |
 | `/api/pos/orders/[id]` | GET, PUT | Single order operations | POS, Admin |
-| `/api/pos/create-payment-intent` | POST | Stripe payment init | POS |
+| `/api/pos/sumup/checkout` | POST | Send order total to a Solo reader | POS |
+| `/api/pos/sumup/status` | GET | Check a reader payment | POS |
+| `/api/pos/sumup/confirm` | POST | Complete a SumUp app payment | POS |
 | `/api/nfc/cards` | GET, POST | NFC card management | Admin |
 | `/api/nfc/cards/[id]` | GET, PUT, DELETE | Single card operations | Admin |
 | `/api/nfc/[card_uid]` | GET | Lookup by card UID | NFC Reader |
@@ -388,7 +391,7 @@ Currently handled via:
 | `/api/analytics/metrics` | GET | Dashboard metrics | Admin |
 | `/api/analytics/events` | POST | Track user events | All Clients |
 | `/api/analytics/realtime` | GET | Live analytics data | Admin |
-| `/api/webhooks/stripe` | POST | Stripe payment webhooks | Stripe |
+| `/api/webhooks/sumup` | POST | SumUp reader payment results | SumUp |
 | `/api/instagram/feed` | GET | Instagram feed proxy | Public |
 | `/api/upload` | POST | File upload handler | Admin |
 
@@ -458,7 +461,7 @@ Currently handled via:
 │ role              │ ENUM: artist, vip, staff, admin                │
 │ avatar_url        │ Profile image URL                              │
 │ talent_id         │ FK → talents (for artist users)                │
-│ stripe_customer_id│ Stripe customer reference                      │
+│ stripe_customer_id│ Legacy Stripe customer reference (unused)      │
 │ created_at        │ Timestamp                                      │
 │ updated_at        │ Timestamp                                      │
 └────────────────────────────────────────────────────────────────────┘
@@ -556,47 +559,44 @@ Currently handled via:
 
 ## 7. Third-Party Integrations
 
-### Payment Provider: Stripe
+### Payment Provider: SumUp
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      STRIPE INTEGRATION                              │
+│                       SUMUP INTEGRATION                              │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  CAPABILITIES:                                                       │
-│  ├── Payment Intents (card payments at POS)                         │
-│  ├── Customer Management (linked to VIP members)                    │
-│  ├── Webhook handling (payment status updates)                      │
-│  └── Payment Methods (saved cards for VIPs)                         │
+│  PAYMENT OPTIONS AT THE TILL:                                        │
+│  ├── Solo card reader (Cloud API checkout sent from the till)        │
+│  ├── SumUp app, e.g. Tap to Pay (staff enter the transaction code)   │
+│  └── Cash                                                            │
 │                                                                      │
-│  DATA FLOW:                                                          │
+│  CARD READER FLOW:                                                   │
 │                                                                      │
-│  POS Terminal          VersaTalent API          Stripe               │
+│  POS Terminal          VersaTalent API          SumUp                │
 │       │                      │                     │                 │
 │       │ Create Order         │                     │                 │
 │       │ ────────────────────▶│                     │                 │
+│       │ Pay on reader        │                     │                 │
+│       │ ────────────────────▶│ Reader checkout     │                 │
+│       │                      │ ───────────────────▶│ (customer pays) │
 │       │                      │                     │                 │
-│       │                      │ Create PaymentIntent│                 │
-│       │                      │ ───────────────────▶│                 │
-│       │                      │                     │                 │
+│       │                      │ Webhook: finished   │                 │
 │       │                      │ ◀───────────────────│                 │
-│       │                      │ client_secret       │                 │
+│       │ Poll status          │ Fetch transaction   │                 │
+│       │ ────────────────────▶│ ───────────────────▶│                 │
+│       │                      │ (status, amount,    │                 │
+│       │                      │  currency checked)  │                 │
 │       │                      │                     │                 │
-│       │ ◀────────────────────│                     │                 │
-│       │ client_secret        │                     │                 │
-│       │                      │                     │                 │
-│       │ confirmCardPayment() │                     │                 │
-│       │ ────────────────────────────────────────────▶               │
-│       │                      │                     │                 │
-│       │                      │ Webhook: succeeded  │                 │
-│       │                      │ ◀───────────────────│                 │
-│       │                      │                     │                 │
-│       │                      │ Update Order        │                 │
+│       │                      │ Mark Order paid     │                 │
 │       │                      │ Award VIP Points    │                 │
-│       │                      │                     │                 │
 │                                                                      │
+│  The webhook isn't signed: it only identifies the order; payment is  │
+│  always confirmed by fetching the transaction from SumUp.            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+Setup: `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 ### Social Media: Instagram Graph API
 
@@ -689,7 +689,7 @@ DATA: Media URLs, captions, engagement metrics
 │  └── Rate limiting (future)                                         │
 │                                                                      │
 │  LAYER 4: WEBHOOK SECURITY                                          │
-│  ├── Stripe signature verification                                  │
+│  ├── SumUp payments re-checked with SumUp's API (webhook unsigned)  │
 │  ├── Request origin validation                                      │
 │  └── Replay attack prevention                                        │
 │                                                                      │
@@ -719,7 +719,7 @@ SENSITIVE DATA HANDLING:
 ├── Sessions: HttpOnly cookies, SameSite=Lax
 ├── API Keys: Environment variables only
 ├── PII: Database-level encryption (future)
-└── Payments: Stripe-side tokenization (no card data stored)
+└── Payments: card data handled by SumUp (no card data stored)
 
 SECURITY HEADERS (via Netlify):
 ├── X-Frame-Options: SAMEORIGIN
@@ -854,7 +854,7 @@ Monolith → Microservices
    • Modular codebase supports team growth
 
 ✅ REVENUE-READY INTEGRATIONS
-   • Stripe payment processing - PCI compliant, global reach
+   • SumUp card payments - card readers, Tap to Pay and cash, PCI compliant
    • VIP loyalty system - built-in customer retention
    • POS system - physical venue monetization
    • NFC technology - premium hardware integration
@@ -868,7 +868,7 @@ Monolith → Microservices
 ✅ SECURITY FIRST
    • Role-based access control
    • Encrypted sessions
-   • No sensitive data stored (Stripe handles payments)
+   • No sensitive data stored (SumUp handles card payments)
    • Security headers configured
 
 ✅ EXTENSIBILITY
@@ -900,7 +900,7 @@ Monolith → Microservices
 |------|------------|
 | Database outage | Neon automatic failover + backups |
 | Traffic spike | Serverless auto-scaling |
-| Payment failure | Stripe retry logic + webhooks |
+| Payment failure | Sale stays open to retry or switch method; SumUp webhook + till status checks |
 | Data loss | Daily backups + point-in-time recovery |
 | Security breach | No PII storage, encrypted sessions |
 | Vendor lock-in | Standard technologies, migration paths defined |

@@ -4,9 +4,18 @@
  */
 
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import type { PaymentMethod } from '@/lib/db/types';
 
 /** Currency for all new POS sales, products and VIP spend */
 export const POS_CURRENCY = 'GBP';
+
+/** How a POS order was paid, for display */
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  sumup_reader: 'SumUp card reader',
+  sumup_app: 'SumUp app',
+  cash: 'Cash',
+  stripe: 'Card (Stripe, before SumUp)',
+};
 
 /**
  * Format currency with symbol
@@ -20,13 +29,6 @@ export function formatCurrency(
     style: 'currency',
     currency,
   }).format(amount / 100); // Assuming amount is in pence/cents
-}
-
-/**
- * Format currency for Stripe (amount in smallest unit)
- */
-export function formatCurrencyForStripe(amount: number): number {
-  return Math.round(amount * 100);
 }
 
 /**
