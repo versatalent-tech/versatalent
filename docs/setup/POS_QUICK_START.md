@@ -115,37 +115,9 @@ You need a VIP member with an NFC card. If you don't have one:
    - Check `vip_points_log` table for entry
    - Check `vip_memberships` for updated balance
 
-## Stripe Integration (Optional)
+## Card Payments (SumUp)
 
-For production use, integrate Stripe for real payments:
-
-### 1. Get Stripe Keys
-
-1. Sign up at https://stripe.com
-2. Get test API keys from dashboard
-3. Add to `.env`:
-   ```bash
-   STRIPE_SECRET_KEY=sk_test_YOUR_KEY
-   STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY
-   ```
-
-### 2. Install Stripe
-
-```bash
-bun add stripe @stripe/stripe-js @stripe/react-stripe-js
-```
-
-### 3. Update Payment API
-
-Edit `src/app/api/pos/create-payment-intent/route.ts`:
-- Uncomment Stripe integration code
-- Remove placeholder response
-
-### 4. Add Payment UI
-
-Update POS page to use Stripe Elements for card input.
-
-See: https://stripe.com/docs/payments/quickstart
+Card payments go through SumUp: a paired Solo card reader, the SumUp app (Tap to Pay), or cash. To set it up, add the four `SUMUP_*` variables in Netlify, redeploy, and pair readers in **Admin → Card Payments (SumUp)**. See `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 ## Common Tasks
 
@@ -206,7 +178,7 @@ ORDER BY pl.created_at DESC;
 1. ✅ **Test the POS** - Process a few test orders
 2. ✅ **Add Real Products** - Replace sample data with your products
 3. ✅ **Test VIP Integration** - Link customer and verify points
-4. 🔲 **Configure Stripe** - For production payments
+4. 🔲 **Set up SumUp** - Add the SumUp keys and pair a card reader
 5. 🔲 **Add Staff Users** - Create accounts for your staff
 6. 🔲 **Train Staff** - Show them how to use the POS
 7. 🔲 **Go Live** - Start processing real sales!

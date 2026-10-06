@@ -14,13 +14,10 @@ Use this checklist to ensure everything is ready before going live.
 - [ ] Backups configured (automatic daily backups)
 - [ ] Connection pooling configured
 
-### Stripe Account
-- [ ] Stripe account created and activated
-- [ ] Business information complete
-- [ ] Identity verification complete
-- [ ] Tax information submitted
-- [ ] Bank account connected and verified
-- [ ] Payouts schedule reviewed (daily/weekly/monthly)
+### SumUp Account
+- [ ] SumUp merchant account verified
+- [ ] Bank account connected for payouts
+- [ ] Solo card reader(s) charged and on Wi-Fi
 
 ### Testing Complete
 - [ ] All features tested in development
@@ -39,10 +36,11 @@ Use this checklist to ensure everything is ready before going live.
 
 ### Get Production Credentials
 
-- [ ] **Stripe Live Keys:**
-  - [ ] `STRIPE_SECRET_KEY` (sk_live_...)
-  - [ ] `STRIPE_PUBLISHABLE_KEY` (pk_live_...)
-  - [ ] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (pk_live_...)
+- [ ] **SumUp Keys** (me.sumup.com → Developers):
+  - [ ] `SUMUP_API_KEY` (secret key, sup_sk_...)
+  - [ ] `SUMUP_MERCHANT_CODE`
+  - [ ] `SUMUP_AFFILIATE_KEY`
+  - [ ] `SUMUP_AFFILIATE_APP_ID`
 
 - [ ] **Production Database:**
   - [ ] `DATABASE_URL` (Neon production connection string)
@@ -70,40 +68,23 @@ DATABASE_URL=postgresql://...
 ADMIN_USERNAME=your-admin
 ADMIN_PASSWORD=strong-password-min-12-chars
 SESSION_SECRET=random-32-char-minimum-secret
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_... (add after webhook setup)
+SUMUP_API_KEY=sup_sk_...
+SUMUP_MERCHANT_CODE=MC0X0ABC
+SUMUP_AFFILIATE_KEY=...
+SUMUP_AFFILIATE_APP_ID=...
 NODE_ENV=production
 ```
 
 ---
 
-## 🔔 Webhook Setup
+## 💳 SumUp Setup
 
-### Local Testing (Development)
-- [ ] Stripe CLI installed
-- [ ] `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-- [ ] Test webhook secret added to .env
-- [ ] Test webhook fired successfully
-- [ ] Order marked as paid via webhook
-- [ ] VIP points awarded via webhook
+- [ ] Admin → Card Payments (SumUp) shows all four settings and "Connected to SumUp"
+- [ ] Each Solo reader paired (Admin → Card Payments → Pair a Solo reader)
+- [ ] Migration `022_sumup_payments.sql` run
+- [ ] No webhook setup needed: the site tells SumUp where to report each reader payment (`/api/webhooks/sumup`)
 
-### Production Webhook
-- [ ] Application deployed to production
-- [ ] HTTPS enabled (automatic on Netlify/Vercel)
-- [ ] Webhook endpoint created in Stripe Dashboard
-- [ ] URL set: `https://yourdomain.com/api/webhooks/stripe`
-- [ ] Events selected:
-  - [ ] `payment_intent.succeeded`
-  - [ ] `payment_intent.payment_failed`
-  - [ ] `payment_intent.canceled`
-  - [ ] `charge.refunded`
-- [ ] Webhook signing secret copied
-- [ ] `STRIPE_WEBHOOK_SECRET` added to env vars
-- [ ] Application redeployed
-- [ ] Test webhook sent from Stripe (200 OK response)
-- [ ] Webhook logs reviewed (no errors)
+See `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 ---
 
@@ -123,7 +104,7 @@ NODE_ENV=production
 - [ ] Site loads: `https://yourdomain.com`
 - [ ] HTTPS working (lock icon in browser)
 - [ ] Admin login works: `/admin/login`
-- [ ] POS loads: `/pos`
+- [ ] POS loads: `/staff/pos`
 - [ ] Product management works: `/admin/pos/products`
 - [ ] Order history works: `/admin/pos/orders`
 - [ ] No console errors
@@ -135,31 +116,17 @@ NODE_ENV=production
 ### Test Payment (Your Own Card!)
 ⚠️ **This will charge your card! Use small amount!**
 
-- [ ] Go to: `https://yourdomain.com/pos`
-- [ ] Add ONE cheap item (€1-2)
-- [ ] Click "Checkout"
-- [ ] Enter YOUR OWN card details
-- [ ] Complete payment
+- [ ] Go to: `https://yourdomain.com/staff/pos`
+- [ ] Add ONE cheap item (£1-2)
+- [ ] Click "Checkout", choose **Card reader** and pay on the Solo with your own card
 - [ ] ✅ Success message appears
-- [ ] ✅ Order appears in admin panel (status: paid)
-- [ ] ✅ Payment appears in Stripe Dashboard
-- [ ] ✅ Webhook delivered successfully (check Stripe logs)
-
-### Verify Webhook
-- [ ] Go to Stripe Dashboard → Webhooks
-- [ ] Click your production endpoint
-- [ ] See "Recent deliveries"
-- [ ] Latest delivery shows: 200 OK
-- [ ] Request/response bodies look correct
-- [ ] No errors in webhook logs
+- [ ] ✅ Order appears in Admin → POS Orders (status: paid, "SumUp card reader" with the transaction code)
+- [ ] ✅ Payment appears in the SumUp dashboard with the same transaction code
+- [ ] Repeat with **SumUp app** (enter the transaction code) and **Cash**
 
 ### Refund Test Payment
-- [ ] Go to Stripe Dashboard → Payments
-- [ ] Find your test payment
-- [ ] Click "Refund"
-- [ ] Confirm refund
-- [ ] ✅ Refund processed
-- [ ] ✅ Webhook fired (charge.refunded)
+- [ ] Refund the test payment in the SumUp app or dashboard
+- [ ] Cancel the order in Admin if needed
 
 ### Test VIP Points
 - [ ] Create test VIP member in admin
@@ -184,12 +151,10 @@ NODE_ENV=production
 - [ ] Database access restricted by IP (if possible)
 - [ ] Neon database password protected
 
-### Stripe Security
-- [ ] Test keys replaced with live keys
-- [ ] Live secret key never exposed in client code
-- [ ] Publishable key starts with `pk_live_`
-- [ ] Webhook signature verification enabled
-- [ ] Webhook secret secure and not shared
+### SumUp Security
+- [ ] `SUMUP_API_KEY` is the secret key and only set in Netlify (never in code)
+- [ ] Only staff can reach the till and SumUp payment routes
+- [ ] Old Stripe keys removed from Netlify
 
 ### Application Security
 - [ ] HTTPS enabled (required!)
@@ -203,15 +168,10 @@ NODE_ENV=production
 
 ## 📊 Monitoring Setup
 
-### Stripe Dashboard
-- [ ] Bookmark: `https://dashboard.stripe.com`
-- [ ] Enable email notifications for:
-  - [ ] Successful payments (optional)
-  - [ ] Failed payments
-  - [ ] Disputes
-  - [ ] Payouts
-- [ ] Set up mobile app (optional)
-- [ ] Configure payout schedule
+### SumUp Dashboard
+- [ ] Bookmark: `https://me.sumup.com`
+- [ ] Notifications enabled for payouts and chargebacks
+- [ ] SumUp app installed on the manager's phone (optional)
 
 ### Application Monitoring
 - [ ] Access to server logs (Netlify/Vercel dashboard)
@@ -256,7 +216,7 @@ NODE_ENV=production
 ## 📞 Support Plan
 
 ### Emergency Contacts
-- [ ] Stripe support: `support@stripe.com` or dashboard
+- [ ] SumUp support: via the SumUp app or me.sumup.com
 - [ ] Deployment platform support (Netlify/Vercel)
 - [ ] Database support (Neon)
 - [ ] Internal technical contact
@@ -266,7 +226,7 @@ NODE_ENV=production
 - [ ] Level 1: Staff troubleshooting (5 min)
 - [ ] Level 2: Manager/supervisor (15 min)
 - [ ] Level 3: Technical admin (30 min)
-- [ ] Level 4: Stripe support (1 hour)
+- [ ] Level 4: SumUp support (1 hour)
 - [ ] Level 5: Emergency shutdown (critical only)
 
 ### Emergency Procedures
@@ -276,9 +236,9 @@ NODE_ENV=production
   - [ ] Post notice for customers
 
 - [ ] **Data Breach Suspected:**
-  - [ ] Revoke all Stripe API keys immediately
+  - [ ] Revoke the SumUp API key immediately (me.sumup.com → Developers)
   - [ ] Change all passwords
-  - [ ] Contact Stripe security team
+  - [ ] Contact SumUp support
   - [ ] Review access logs
   - [ ] Notify affected customers
 
@@ -301,7 +261,7 @@ NODE_ENV=production
 - [ ] Backup plan ready
 
 ### Launch Day
-- [ ] Monitor Stripe Dashboard
+- [ ] Monitor the SumUp dashboard
 - [ ] Watch application logs
 - [ ] Staff ready to assist
 - [ ] Process first real transaction
@@ -371,9 +331,7 @@ NODE_ENV=production
 ## 📚 Reference Documents
 
 - **Full Guide:** `PRODUCTION_DEPLOYMENT_GUIDE.md`
-- **Webhook Setup:** `WEBHOOK_SETUP_GUIDE.md`
-- **Stripe Setup:** `STRIPE_SETUP_GUIDE.md`
-- **Quick Setup:** `STRIPE_ENV_SETUP.md`
+- **SumUp Setup:** `SUMUP_SETUP_GUIDE.md`
 - **NFC Setup:** `NFC_HARDWARE_SETUP.md`
 - **POS Guide:** `POS_SYSTEM_README.md`
 - **Quick Start:** `POS_QUICK_START.md`

@@ -219,51 +219,41 @@ curl -X POST http://localhost:3000/api/staff/pos/nfc-attach \
 
 ---
 
-### Test 6: Payment Processing (Development Mode) ✅
-
-**Note:** Without Stripe configured, the system marks orders as paid immediately.
+### Test 6: Cash Payment ✅
 
 **Steps:**
 1. Add 2x Espresso + 1x Croissant
-2. Click "Checkout"
-3. If Stripe is not configured, order is auto-paid
+2. Click "Checkout" and choose **Cash**
+3. Confirm the cash was taken
 
 **Expected Result:**
 - ✅ Success message: "Payment successful! Order complete."
 - ✅ Cart cleared
 - ✅ Customer unlinked (if was linked)
-- ✅ Can make another sale
+- ✅ Order shows "Cash" in Admin → POS Orders
 
 ---
 
-### Test 7: Payment with Stripe (Production) ✅
+### Test 7: Card Payment with SumUp ✅
 
-**Prerequisites:** Stripe configured in `.env.local`
+**Prerequisites:** SumUp set up and a Solo reader paired (`docs/setup/SUMUP_SETUP_GUIDE.md`)
 
 **Steps:**
 1. Add items to cart
 2. Link VIP customer (optional)
-3. Click "Checkout"
-4. Enter test card details:
-   - Card: 4242 4242 4242 4242
-   - Expiry: Any future date
-   - CVC: Any 3 digits
+3. Click "Checkout", choose **Card reader** and the reader
+4. Pay on the reader with a real card (use a small amount and refund it in SumUp afterwards)
 
 **Expected Result:**
-- ✅ Payment dialog shows Stripe form
-- ✅ Can enter card details
-- ✅ On submit: "Processing..." shown
+- ✅ Till shows it's waiting for the reader
 - ✅ On success:
   - Success message with points (if VIP linked)
   - Cart cleared
   - Products refreshed with updated stock
+  - Order shows "SumUp card reader" and the transaction code in Admin → POS Orders
+- ✅ If the payment fails or is cancelled on the reader, the till says so and you can try again or use another method; closing the checkout cancels the order and puts the stock back
 
-**Test Card Scenarios:**
-```
-Success: 4242 4242 4242 4242
-Decline: 4000 0000 0000 0002
-Insufficient funds: 4000 0000 0000 9995
-```
+**SumUp app variant:** take the payment in the SumUp app, choose **SumUp app** at checkout and enter the transaction code. A wrong code, a different amount, or a code already used for another order is rejected.
 
 ---
 
@@ -583,7 +573,7 @@ ORDER BY stock_quantity ASC;
 4. **Production Deployment**
    - Run migration on production database
    - Create production staff accounts
-   - Configure production Stripe keys
+   - Add the SumUp keys in Netlify and pair the card readers
    - Set up monitoring and alerts
 
 ---

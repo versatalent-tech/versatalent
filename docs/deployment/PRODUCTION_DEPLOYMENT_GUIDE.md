@@ -50,10 +50,11 @@ ADMIN_PASSWORD=your_secure_password_here
 # Session Secret (⚠️ CHANGE IMMEDIATELY!)
 SESSION_SECRET=GENERATE_LONG_RANDOM_STRING_HERE_MIN_64_CHARS
 
-# Stripe (Optional - for payment processing)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_stripe_key
-STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+# SumUp (card payments at the till)
+SUMUP_API_KEY=sup_sk_your_secret_key
+SUMUP_MERCHANT_CODE=MC0X0ABC
+SUMUP_AFFILIATE_KEY=your_affiliate_key
+SUMUP_AFFILIATE_APP_ID=your_affiliate_app_id
 ```
 
 #### How to Generate Secure Secrets:
@@ -152,43 +153,16 @@ console.log(hash);
 
 ---
 
-### 4. Set Up Stripe (For Payment Processing)
+### 4. Set Up SumUp (For Card Payments)
 
-If you want to accept real payments through the POS system:
+To take card payments at the till:
 
-#### Step 1: Get Stripe Keys
+1. In the SumUp dashboard (me.sumup.com → **Developers**), create a secret API key and an affiliate key, and note your merchant code and the affiliate app ID
+2. Add the four `SUMUP_*` variables above in Netlify, then redeploy
+3. Open **Admin → Card Payments (SumUp)**: it should say "Connected to SumUp"
+4. Pair each Solo reader on the same page
 
-1. Go to: https://dashboard.stripe.com
-2. Create account or login
-3. Get API keys:
-   - **Dashboard** → **Developers** → **API keys**
-   - Copy **Publishable key** (starts with `pk_live_...`)
-   - Copy **Secret key** (starts with `sk_live_...`)
-
-#### Step 2: Add to Netlify Environment Variables
-
-```bash
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_SECRET_KEY=sk_live_...
-```
-
-#### Step 3: Set Up Webhook (Optional but Recommended)
-
-1. In Stripe Dashboard: **Developers** → **Webhooks**
-2. Click **Add endpoint**
-3. Endpoint URL: `https://same-i3xfumkpmp9-latest.netlify.app/api/webhooks/stripe`
-4. Select events:
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-5. Copy **Signing secret** (starts with `whsec_...`)
-6. Add to Netlify:
-   ```bash
-   STRIPE_WEBHOOK_SECRET=whsec_...
-   ```
-
-#### Step 4: Redeploy
-
-Trigger a new deployment after adding Stripe keys.
+No webhook setup is needed. Full guide: `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 ---
 
@@ -240,7 +214,7 @@ Before going live, verify:
 - [ ] Generated new `SESSION_SECRET` (64+ chars)
 - [ ] Using strong passwords for staff users (bcrypt hashed)
 - [ ] Database connection uses SSL (`sslmode=require`)
-- [ ] Stripe keys are from **live** mode (not test mode)
+- [ ] SumUp API key is the secret key (`sup_sk_...`) for the live merchant account
 - [ ] Environment variables are set in Netlify (not in code)
 - [ ] No sensitive data committed to Git
 
@@ -342,7 +316,7 @@ Monitor Neon database:
 - [ ] Review inventory movements audit trail
 - [ ] Check VIP points transactions
 - [ ] Backup database
-- [ ] Review Stripe transactions
+- [ ] Review SumUp transactions against Admin → POS Orders
 - [ ] Update staff users if needed
 
 ---
@@ -388,17 +362,17 @@ SELECT COUNT(*) FROM products;
 -- If empty, insert test products (see step 5 above)
 ```
 
-### Issue: "Stripe payment not working"
+### Issue: "Card payment not working"
 
 **Possible causes:**
-1. Stripe keys not set
-2. Using test keys in production
-3. Webhook not configured
+1. SumUp settings missing or wrong
+2. Reader not paired, offline or logged in to the SumUp app
+3. App payment code typed wrongly or for a different amount
 
 **Fix:**
-1. Verify `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` starts with `pk_live_`
-2. Verify `STRIPE_SECRET_KEY` starts with `sk_live_`
-3. Check Stripe Dashboard for errors
+1. Open Admin → Card Payments (SumUp) and check every setting has a tick and it says "Connected to SumUp"
+2. Re-pair the reader if it isn't listed
+3. See the troubleshooting section of `docs/setup/SUMUP_SETUP_GUIDE.md`
 
 ### Issue: "Stock not deducting"
 
@@ -432,12 +406,13 @@ NEXTAUTH_URL=https://pos.yourdomain.com
 NEXT_PUBLIC_SITE_URL=https://pos.yourdomain.com
 ```
 
-### Step 3: Update Stripe Webhook
+### Step 3: Update the Site URL
 
-If using Stripe, update webhook URL to:
+Set `NEXT_PUBLIC_SITE_URL` to the new domain:
 ```
-https://pos.yourdomain.com/api/webhooks/stripe
+https://pos.yourdomain.com
 ```
+SumUp reports reader payments to `<site URL>/api/webhooks/sumup`, and NFC card addresses use the same URL.
 
 ### Step 4: Redeploy
 
@@ -484,7 +459,7 @@ All images use Next.js Image component for automatic optimization.
 - **Netlify Docs:** https://docs.netlify.com
 - **Next.js Docs:** https://nextjs.org/docs
 - **Neon Docs:** https://neon.tech/docs
-- **Stripe Docs:** https://stripe.com/docs
+- **SumUp Developer Docs:** https://developer.sumup.com
 
 ### Need Help?
 
@@ -502,7 +477,7 @@ Before announcing your POS system is live:
 **Environment:**
 - [ ] All environment variables configured
 - [ ] Secrets changed from development defaults
-- [ ] Stripe configured (if using payments)
+- [ ] SumUp connected and readers paired (if taking card payments)
 
 **Database:**
 - [ ] Migration 011 executed

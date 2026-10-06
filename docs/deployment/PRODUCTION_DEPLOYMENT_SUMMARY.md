@@ -112,7 +112,7 @@
   - Product catalog
   - Stock management
   - Cart functionality
-  - Stripe payment integration
+  - SumUp card payments (reader, app, cash)
   - NFC customer linking
   - Loyalty points system
   - Order management
@@ -245,13 +245,15 @@ VALUES
   ('Croissant', 'Butter croissant', 200, 'EUR', 'Food', 50, 10, true);
 ```
 
-#### 7. Configure Stripe (Optional) 💳
-If using payments:
+#### 7. Configure SumUp (Card Payments) 💳
+Add in Netlify, redeploy, then pair readers in Admin → Card Payments (SumUp):
 ```bash
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_key
-STRIPE_SECRET_KEY=sk_live_your_key
-STRIPE_WEBHOOK_SECRET=whsec_your_secret
+SUMUP_API_KEY=sup_sk_your_secret_key
+SUMUP_MERCHANT_CODE=MC0X0ABC
+SUMUP_AFFILIATE_KEY=your_affiliate_key
+SUMUP_AFFILIATE_APP_ID=your_affiliate_app_id
 ```
+See `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 #### 8. Set Up Custom Domain (Optional) 🌐
 In Netlify Dashboard:
@@ -510,7 +512,7 @@ Deploys → [Latest Deploy] → Functions → Edge Functions
 - **Public Pages:** 10+
 - **API Endpoints:** 30+
 - **Authentication Systems:** 3 (Admin, Staff, Stack Auth)
-- **Payment Integration:** Stripe
+- **Payment Integration:** SumUp
 - **Database:** PostgreSQL with JSONB
 
 ### Testing

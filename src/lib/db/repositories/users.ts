@@ -1,7 +1,6 @@
 import { sql } from '../client';
 import type { User, CreateUserRequest, UpdateUserRequest } from '../types';
 import bcrypt from 'bcryptjs';
-import { createStripeCustomer } from '@/lib/services/stripe';
 
 export async function getAllUsers(): Promise<User[]> {
   const users = await sql<User[]>`
@@ -60,30 +59,7 @@ export async function createUser(data: CreateUserRequest): Promise<User> {
     RETURNING *
   `;
 
-  const user = users[0];
-
-  // Create Stripe customer asynchronously
-  // Don't block user creation if Stripe fails
-  try {
-    const stripeCustomer = await createStripeCustomer(user);
-
-    // Update user with Stripe customer ID
-    const updatedUsers = await sql<User[]>`
-      UPDATE users
-      SET stripe_customer_id = ${stripeCustomer.id}
-      WHERE id = ${user.id}
-      RETURNING *
-    `;
-
-    return updatedUsers[0];
-  } catch (error) {
-    console.error('Failed to create Stripe customer during user creation:', error);
-    console.warn(`User ${user.id} created without Stripe customer. Stripe customer can be created later.`);
-
-    // Return the user even if Stripe fails
-    // The stripe_customer_id will be null and can be populated later
-    return user;
-  }
+  return users[0];
 }
 
 export async function updateUser(id: string, data: UpdateUserRequest): Promise<User> {
@@ -115,10 +91,6 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
   if (data.talent_id !== undefined) {
     updates.push(`talent_id = $${paramIndex++}`);
     values.push(data.talent_id);
-  }
-  if (data.stripe_customer_id !== undefined) {
-    updates.push(`stripe_customer_id = $${paramIndex++}`);
-    values.push(data.stripe_customer_id);
   }
 
   if (updates.length === 0) {

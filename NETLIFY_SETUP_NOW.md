@@ -60,8 +60,10 @@ Click **"Add a variable"** and add EACH of these:
 
 ```bash
 DATABASE_URL = your_neon_database_url
-STRIPE_SECRET_KEY = sk_test_or_live_...
-STRIPE_PUBLISHABLE_KEY = pk_test_or_live_...
+SUMUP_API_KEY = sup_sk_...
+SUMUP_MERCHANT_CODE = MC0X0ABC
+SUMUP_AFFILIATE_KEY = ...
+SUMUP_AFFILIATE_APP_ID = ...
 ADMIN_USERNAME = admin
 ADMIN_PASSWORD = your_secure_password
 STAFF_USERNAME = staff
@@ -71,7 +73,7 @@ NEXT_PUBLIC_APP_URL = https://same-i3xfumkpmp9-latest.netlify.app
 
 **Critical**: Use your ACTUAL values, especially:
 - Real Neon database URL
-- Real Stripe keys
+- Real SumUp keys
 - Secure passwords
 - Your actual Netlify URL
 

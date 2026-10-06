@@ -15,7 +15,7 @@ import { ShoppingCart, User, Calendar, CreditCard } from "lucide-react";
 import type { POSOrder, OrderStatus } from "@/lib/db/types";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { formatCurrency } from "@/lib/utils/formatting";
+import { formatCurrency, PAYMENT_METHOD_LABELS } from "@/lib/utils/formatting";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 
 export default function AdminOrdersPage() {
@@ -183,10 +183,13 @@ export default function AdminOrdersPage() {
                               Customer linked
                             </div>
                           )}
-                          {order.stripe_payment_intent_id && (
+                          {order.payment_method && (
                             <div className="flex items-center gap-1">
                               <CreditCard className="h-4 w-4" />
-                              Stripe
+                              {PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}
+                              {order.sumup_transaction_code && (
+                                <span className="font-mono text-xs text-gray-500">· {order.sumup_transaction_code}</span>
+                              )}
                             </div>
                           )}
                         </div>

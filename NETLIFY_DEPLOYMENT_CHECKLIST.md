@@ -48,8 +48,10 @@ Go to: **Site settings** → **Build & deploy** → **Environment variables**
 Click **"Add a variable"** for each of these:
 
 - [ ] `DATABASE_URL` = `your_neon_database_url`
-- [ ] `STRIPE_SECRET_KEY` = `sk_test_...` or `sk_live_...`
-- [ ] `STRIPE_PUBLISHABLE_KEY` = `pk_test_...` or `pk_live_...`
+- [ ] `SUMUP_API_KEY` = `sup_sk_...`
+- [ ] `SUMUP_MERCHANT_CODE`
+- [ ] `SUMUP_AFFILIATE_KEY`
+- [ ] `SUMUP_AFFILIATE_APP_ID`
 - [ ] `ADMIN_USERNAME` = `admin` (or your choice)
 - [ ] `ADMIN_PASSWORD` = `your_secure_password`
 - [ ] `STAFF_USERNAME` = `staff` (or your choice)

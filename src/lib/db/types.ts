@@ -13,7 +13,6 @@ export interface User {
   role: UserRole;
   avatar_url?: string;
   talent_id?: string;
-  stripe_customer_id?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -166,7 +165,6 @@ export interface UpdateUserRequest {
   role?: UserRole;
   avatar_url?: string;
   talent_id?: string;
-  stripe_customer_id?: string;
 }
 
 export interface CreateNFCCardRequest {
@@ -535,7 +533,6 @@ export interface POSOrder {
   customer_user_id?: string;
   total_cents: number;
   currency: string;
-  stripe_payment_intent_id?: string;
   status: OrderStatus;
   notes?: string;
   payment_method?: PaymentMethod | null;
@@ -545,6 +542,7 @@ export interface POSOrder {
   updated_at: Date;
 }
 
+// 'stripe' only appears on orders paid before the switch to SumUp
 export type PaymentMethod = 'stripe' | 'sumup_reader' | 'sumup_app' | 'cash';
 
 export interface POSOrderItem {
@@ -570,7 +568,7 @@ export interface POSOrderItemWithProduct extends POSOrderItem {
 }
 
 // ============================================
-// Purchase History Types (Stripe Integration)
+// Purchase History Types
 // ============================================
 
 export interface PurchaseHistoryItem {
@@ -588,7 +586,8 @@ export interface PurchaseHistoryOrder {
   total_cents: number;
   currency: string;
   status: OrderStatus;
-  stripe_payment_intent_id?: string;
+  payment_method?: PaymentMethod | null;
+  sumup_transaction_code?: string | null;
   items: PurchaseHistoryItem[];
   notes?: string;
   staff_user?: {
@@ -601,7 +600,6 @@ export interface UserPurchaseHistory {
   user_id: string;
   user_name: string;
   user_email: string;
-  stripe_customer_id?: string;
   total_orders: number;
   total_spent_cents: number;
   currency: string;
@@ -762,7 +760,6 @@ export interface CreatePOSOrderRequest {
 
 export interface UpdatePOSOrderRequest {
   status?: OrderStatus;
-  stripe_payment_intent_id?: string;
   notes?: string;
 }
 

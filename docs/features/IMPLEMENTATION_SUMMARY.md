@@ -323,7 +323,7 @@ export default function StaffPOSPage() {
         {/* - Product grid with stock indicators */}
         {/* - Cart with NFC link button */}
         {/* - VIP info display */}
-        {/* - Checkout with Stripe */}
+        {/* - Checkout with SumUp (reader, app, cash) */}
       </MainLayout>
     </StaffAuthGuard>
   );
@@ -457,7 +457,7 @@ WHERE conrelid = 'vip_consumptions'::regclass;
 - [ ] Set `low_stock_threshold` for all products
 - [ ] Configure VIP points rules for POS
 - [ ] Test NFC cards are registered
-- [ ] Verify Stripe is configured
+- [ ] Verify SumUp is connected and a reader is paired
 - [ ] Test staff login flow
 - [ ] Test order creation with stock check
 - [ ] Test payment with stock deduction
@@ -496,7 +496,7 @@ WHERE conrelid = 'vip_consumptions'::regclass;
 │  │           Checkout & Payment              │  │
 │  │  1. Stock Check                           │  │
 │  │  2. Create Order (pending)                │  │
-│  │  3. Stripe Payment                        │  │
+│  │  3. SumUp Payment                         │  │
 │  │  4. On Success:                           │  │
 │  │     - Update Order (paid)                 │  │
 │  │     - Deduct Stock      ─────────┐        │  │

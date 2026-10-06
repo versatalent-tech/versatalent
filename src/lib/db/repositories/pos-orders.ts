@@ -231,8 +231,7 @@ export async function createOrder(data: CreatePOSOrderRequest): Promise<POSOrder
  */
 export async function updateOrderStatus(
   id: string,
-  status: OrderStatus,
-  stripePaymentIntentId?: string
+  status: OrderStatus
 ): Promise<POSOrder | null> {
   // Get the current order to check previous status
   const currentOrder = await getOrderById(id);
@@ -243,7 +242,6 @@ export async function updateOrderStatus(
   const rows = await sql`
     UPDATE pos_orders
     SET status = ${status},
-        stripe_payment_intent_id = ${stripePaymentIntentId || null},
         updated_at = NOW()
     WHERE id = ${id}
     RETURNING *

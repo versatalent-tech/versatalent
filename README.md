@@ -65,7 +65,7 @@ VersaTalent is built as a **Next.js 15 full-stack application** with the followi
                 │                      │
                 ▼                      ▼
 ┌──────────────────────┐   ┌──────────────────────┐
-│  Neon PostgreSQL     │   │  Stripe Payment API  │
+│  Neon PostgreSQL     │   │  SumUp Payments API  │
 │  (Serverless)        │   │  POS • Webhooks      │
 └──────────────────────┘   └──────────────────────┘
 ```
@@ -74,7 +74,7 @@ VersaTalent is built as a **Next.js 15 full-stack application** with the followi
 
 1. **NFC Membership System** - Track user check-ins and engagement via NFC cards
 2. **VIP Loyalty Program** - Three-tier system (Silver/Gold/Black) with points and benefits
-3. **Point of Sale (POS)** - Complete retail system with Stripe integration
+3. **Point of Sale (POS)** - Complete retail system with SumUp card payments
 4. **Talent Management** - Comprehensive profiles, portfolios, and social media
 5. **Events System** - Event creation, management, and ticket integration
 6. **Admin Dashboard** - Full control panel for staff and administrators
@@ -94,7 +94,7 @@ VersaTalent is built as a **Next.js 15 full-stack application** with the followi
 - ✅ **Analytics Dashboard** - Real-time metrics and reporting
 
 ### For Staff
-- ✅ **POS System** - Process sales with Stripe payment
+- ✅ **POS System** - Process sales with a SumUp card reader, the SumUp app (Tap to Pay) or cash
 - ✅ **NFC Reader** - Attach customer cards to orders for loyalty points
 - ✅ **Product Management** - Update inventory and pricing
 - ✅ **Order History** - View past transactions
@@ -108,7 +108,6 @@ VersaTalent is built as a **Next.js 15 full-stack application** with the followi
 
 ### Technical Features
 - ✅ **Google Drive Integration** - Direct image hosting support
-- ✅ **Stripe Customer Sync** - Automatic customer creation and linking
 - ✅ **Image Optimization** - Client-side compression before upload
 - ✅ **Responsive Design** - Mobile-first, works on all devices
 - ✅ **Real-time Updates** - Live analytics and metrics
@@ -133,7 +132,7 @@ VersaTalent is built as a **Next.js 15 full-stack application** with the followi
 - **Database**: Neon PostgreSQL (Serverless)
 - **ORM**: SQL queries via @neondatabase/serverless
 - **Authentication**: Custom JWT-based auth
-- **Payments**: Stripe (API + React Stripe.js)
+- **Payments**: SumUp (Solo card readers via the Cloud API, SumUp app transactions)
 - **Password Hashing**: bcryptjs
 
 ### Development
@@ -161,7 +160,7 @@ versatalent/
 │   │   │   ├── staff/          # Staff authentication
 │   │   │   ├── talents/        # Talent management
 │   │   │   ├── vip/            # VIP loyalty system
-│   │   │   └── webhooks/       # Stripe webhooks
+│   │   │   └── webhooks/       # SumUp webhook
 │   │   └── ...
 │   ├── components/             # React components
 │   │   ├── admin/              # Admin-specific components
@@ -184,7 +183,6 @@ versatalent/
 │   ├── images/                 # Uploaded images
 │   └── ...
 ├── scripts/                    # Utility scripts
-│   ├── check-stripe-setup.ts   # Verify Stripe configuration
 │   └── optimize-*.js           # Image optimization scripts
 ├── migrations/                 # Database migrations
 │   └── 001-012_*.sql           # Migration files
@@ -203,7 +201,7 @@ versatalent/
 
 - **`src/app/api/`** - All backend API routes following Next.js file-based routing
 - **`src/lib/db/repositories/`** - Database access layer, one file per entity
-- **`src/lib/services/`** - Business logic (VIP points, Stripe, analytics)
+- **`src/lib/services/`** - Business logic (VIP points, SumUp payments, analytics)
 - **`src/components/admin/`** - Admin dashboard UI components
 - **`src/components/ui/`** - Reusable shadcn/ui components
 
@@ -228,7 +226,7 @@ Migrations are located in `src/db/migrations/` and `migrations/`.
 007_link_users_to_talents.sql   -- User-talent relationship
 008_pos_system.sql              -- POS orders and products
 011_inventory_management.sql    -- Inventory tracking
-012_stripe_customer_integration.sql -- Stripe customer IDs
+012_stripe_customer_integration.sql -- Stripe customer IDs (no longer used)
 ```
 
 ### Database Schema Overview
@@ -270,10 +268,11 @@ Create a `.env.local` file in the root:
 # Database
 DATABASE_URL="postgresql://user:password@endpoint.neon.tech/db?sslmode=require"
 
-# Stripe
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_PUBLISHABLE_KEY="pk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."  # For webhook signature verification
+# SumUp card payments (see docs/setup/SUMUP_SETUP_GUIDE.md)
+SUMUP_API_KEY="sup_sk_..."
+SUMUP_MERCHANT_CODE="MC0X0ABC"
+SUMUP_AFFILIATE_KEY="..."
+SUMUP_AFFILIATE_APP_ID="..."
 
 # Admin Authentication
 ADMIN_USERNAME="admin"
@@ -294,8 +293,7 @@ INSTAGRAM_USER_ID="..."
 **Security Notes:**
 - Never commit `.env.local` to version control
 - Use strong passwords for admin/staff accounts
-- Rotate Stripe keys regularly
-- Use Stripe test keys for development
+- Rotate the SumUp API key regularly
 
 ---
 
@@ -316,7 +314,6 @@ bun run dev          # Start dev server with Turbopack
 bun run build        # Build for production
 bun run start        # Start production server
 bun run lint         # Run linter
-bun run check-stripe # Verify Stripe setup
 ```
 
 ### Development Workflow
@@ -353,12 +350,13 @@ bun run check-stripe # Verify Stripe setup
 
 Run migrations in Neon Console before deploying new versions.
 
-### Stripe Webhooks
+### SumUp Card Payments
 
-1. Set up webhook endpoint in Stripe Dashboard
-2. Point to: `https://yourdomain.com/api/webhooks/stripe`
-3. Select events: `payment_intent.succeeded`, `payment_intent.payment_failed`
-4. Copy webhook secret to `STRIPE_WEBHOOK_SECRET`
+1. Add the four `SUMUP_*` variables in Netlify and redeploy
+2. Open Admin → Card Payments (SumUp) to check the connection and pair Solo readers
+3. SumUp reports reader payments to `https://yourdomain.com/api/webhooks/sumup` automatically (no dashboard setup needed)
+
+See `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
 ---
 
@@ -395,7 +393,8 @@ Run migrations in Neon Console before deploying new versions.
 - `GET /api/pos/products` - List products
 - `POST /api/pos/products` - Create product
 - `POST /api/pos/orders` - Create order
-- `POST /api/pos/create-payment-intent` - Initialize Stripe payment
+- `POST /api/pos/sumup/checkout` - Send the order total to a SumUp Solo reader
+- `POST /api/pos/sumup/confirm` - Complete an order paid in the SumUp app
 - `POST /api/staff/pos/nfc-attach` - Attach NFC card to order
 
 ### Talents & Events
@@ -414,12 +413,11 @@ Run migrations in Neon Console before deploying new versions.
 ### Manual Testing Checklist
 
 **Critical Flows:**
-- [ ] User registration creates Stripe customer
 - [ ] NFC card attaches to POS order
 - [ ] VIP points are awarded after purchase
 - [ ] Admin can create talents and events
 - [ ] Staff can process POS sales
-- [ ] Stripe webhooks update order status
+- [ ] SumUp reader payments complete the order
 
 ### Running Tests
 
@@ -472,7 +470,7 @@ Proprietary - All rights reserved by VersaTalent
 
 ### Current Version: 1.82
 - ✅ Core NFC, VIP, POS, Events, Talents systems
-- ✅ Stripe integration with customer sync
+- ✅ SumUp card payments (Solo readers, SumUp app, cash)
 - ✅ Google Drive image support
 - ✅ Admin & staff dashboards
 
