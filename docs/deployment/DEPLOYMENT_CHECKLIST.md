@@ -190,7 +190,7 @@ See `docs/setup/SUMUP_SETUP_GUIDE.md`.
 ## 👥 Staff Training
 
 ### Train All Staff On:
-- [ ] How to login to POS (`/pos`)
+- [ ] How to login to POS (`/staff/pos`)
 - [ ] Adding products to cart
 - [ ] Linking customers via NFC (manual entry)
 - [ ] Processing checkout

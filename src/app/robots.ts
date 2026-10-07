@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
       // Internal tools, per-member pages and post-submit screens
-      disallow: ['/admin', '/staff', '/pos', '/api/', '/nfc/', '/vip/', '/dashboard', '/success'],
+      disallow: ['/admin', '/staff', '/api/', '/nfc/', '/vip/', '/dashboard', '/success'],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

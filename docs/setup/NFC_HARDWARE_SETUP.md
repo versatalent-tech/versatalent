@@ -69,7 +69,7 @@ This guide explains how to set up NFC card readers for customer linking at the P
 
 1. **Open POS on mobile device:**
    ```
-   https://yourdomain.com/pos
+   https://yourdomain.com/staff/pos
    ```
 
 2. **Login as staff**
@@ -414,7 +414,7 @@ Most NFC cards have **fixed UIDs** (printed on card).
 ### Test Card Detection
 
 1. **Prepare test card** with known UID
-2. **Open POS**: http://localhost:3000/pos
+2. **Open POS**: http://localhost:3000/staff/pos
 3. **Click "Link Customer (NFC)"**
 4. **Method 1 (Web NFC):**
    - Click "Tap Card Now"

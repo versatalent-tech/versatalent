@@ -28,7 +28,7 @@ Follow these steps to get the POS system running:
    - Password: (your admin password)
 
 3. Navigate to POS:
-   - URL: http://localhost:3000/pos
+   - URL: http://localhost:3000/staff/pos
 
 ✅ You should see the POS interface with sample products!
 
@@ -193,4 +193,4 @@ Need help?
 
 ---
 
-**Ready to sell? Start at http://localhost:3000/pos** 🚀
+**Ready to sell? Start at http://localhost:3000/staff/pos** 🚀
