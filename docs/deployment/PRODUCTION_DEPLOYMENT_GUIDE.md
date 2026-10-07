@@ -29,12 +29,12 @@ Your application needs these environment variables to function. You must add the
 
 ```bash
 # Database (Already configured - verify it's set)
-DATABASE_URL=postgresql://neondb_owner:npg_7lSOGPYyIDW6@ep-royal-leaf-a4rl6jau-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=postgresql://USER:PASSWORD@YOUR-ENDPOINT-pooler.REGION.aws.neon.tech/neondb?sslmode=require
 
 # Stack Auth (Already configured - verify)
-NEXT_PUBLIC_STACK_PROJECT_ID=846d74a5-4d74-4c46-a89c-1f7c5bc397f5
-NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=pck_5yanfb8k3bpm70wbx6m2yg81k8bx8cn7snwwq23xcvtfg
-STACK_SECRET_SERVER_KEY=ssk_qa1gfsf4kbbghsrkgcp5n4sk79q4c0bfsfcnppqfsz67r
+NEXT_PUBLIC_STACK_PROJECT_ID=your-stack-project-id
+NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=pck_your-publishable-client-key
+STACK_SECRET_SERVER_KEY=ssk_your-secret-server-key
 
 # NextAuth Configuration (CHANGE THESE!)
 NEXTAUTH_URL=https://same-i3xfumkpmp9-latest.netlify.app
@@ -90,7 +90,7 @@ The inventory management migration MUST be run on your production database:
 
 ```bash
 # Connect to your Neon database
-psql postgresql://neondb_owner:npg_7lSOGPYyIDW6@ep-royal-leaf-a4rl6jau-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+psql postgresql://USER:PASSWORD@YOUR-ENDPOINT-pooler.REGION.aws.neon.tech/neondb?sslmode=require
 
 # Run the migration
 \i migrations/011_inventory_management.sql
