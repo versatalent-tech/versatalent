@@ -37,25 +37,25 @@ Click **"Add environment variables"** and add these:
 
 ```
 DATABASE_URL
-postgresql://neondb_owner:*************@ep-royal-leaf-a4rl6jau-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+postgresql://USER:PASSWORD@YOUR-ENDPOINT-pooler.REGION.aws.neon.tech/neondb?sslmode=require
 
 NEXTAUTH_URL
 https://YOUR-SITE-NAME.netlify.app
 
 NEXTAUTH_SECRET
-nfc-versatalent-secret-key-2025-change-in-production
+generate-a-long-random-value
 
 NEXT_PUBLIC_SITE_URL
 https://YOUR-SITE-NAME.netlify.app
 
 NEXT_PUBLIC_STACK_PROJECT_ID
-846d74a5-4d74-4c46-a89c-1f7c5bc397f5
+your-stack-project-id
 
 NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
-pck_5yanfb8k3bpm70wbx6m2yg81k8bx8cn7snwwq23xcvtfg
+pck_your-publishable-client-key
 
 STACK_SECRET_SERVER_KEY
-ssk_qa1gfsf4kbbghsrkgcp5n4sk79q4c0bfsfcnppqfsz67r
+ssk_your-secret-server-key
 ```
 
 **Important:** Replace `YOUR-SITE-NAME` in `NEXTAUTH_URL` and `NEXT_PUBLIC_SITE_URL` with your actual Netlify site name (you'll get this after deployment).
