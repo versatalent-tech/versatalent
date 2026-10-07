@@ -203,6 +203,12 @@ export default function AdminOrdersPage() {
                         <p className="text-2xl font-bold text-gold">
                           {formatCurrency(order.total_cents, order.currency)}
                         </p>
+                        {(order.discount_cents ?? 0) > 0 && (
+                          <p className="text-xs text-green-700">
+                            {order.discount_tier ? `${order.discount_tier.charAt(0).toUpperCase()}${order.discount_tier.slice(1)} ` : ''}
+                            member discount {Number(order.discount_percent)}%: −{formatCurrency(order.discount_cents ?? 0, order.currency)}
+                          </p>
+                        )}
                         <p className="text-xs text-gray-500">{order.currency}</p>
                       </div>
                     </div>

@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Trophy, Star, TrendingUp, Users } from "lucide-react";
+import { addYears } from "@/lib/vip-tier-rules";
 
 interface VIPMember {
   id: string;
@@ -20,6 +21,10 @@ interface VIPMember {
   tier: 'silver' | 'gold' | 'black';
   points_balance: number;
   lifetime_points: number;
+  /** Points earned in the current membership year */
+  status_points?: number;
+  /** Start of the current membership year (YYYY-MM-DD) */
+  year_start?: string;
   status: string;
   user: {
     name: string;
@@ -182,6 +187,7 @@ export function VIPMembershipsManager() {
                 <th className="text-left py-3 px-4">Member</th>
                 <th className="text-left py-3 px-4">Tier</th>
                 <th className="text-right py-3 px-4">Points</th>
+                <th className="text-right py-3 px-4">This Year</th>
                 <th className="text-right py-3 px-4">Lifetime</th>
                 <th className="text-left py-3 px-4">Status</th>
                 <th className="text-right py-3 px-4">Actions</th>
@@ -206,6 +212,15 @@ export function VIPMembershipsManager() {
                     <span className="font-semibold text-gold">
                       {member.points_balance.toLocaleString()}
                     </span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <div className="font-medium">{(member.status_points ?? 0).toLocaleString()}</div>
+                    {member.year_start && (
+                      <div className="text-xs text-gray-500">
+                        renews{' '}
+                        {new Date(`${addYears(member.year_start, 1)}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-right text-gray-600">
                     {member.lifetime_points.toLocaleString()}

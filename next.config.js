@@ -6,7 +6,12 @@ const nextConfig = {
         output: 'export',
         distDir: 'out'
       }
-    : {}
+    : {
+        // The old till page was removed; send bookmarks to the staff till
+        async redirects() {
+          return [{ source: '/pos', destination: '/staff/pos', permanent: true }];
+        },
+      }
   ),
   images: {
     unoptimized: true,

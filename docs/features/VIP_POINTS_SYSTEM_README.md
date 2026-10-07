@@ -10,17 +10,31 @@ The VIP Points & Tier System is a comprehensive loyalty program integrated with 
 
 ### 1. **Automatic Points Awarding**
 - **Event Check-ins**: +10 points per check-in (configurable)
-- **Consumption**: +1 point per 3 euros spent (configurable)
-- **Manual Adjustments**: Admin can add/deduct points manually
+- **Purchases**: +1 point per £3 actually paid, after any member discount (configurable)
+- **Tier multipliers**: Gold earns 1.5x and Black 2x on check-ins and purchases (configurable)
+- **Manual Adjustments**: Admin can add/deduct points manually (no multiplier)
 
-### 2. **Tier System**
-- **Silver**: 0-499 points
-- **Gold**: 500-1,749 points
-- **Black**: 1,750+ points
+Only VIP members (and artists) earn points; staff or guest cards linked at the till don't.
 
-Tiers are automatically upgraded when points thresholds are reached.
+### 2. **Tier System (yearly requalification)**
+Status is earned within each **membership year**, which runs from the anniversary of the day the member joined.
 
-### 3. **Activity Tracking**
+- **Silver**: starting tier
+- **Gold**: 500 points earned in a membership year
+- **Black**: 1,750 points earned in a membership year
+
+(Thresholds are configurable in Admin → VIP → Point Rules.)
+
+- Reaching a threshold moves the member up **straight away**; that tier is kept for the rest of the year and all of the next.
+- At each anniversary the new tier is what the year's points qualify for, but a member drops **at most one tier** (Black → Gold, never straight to Silver).
+- The points balance and lifetime points are separate from status: tiers depend only on points earned in the membership year.
+
+### 3. **Member Discounts at the Till**
+- Each tier has a discount on till items (default Silver 0%, Gold 10%, Black 20%), set in Admin → VIP → Point Rules.
+- Products can be marked "Excluded from member discounts" in POS admin.
+- The discount is applied when the member's card is linked at the till and recorded on the order.
+
+### 4. **Activity Tracking**
 - Full points history ledger
 - Consumption/spending tracking
 - Event attendance history
@@ -130,7 +144,7 @@ Response:
 When a VIP member makes a purchase:
 
 1. Admin/staff records consumption
-2. System looks up the `consumption` point rule (default: 1 point per 3 euros)
+2. System looks up the `consumption` point rule (default: 1 point per £3)
 3. Points = floor(amount × points_per_unit)
 4. Points are awarded
 5. Membership is updated
@@ -184,29 +198,28 @@ Response:
 }
 ```
 
-### Tier Upgrades
+### Tier Upgrades and Requalification
 
-Tiers are **automatically upgraded** when points balance changes.
+Each `vip_memberships` row tracks the membership year (migration `023_vip_tiers_and_discounts.sql`):
 
-**Upgrade Logic:**
-- Database trigger `trigger_auto_upgrade_vip_tier` monitors `points_balance` changes
-- Calls function `calculate_vip_tier(points)` to determine new tier
-- Updates `tier` column if different from current tier
+| Column | Meaning |
+|--------|---------|
+| `year_start` | Start of the current membership year (anniversary of joining) |
+| `status_points` | Points earned in the current membership year |
+| `base_tier` | Tier secured for the whole current year |
+| `tier` | `base_tier`, or higher once `status_points` reach a higher threshold |
 
-**Thresholds:**
-```javascript
-Silver: 0-499 points
-Gold: 500-1,749 points
-Black: 1,750+ points
+**Logic** (`src/lib/vip-tier-rules.ts`, `src/lib/services/vip-points-service.ts`):
+- Every point change also changes `status_points`; the tier becomes the higher of `base_tier` and what `status_points` qualify for. Within a year a member never drops below `base_tier`.
+- When a membership is read or changed after its year has ended, it moves into the new year: `base_tier` becomes what the finished year's points qualify for, but no more than one tier below the tier held; `status_points` resets to 0. Each further year with no points drops one more tier.
+
+**Example:**
 ```
-
-**Automatic Upgrade Example:**
-```
-User has 480 points (Silver tier)
-→ Earns 30 points from consumption
-→ New balance: 510 points
-→ Tier automatically upgraded to Gold
-→ User sees new tier on next page load
+Member joined 15 March. Silver, 480 points this year
+→ Earns 30 points → 510 this year → Gold straight away
+→ Next 15 March: qualified Gold → Gold for the whole new year
+→ Earns only 200 that year → following 15 March: drops to Silver
+   (a Black member in the same position would drop to Gold)
 ```
 
 ---
@@ -264,7 +277,7 @@ Existing NFC system remains intact. Points are awarded automatically during chec
 5. Enter amount (e.g., 150.00)
 6. Add description (optional)
 7. Click "Record Consumption"
-8. Points are automatically awarded (1 point per 3 euros)
+8. Points are automatically awarded (1 point per £3)
 
 #### Manually Adjust Points
 1. Go to `/admin/vip`
@@ -285,7 +298,7 @@ Point rules are stored in `vip_point_rules` table.
 
 **Default Rules:**
 - `event_checkin`: 10 points per event
-- `consumption`: 1 point per 3 euros
+- `consumption`: 1 point per £3
 
 **To modify:**
 ```sql
@@ -305,7 +318,7 @@ Or create API endpoint to manage rules via UI.
 
 #### Earn Points
 - **Check-in at events**: Scan your NFC card (+10 points)
-- **Make purchases**: Ask staff to record your purchase (+1 point per 3 euros)
+- **Make purchases**: Tap your card at the till (+1 point per £3 paid, multiplied by your tier rate)
 
 #### Tier Benefits
 - **Silver**: Standard VIP access

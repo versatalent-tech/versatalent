@@ -133,9 +133,8 @@ POS UI updates automatically with customer info
 ### 4. Loyalty Points Integration ✅
 
 **Service Created:**
-- `src/lib/services/pos-loyalty.ts`
-  - `awardLoyaltyPointsForOrder()` - Award points on payment
-  - `reverseLoyaltyPointsForOrder()` - Reverse points on refund
+- `src/lib/services/pos-vip-integration.ts`
+  - `processPOSOrderForVIP()` - Award points on payment (via `vip-points-service.ts`)
 
 **Features:**
 - ✅ Automatic points calculation based on order total

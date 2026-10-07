@@ -41,6 +41,9 @@ interface Order {
   status: string;
   payment_method?: PaymentMethod | null;
   sumup_transaction_code?: string | null;
+  discount_cents?: number;
+  discount_percent?: number;
+  discount_tier?: string | null;
   items: PurchaseItem[];
   notes?: string;
   staff_user?: {
@@ -305,6 +308,11 @@ export default function PurchaseHistory({ userId }: PurchaseHistoryProps) {
                         <div className="font-bold">
                           {formatCurrency(order.total_cents, order.currency)}
                         </div>
+                        {(order.discount_cents ?? 0) > 0 && (
+                          <div className="text-xs text-green-700">
+                            Saved {formatCurrency(order.discount_cents ?? 0, order.currency)} ({order.discount_percent}% member discount)
+                          </div>
+                        )}
                         <div className="text-xs text-muted-foreground">
                           {order.items.length} item{order.items.length !== 1 && 's'}
                         </div>

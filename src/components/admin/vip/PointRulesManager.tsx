@@ -17,8 +17,10 @@ import {
   Check,
   Trophy,
   Edit3,
+  Percent,
 } from "lucide-react";
-import type { VIPPointRule } from "@/lib/db/types";
+import type { VIPPointRule, VIPTier } from "@/lib/db/types";
+import { DEFAULT_TIER_SETTINGS } from "@/lib/vip-tier-rules";
 import { POS_CURRENCY } from "@/lib/utils/formatting";
 interface PointRulesManagerProps {
   className?: string;
@@ -27,7 +29,7 @@ interface PointRulesManagerProps {
 const DEFAULT_RULES: Partial<VIPPointRule>[] = [
   {
     action_type: "consumption",
-    points_per_unit: 0.333333,
+    points_per_unit: 1 / 3,
     unit: POS_CURRENCY,
     is_active: true,
   },
@@ -35,12 +37,6 @@ const DEFAULT_RULES: Partial<VIPPointRule>[] = [
     action_type: "event_checkin",
     points_per_unit: 10,
     unit: "checkin",
-    is_active: true,
-  },
-  {
-    action_type: "tier_bonus",
-    points_per_unit: 50,
-    unit: "bonus",
     is_active: true,
   },
 ];
@@ -63,7 +59,10 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
   // Form state for easier editing
   const [eurosPerPoint, setEurosPerPoint] = useState(3); // Default: 1 point per 3 euros
   const [checkinPoints, setCheckinPoints] = useState(10);
-  const [tierBonusPoints, setTierBonusPoints] = useState(50);
+  // Member discounts (percent) and points multipliers per tier
+  const [discounts, setDiscounts] = useState<Record<VIPTier, number>>(DEFAULT_TIER_SETTINGS.discounts);
+  const [goldMultiplier, setGoldMultiplier] = useState(DEFAULT_TIER_SETTINGS.multipliers.gold);
+  const [blackMultiplier, setBlackMultiplier] = useState(DEFAULT_TIER_SETTINGS.multipliers.black);
   const [consumptionActive, setConsumptionActive] = useState(true);
   const [checkinActive, setCheckinActive] = useState(true);
   // Tier threshold state
@@ -83,7 +82,6 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
         // Update form values from fetched rules
         const consumptionRule = data.find((r) => r.action_type === "consumption");
         const checkinRule = data.find((r) => r.action_type === "event_checkin");
-        const bonusRule = data.find((r) => r.action_type === "tier_bonus");
         const goldThresholdRule = data.find((r) => r.action_type === "tier_threshold_gold");
         const blackThresholdRule = data.find((r) => r.action_type === "tier_threshold_black");
         if (consumptionRule) {
@@ -94,9 +92,14 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
           setCheckinPoints(Math.round(checkinRule.points_per_unit));
           setCheckinActive(checkinRule.is_active);
         }
-        if (bonusRule) {
-          setTierBonusPoints(Math.round(bonusRule.points_per_unit));
-        }
+        const ruleValue = (actionType: string) => data.find((r) => r.action_type === actionType)?.points_per_unit;
+        setDiscounts({
+          silver: ruleValue("tier_discount_silver") ?? DEFAULT_TIER_SETTINGS.discounts.silver,
+          gold: ruleValue("tier_discount_gold") ?? DEFAULT_TIER_SETTINGS.discounts.gold,
+          black: ruleValue("tier_discount_black") ?? DEFAULT_TIER_SETTINGS.discounts.black,
+        });
+        setGoldMultiplier(ruleValue("tier_multiplier_gold") ?? DEFAULT_TIER_SETTINGS.multipliers.gold);
+        setBlackMultiplier(ruleValue("tier_multiplier_black") ?? DEFAULT_TIER_SETTINGS.multipliers.black);
         if (goldThresholdRule) {
           setGoldThreshold(Math.round(goldThresholdRule.points_per_unit));
         }
@@ -144,6 +147,16 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
         setSaving(false);
         return;
       }
+      if (Object.values(discounts).some((d) => !(d >= 0 && d <= 100))) {
+        setError("Member discounts must be between 0% and 100%");
+        setSaving(false);
+        return;
+      }
+      if (!(goldMultiplier >= 1) || !(blackMultiplier >= 1)) {
+        setError("Points multipliers must be at least 1");
+        setSaving(false);
+        return;
+      }
       // Save consumption rule
       await saveRule(
         "consumption",
@@ -153,12 +166,16 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
       );
       // Save event check-in rule
       await saveRule("event_checkin", checkinPoints, "checkin", checkinActive);
-      // Save tier bonus rule
-      await saveRule("tier_bonus", tierBonusPoints, "bonus", true);
+      // Save member discounts and points multipliers
+      for (const tier of ["silver", "gold", "black"] as VIPTier[]) {
+        await saveRule(`tier_discount_${tier}`, discounts[tier], "percent", true);
+      }
+      await saveRule("tier_multiplier_gold", goldMultiplier, "multiplier", true);
+      await saveRule("tier_multiplier_black", blackMultiplier, "multiplier", true);
       // Save tier threshold rules
       await saveRule("tier_threshold_gold", goldThreshold, "points", true);
       await saveRule("tier_threshold_black", blackThreshold, "points", true);
-      setSuccess("Point rules and tier thresholds saved successfully!");
+      setSuccess("Point rules, tier thresholds, discounts and multipliers saved successfully!");
       setTimeout(() => setSuccess(null), 3000);
       // Refresh rules
       await fetchRules();
@@ -222,9 +239,10 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
         <div className="text-sm text-blue-800">
           <p className="font-medium mb-1">How Points Work</p>
           <p>
-            Points are earned through purchases and event check-ins. When members reach tier thresholds,
-            they automatically upgrade to the next VIP level. You can customize both point earning rates
-            and tier thresholds below.
+            Points are earned through purchases and event check-ins, multiplied by the member&apos;s tier rate.
+            Tiers are earned each membership year (from the day the member joined): reaching a threshold
+            moves a member up straight away, and the tier is kept for the rest of that year and all of the
+            next. A member who doesn&apos;t requalify drops one tier at their anniversary.
           </p>
         </div>
       </div>
@@ -337,7 +355,49 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
             </div>
           </CardContent>
         </Card>
-        {/* Tier Upgrade Bonus Card */}
+        {/* Member Discounts Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Percent className="h-5 w-5 text-green-700" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Member Discounts</CardTitle>
+                <CardDescription>Percent off till items, by tier</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {(["silver", "gold", "black"] as VIPTier[]).map((tier) => (
+                <div key={tier} className="flex items-center justify-between gap-3">
+                  <Badge className={tier === "black" ? "bg-black text-white" : tier === "gold" ? "bg-gold" : "bg-gray-400"}>
+                    {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={discounts[tier]}
+                      onChange={(e) => setDiscounts({ ...discounts, [tier]: parseFloat(e.target.value) || 0 })}
+                      className="w-24"
+                    />
+                    <span className="text-gray-600">% off</span>
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-gray-500">
+                Applied at the till when a member&apos;s card is linked. Products marked &quot;Excluded from member
+                discounts&quot; in POS admin are always full price.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Points Multipliers Card */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -345,32 +405,44 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
                 <Trophy className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <CardTitle className="text-lg">Tier Upgrade Bonus</CardTitle>
-                <CardDescription>Bonus points when upgrading tiers</CardDescription>
+                <CardTitle className="text-lg">Points Multipliers</CardTitle>
+                <CardDescription>Extra points for higher tiers</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Bonus Points
-                </label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={tierBonusPoints}
-                    onChange={(e) => setTierBonusPoints(parseInt(e.target.value) || 0)}
-                    className="w-32"
-                  />
-                  <span className="text-gray-600">points per tier upgrade</span>
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <Badge className="bg-gray-400">Silver</Badge>
+                <span className="text-gray-600">1x (standard)</span>
               </div>
+              {([
+                ["Gold", goldMultiplier, setGoldMultiplier, "bg-gold"],
+                ["Black", blackMultiplier, setBlackMultiplier, "bg-black text-white"],
+              ] as const).map(([label, value, setValue, badge]) => (
+                <div key={label} className="flex items-center justify-between gap-3">
+                  <Badge className={badge}>{label}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="1"
+                      step="0.1"
+                      value={value}
+                      onChange={(e) => setValue(parseFloat(e.target.value) || 1)}
+                      className="w-24"
+                    />
+                    <span className="text-gray-600">x points</span>
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-gray-500">
+                Applies to check-ins and purchases (not manual adjustments). Example: a £30 purchase earns a Gold
+                member {Math.floor(Math.floor(30 / eurosPerPoint) * goldMultiplier)} points.
+              </p>
             </div>
           </CardContent>
         </Card>
+
         {/* Tier Thresholds Card - Now Editable */}
         <Card className="border-2 border-gold/30">
           <CardHeader>
@@ -380,7 +452,7 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
               </div>
               <div>
                 <CardTitle className="text-lg">Tier Thresholds</CardTitle>
-                <CardDescription>Configure points needed for each tier</CardDescription>
+                <CardDescription>Points needed within a membership year</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -436,8 +508,8 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
               </div>
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <p className="text-xs text-green-800">
-                  <strong>Tip:</strong> Members automatically upgrade when they reach the threshold.
-                  Changes take effect immediately after saving.
+                  <strong>Tip:</strong> Points count towards a tier for the membership year they were earned
+                  in. Changes take effect within a minute of saving.
                 </p>
               </div>
             </div>
@@ -473,11 +545,11 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
               </Badge>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600 mb-1">Tier Bonus</p>
-              <p className="text-2xl font-bold text-amber-600">
-                {tierBonusPoints} pts
+              <p className="text-sm text-gray-600 mb-1">Member Discounts</p>
+              <p className="text-2xl font-bold text-green-700">
+                {discounts.silver}% / {discounts.gold}% / {discounts.black}%
               </p>
-              <Badge variant="default" className="mt-2">Active</Badge>
+              <p className="text-xs text-gray-500 mt-2">Silver / Gold / Black</p>
             </div>
           </div>
           {/* Tier Thresholds Summary */}

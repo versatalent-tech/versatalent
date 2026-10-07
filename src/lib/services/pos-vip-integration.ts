@@ -1,5 +1,6 @@
 import { createVIPConsumption } from '../db/repositories/vip-consumptions';
-import { processConsumption } from './vip-points-service';
+import { getUserById } from '../db/repositories/users';
+import { MEMBER_ROLES, processConsumption } from './vip-points-service';
 import type { POSOrder } from '../db/types';
 
 /**
@@ -21,13 +22,20 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
       };
     }
 
-    // Convert cents to euros for consumption tracking
-    const amountInEuros = order.total_cents / 100;
+    // Points are for VIP members (and artists), as with check-ins; staff or
+    // guest cards linked at the till don't earn them
+    const customer = await getUserById(order.customer_user_id);
+    if (!customer || !MEMBER_ROLES.includes(customer.role)) {
+      return { success: true, pointsAwarded: 0 };
+    }
+
+    // Points are earned on what was paid, after any member discount
+    const amountPaid = order.total_cents / 100;
 
     // Create consumption record
     const consumption = await createVIPConsumption({
       user_id: order.customer_user_id,
-      amount: amountInEuros,
+      amount: amountPaid,
       currency: order.currency,
       description: `POS Order #${order.id.slice(0, 8)}`
     });
@@ -35,7 +43,7 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
     // Award loyalty points based on consumption
     const pointsResult = await processConsumption(
       order.customer_user_id,
-      amountInEuros,
+      amountPaid,
       order.currency,
       consumption.id
     );

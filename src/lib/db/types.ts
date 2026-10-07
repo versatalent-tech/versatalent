@@ -85,9 +85,16 @@ export type PointsSource = 'event_checkin' | 'consumption' | 'manual_adjust' | '
 export interface VIPMembership {
   id: string;
   user_id: string;
+  /** Current tier: base_tier, or higher if this year's status points reach it */
   tier: VIPTier;
+  /** Tier secured for the whole current membership year */
+  base_tier: VIPTier;
   points_balance: number;
   lifetime_points: number;
+  /** Points earned in the current membership year */
+  status_points: number;
+  /** Start of the current membership year (YYYY-MM-DD, anniversary of joining) */
+  year_start: string;
   status: VIPStatus;
   created_at: Date;
   updated_at: Date;
@@ -523,6 +530,8 @@ export interface Product {
   is_active: boolean;
   stock_quantity: number;
   low_stock_threshold?: number;
+  /** Excluded from VIP member discounts at the till */
+  member_discount_excluded?: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -533,6 +542,11 @@ export interface POSOrder {
   customer_user_id?: string;
   total_cents: number;
   currency: string;
+  /** Before the member discount; total_cents is the amount charged */
+  subtotal_cents?: number | null;
+  discount_cents?: number;
+  discount_percent?: number | string;
+  discount_tier?: VIPTier | null;
   status: OrderStatus;
   notes?: string;
   payment_method?: PaymentMethod | null;
@@ -588,6 +602,9 @@ export interface PurchaseHistoryOrder {
   status: OrderStatus;
   payment_method?: PaymentMethod | null;
   sumup_transaction_code?: string | null;
+  discount_cents?: number;
+  discount_percent?: number;
+  discount_tier?: VIPTier | null;
   items: PurchaseHistoryItem[];
   notes?: string;
   staff_user?: {
@@ -735,6 +752,7 @@ export interface CreateProductRequest {
   image_url?: string;
   is_active?: boolean;
   stock_quantity?: number;
+  member_discount_excluded?: boolean;
 }
 
 export interface UpdateProductRequest {
@@ -746,6 +764,7 @@ export interface UpdateProductRequest {
   image_url?: string;
   is_active?: boolean;
   stock_quantity?: number;
+  member_discount_excluded?: boolean;
 }
 
 export interface CreatePOSOrderRequest {

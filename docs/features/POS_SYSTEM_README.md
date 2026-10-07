@@ -64,7 +64,7 @@ See `docs/setup/SUMUP_SETUP_GUIDE.md` for where to find them.
 ### 3. Access the POS
 
 **Staff POS Interface:**
-- URL: `/pos`
+- URL: `/staff/pos`
 - Role Required: `staff` or `admin`
 
 **Admin Product Management:**
@@ -80,7 +80,7 @@ See `docs/setup/SUMUP_SETUP_GUIDE.md` for where to find them.
 ### For Staff Members
 
 1. **Access POS**
-   - Navigate to `/pos`
+   - Navigate to `/staff/pos`
    - Login with staff credentials
 
 2. **Add Products to Cart**

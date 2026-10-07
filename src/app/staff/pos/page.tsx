@@ -39,6 +39,8 @@ interface Customer {
   email: string;
   tier?: string;
   points?: number;
+  /** Member discount on till items, in percent (0 if none) */
+  discountPercent?: number;
 }
 
 function StaffPOSContent() {
@@ -54,6 +56,8 @@ function StaffPOSContent() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  // Amount to charge for the current order, as worked out by the server
+  const [currentOrderTotal, setCurrentOrderTotal] = useState<number>(0);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
@@ -171,9 +175,22 @@ function StaffPOSContent() {
     setCart([]);
   };
 
-  const getTotal = () => {
+  const memberDiscountPercent = customer?.discountPercent ?? 0;
+
+  const getSubtotal = () => {
     return cart.reduce((sum, item) => sum + (item.product.price_cents * item.quantity), 0);
   };
+
+  // Preview only: the server works out the discount again when the order is created
+  const getDiscount = () => {
+    if (memberDiscountPercent <= 0) return 0;
+    const discountable = cart
+      .filter(item => !item.product.member_discount_excluded)
+      .reduce((sum, item) => sum + (item.product.price_cents * item.quantity), 0);
+    return Math.round((discountable * memberDiscountPercent) / 100);
+  };
+
+  const getTotal = () => getSubtotal() - getDiscount();
 
   const handleCustomerLinked = (linkedCustomer: Customer) => {
     setCustomer(linkedCustomer);
@@ -217,6 +234,7 @@ function StaffPOSContent() {
 
       const order = await orderResponse.json();
       setCurrentOrderId(order.id);
+      setCurrentOrderTotal(order.total_cents);
 
       // Take payment: SumUp card reader, SumUp app (Tap to Pay) or cash
       setShowCheckout(true);
@@ -444,6 +462,11 @@ function StaffPOSContent() {
                                 {customer.points} points
                               </p>
                             )}
+                            {memberDiscountPercent > 0 && (
+                              <p className="text-xs text-green-800 mt-1 font-semibold">
+                                {memberDiscountPercent}% member discount
+                              </p>
+                            )}
                           </div>
                         </div>
                         <Button
@@ -473,6 +496,9 @@ function StaffPOSContent() {
                             <p className="text-xs text-gray-600">
                               {formatCurrency(item.product.price_cents)} each
                             </p>
+                            {memberDiscountPercent > 0 && item.product.member_discount_excluded && (
+                              <p className="text-xs text-amber-700">No member discount</p>
+                            )}
                           </div>
                           <Button
                             variant="ghost"
@@ -520,7 +546,21 @@ function StaffPOSContent() {
                 {/* Total and Checkout */}
                 {cart.length > 0 && (
                   <>
-                    <div className="border-t pt-4 mb-4">
+                    <div className="border-t pt-4 mb-4 space-y-1">
+                      {getDiscount() > 0 && (
+                        <>
+                          <div className="flex justify-between items-center text-sm text-gray-600">
+                            <span>Subtotal:</span>
+                            <span>{formatCurrency(getSubtotal())}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm text-green-700">
+                            <span>
+                              {customer?.tier ? `${customer.tier.charAt(0).toUpperCase()}${customer.tier.slice(1)} member` : 'Member'} discount ({memberDiscountPercent}%):
+                            </span>
+                            <span>−{formatCurrency(getDiscount())}</span>
+                          </div>
+                        </>
+                      )}
                       <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total:</span>
                         <span className="text-gold">{formatCurrency(getTotal())}</span>
@@ -557,7 +597,7 @@ function StaffPOSContent() {
       {showCheckout && currentOrderId && (
         <SumUpCheckout
           orderId={currentOrderId}
-          amount={getTotal()}
+          amount={currentOrderTotal}
           currency={POS_CURRENCY}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
