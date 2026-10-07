@@ -1,5 +1,5 @@
 import { sql, query } from '../client';
-import type { POSOrder, POSOrderItem, POSOrderWithDetails, OrderStatus, CreatePOSOrderRequest, PaymentMethod } from '../types';
+import type { POSOrder, POSOrderItem, POSOrderWithDetails, OrderStatus, CreatePOSOrderRequest, PaymentMethod, VIPTier } from '../types';
 import { getProductsByIds } from './products';
 import { checkStockAvailability, deductStockForOrder, restoreStockForOrder } from './inventory';
 import { POS_CURRENCY } from '@/lib/utils/formatting';
@@ -131,9 +131,14 @@ export async function getOrderWithDetails(id: string): Promise<POSOrderWithDetai
 }
 
 /**
- * Create a new order
+ * Create a new order. With a member discount, the discount applies to every
+ * item not excluded from member discounts, and total_cents is the amount to
+ * charge.
  */
-export async function createOrder(data: CreatePOSOrderRequest): Promise<POSOrder> {
+export async function createOrder(
+  data: CreatePOSOrderRequest,
+  memberDiscount?: { tier: VIPTier; percent: number } | null
+): Promise<POSOrder> {
   const { staff_user_id, customer_user_id, items, notes } = data;
 
   // Check stock availability BEFORE creating the order
@@ -151,8 +156,9 @@ export async function createOrder(data: CreatePOSOrderRequest): Promise<POSOrder
   const products = await getProductsByIds(productIds);
   const productMap = new Map(products.map(p => [p.id, p]));
 
-  // Calculate total
-  let totalCents = 0;
+  // Calculate totals
+  let subtotalCents = 0;
+  let discountableCents = 0;
   const orderItems: Array<{
     product_id: string;
     product_name: string;
@@ -168,7 +174,10 @@ export async function createOrder(data: CreatePOSOrderRequest): Promise<POSOrder
     }
 
     const lineTotal = product.price_cents * item.quantity;
-    totalCents += lineTotal;
+    subtotalCents += lineTotal;
+    if (!product.member_discount_excluded) {
+      discountableCents += lineTotal;
+    }
 
     orderItems.push({
       product_id: product.id,
@@ -179,13 +188,22 @@ export async function createOrder(data: CreatePOSOrderRequest): Promise<POSOrder
     });
   }
 
+  const discountPercent = customer_user_id && memberDiscount ? memberDiscount.percent : 0;
+  const discountCents = Math.round((discountableCents * discountPercent) / 100);
+  const totalCents = subtotalCents - discountCents;
+
   // Create the order
   const orderRows = await sql`
     INSERT INTO pos_orders (
-      staff_user_id, customer_user_id, total_cents, currency, status, notes
+      staff_user_id, customer_user_id, subtotal_cents, discount_cents, discount_percent,
+      discount_tier, total_cents, currency, status, notes
     ) VALUES (
       ${staff_user_id || null},
       ${customer_user_id || null},
+      ${subtotalCents},
+      ${discountCents},
+      ${discountPercent},
+      ${discountCents > 0 ? memberDiscount!.tier : null},
       ${totalCents},
       ${POS_CURRENCY},
       'pending',

@@ -19,6 +19,8 @@ export interface LinkedCustomer {
   email: string;
   tier?: string;
   points?: number;
+  /** Member discount on till items, in percent (0 if none) */
+  discountPercent?: number;
 }
 
 interface NFCReaderProps {
@@ -48,7 +50,8 @@ export async function lookupCustomerByCard(uid: string): Promise<LinkedCustomer>
     name: data.customer.name,
     email: data.customer.email,
     tier: data.vip?.tier,
-    points: data.vip?.points_balance
+    points: data.vip?.points_balance,
+    discountPercent: data.vip?.discount_percent ?? 0
   };
 }
 

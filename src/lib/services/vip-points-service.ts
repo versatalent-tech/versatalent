@@ -1,141 +1,101 @@
-import { getPointRuleByActionType, getActivePointRules } from '../db/repositories/vip-point-rules';
+import { getPointRuleByActionType } from '../db/repositories/vip-point-rules';
 import {
   getVIPMembershipByUserId,
   createVIPMembership,
-  addPointsToMembership
+  addPointsToMembership,
+  setMembershipTier,
+  getMembershipsDueForNewYear,
+  startNewMembershipYear,
 } from '../db/repositories/vip-memberships';
 import { createPointsLogEntry } from '../db/repositories/vip-points-log';
 import { updateUserNFCCardsMetadata } from '../db/repositories/nfc-cards';
+import { getUserById } from '../db/repositories/users';
 import { sql } from '../db/client';
 import { POS_CURRENCY } from '../utils/formatting';
-import type { PointsSource, VIPTier } from '../db/types';
-// Default tier thresholds (used as fallback)
-export const DEFAULT_TIER_THRESHOLDS = {
-  silver: 0,
-  gold: 500,
-  black: 1750
-} as const;
-// For backward compatibility, export TIER_THRESHOLDS as alias
-export const TIER_THRESHOLDS = DEFAULT_TIER_THRESHOLDS;
-// Cache for tier thresholds (refreshed periodically)
-let cachedThresholds: { silver: number; gold: number; black: number } | null = null;
-let lastThresholdFetch = 0;
-const THRESHOLD_CACHE_TTL = 60000; // 1 minute cache
+import { currentTier, getTierSettings, tierAfterYearsEnded } from './vip-tiers';
+import type { PointsSource, VIPMembership, VIPTier } from '../db/types';
+
+/** Roles whose membership earns points and member discounts */
+export const MEMBER_ROLES = ['vip', 'artist'];
+
 /**
- * Get tier thresholds from database (with caching)
+ * Move memberships whose year has ended into their new year, setting the
+ * tier secured for it (see vip-tiers). Runs lazily before memberships are
+ * read or changed; pass a userId to check just one member.
  */
-export async function getTierThresholds(): Promise<{ silver: number; gold: number; black: number }> {
-  const now = Date.now();
-  // Return cached value if still valid
-  if (cachedThresholds && (now - lastThresholdFetch) < THRESHOLD_CACHE_TTL) {
-    return cachedThresholds;
-  }
-  try {
-    const rules = await getActivePointRules();
-    const goldRule = rules.find(r => r.action_type === 'tier_threshold_gold');
-    const blackRule = rules.find(r => r.action_type === 'tier_threshold_black');
-    cachedThresholds = {
-      silver: 0, // Silver always starts at 0
-      gold: goldRule ? Math.round(goldRule.points_per_unit) : DEFAULT_TIER_THRESHOLDS.gold,
-      black: blackRule ? Math.round(blackRule.points_per_unit) : DEFAULT_TIER_THRESHOLDS.black
-    };
-    lastThresholdFetch = now;
-    return cachedThresholds;
-  } catch (error) {
-    console.error('Error fetching tier thresholds, using defaults:', error);
-    return DEFAULT_TIER_THRESHOLDS;
+export async function rollOverMembershipYears(userId?: string): Promise<void> {
+  const due = await getMembershipsDueForNewYear(userId);
+  if (due.length === 0) return;
+
+  const { thresholds } = await getTierSettings();
+  for (const m of due) {
+    const tier = tierAfterYearsEnded(m.base_tier, m.status_points, m.years_ended, thresholds);
+    const moved = await startNewMembershipYear(m.user_id, m.year_start, m.years_ended, tier);
+    if (moved && tier !== m.tier) {
+      await updateUserNFCCardsMetadata(m.user_id).catch((error) =>
+        console.error('Error updating NFC cards metadata after new membership year:', error)
+      );
+    }
   }
 }
-/**
- * Clear the tier thresholds cache (call after updating thresholds)
- */
-export function clearTierThresholdsCache(): void {
-  cachedThresholds = null;
-  lastThresholdFetch = 0;
+
+/** A member's membership, moved into the current membership year */
+export async function getCurrentMembership(userId: string): Promise<VIPMembership | null> {
+  await rollOverMembershipYears(userId);
+  return getVIPMembershipByUserId(userId);
 }
+
 /**
- * Calculate tier based on points balance
+ * The discount a customer gets at the till: VIP members (and artists) with an
+ * active membership get their tier's discount. Null when there isn't one.
  */
-export function calculateTier(points: number): VIPTier {
-  // Use cached thresholds synchronously for performance
-  // This uses default values if cache is not populated
-  const thresholds = cachedThresholds || DEFAULT_TIER_THRESHOLDS;
-  if (points >= thresholds.black) return 'black';
-  if (points >= thresholds.gold) return 'gold';
-  return 'silver';
+export async function getMemberDiscount(userId: string): Promise<{ tier: VIPTier; percent: number } | null> {
+  const user = await getUserById(userId);
+  if (!user || !MEMBER_ROLES.includes(user.role)) return null;
+
+  const membership = await getCurrentMembership(userId);
+  if (!membership || membership.status !== 'active') return null;
+
+  const { discounts } = await getTierSettings();
+  const percent = Math.min(100, Math.max(0, discounts[membership.tier] ?? 0));
+  return percent > 0 ? { tier: membership.tier, percent } : null;
 }
-/**
- * Calculate tier based on points balance (async version with fresh thresholds)
- */
-export async function calculateTierAsync(points: number): Promise<VIPTier> {
-  const thresholds = await getTierThresholds();
-  if (points >= thresholds.black) return 'black';
-  if (points >= thresholds.gold) return 'gold';
-  return 'silver';
+
+/** Whole points from an amount times a rate, ignoring float noise (30 x 1/3 = 10) */
+function wholePoints(value: number): number {
+  return Math.floor(Math.round(value * 1000) / 1000);
 }
+
 /**
- * Get points required for next tier
- */
-export function getPointsToNextTier(currentPoints: number, currentTier: VIPTier): number | null {
-  const thresholds = cachedThresholds || DEFAULT_TIER_THRESHOLDS;
-  if (currentTier === 'black') return null; // Already at max tier
-  if (currentTier === 'gold') {
-    return thresholds.black - currentPoints;
-  }
-  if (currentTier === 'silver') {
-    return thresholds.gold - currentPoints;
-  }
-  return null;
-}
-/**
- * Get next tier name
- */
-export function getNextTier(currentTier: VIPTier): VIPTier | null {
-  if (currentTier === 'silver') return 'gold';
-  if (currentTier === 'gold') return 'black';
-  return null;
-}
-/**
- * Get tier color for UI
- */
-export function getTierColor(tier: VIPTier): string {
-  switch (tier) {
-    case 'black': return 'bg-gray-900 text-white';
-    case 'gold': return 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white';
-    case 'silver': return 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-900';
-  }
-}
-/**
- * Get tier badge styling
- */
-export function getTierBadgeClass(tier: VIPTier): string {
-  switch (tier) {
-    case 'black': return 'bg-black text-white border-2 border-gray-700';
-    case 'gold': return 'bg-gold text-white border-2 border-yellow-500';
-    case 'silver': return 'bg-gray-400 text-white border-2 border-gray-500';
-  }
-}
-/**
- * Award points to a user for an action
+ * Award points to a user for an action. With applyTierMultiplier, the points
+ * are multiplied by the member's tier rate (e.g. Gold 1.5x); use it for
+ * check-ins and purchases, not manual adjustments.
  */
 export async function awardPoints(
   userId: string,
   source: PointsSource,
   amount: number,
   metadata?: Record<string, any>,
-  refId?: string
-): Promise<{ success: boolean; newBalance: number; newTier: VIPTier }> {
+  refId?: string,
+  options: { applyTierMultiplier?: boolean } = {}
+): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
   try {
-    // Ensure user has a VIP membership
-    let membership = await getVIPMembershipByUserId(userId);
+    let membership = await getCurrentMembership(userId);
     if (!membership) {
       membership = await createVIPMembership(userId);
     }
-    const oldTier = membership.tier;
-    // Add points to membership (this triggers auto-tier upgrade)
-    const updatedMembership = await addPointsToMembership(userId, amount);
-    // If tier changed, update NFC card metadata
-    if (oldTier !== updatedMembership.tier) {
+    const settings = await getTierSettings();
+
+    const multiplier = options.applyTierMultiplier ? settings.multipliers[membership.tier] ?? 1 : 1;
+    const points = multiplier === 1 ? amount : wholePoints(amount * multiplier);
+
+    const updated = await addPointsToMembership(userId, points);
+
+    // Moving up happens straight away; within the year the tier never drops
+    // below the one secured for it
+    const newTier = currentTier(updated.base_tier, updated.status_points, settings.thresholds);
+    if (newTier !== updated.tier) {
+      await setMembershipTier(userId, newTier);
       try {
         await updateUserNFCCardsMetadata(userId);
       } catch (error) {
@@ -143,25 +103,28 @@ export async function awardPoints(
         // Don't fail the points award if metadata update fails
       }
     }
-    // Log the points transaction
+
     await createPointsLogEntry(
       userId,
       source,
-      amount,
-      updatedMembership.points_balance,
-      metadata,
+      points,
+      updated.points_balance,
+      multiplier === 1 ? metadata : { ...metadata, base_points: amount, tier_multiplier: multiplier, tier: membership.tier },
       refId
     );
+
     return {
       success: true,
-      newBalance: updatedMembership.points_balance,
-      newTier: updatedMembership.tier
+      pointsAwarded: points,
+      newBalance: updated.points_balance,
+      newTier
     };
   } catch (error) {
     console.error('Error awarding points:', error);
     throw error;
   }
 }
+
 /**
  * Claim the check-in award for this member. Returns the award key, or null
  * if points were already awarded for it.
@@ -211,7 +174,7 @@ export async function processEventCheckin(
   const awardKey = await claimCheckinAward(userId, eventId, checkinId);
 
   if (!awardKey) {
-    const membership = await getVIPMembershipByUserId(userId);
+    const membership = await getCurrentMembership(userId);
     return {
       success: true,
       pointsAwarded: 0,
@@ -236,12 +199,13 @@ export async function processEventCheckin(
         award_key: awardKey,
         timestamp: new Date().toISOString()
       },
-      checkinId
+      checkinId,
+      { applyTierMultiplier: true }
     );
 
     return {
       success: result.success,
-      pointsAwarded: pointsToAward,
+      pointsAwarded: result.pointsAwarded,
       alreadyAwarded: false,
       newBalance: result.newBalance,
       newTier: result.newTier
@@ -264,9 +228,9 @@ export async function processConsumption(
 ): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
   // Get point rule for consumption
   const rule = await getPointRuleByActionType('consumption');
-  const pointsPerUnit = rule ? rule.points_per_unit : 0.333333; // Default 1 point per 3 euros
+  const pointsPerUnit = rule ? rule.points_per_unit : 1 / 3; // Default 1 point per £3
   // Calculate points (1 point per 3 euros by default)
-  const pointsToAward = Math.floor(amount * pointsPerUnit);
+  const pointsToAward = wholePoints(amount * pointsPerUnit);
   const result = await awardPoints(
     userId,
     'consumption',
@@ -277,11 +241,12 @@ export async function processConsumption(
       consumption_id: consumptionId,
       timestamp: new Date().toISOString()
     },
-    consumptionId
+    consumptionId,
+    { applyTierMultiplier: true }
   );
   return {
     success: result.success,
-    pointsAwarded: pointsToAward,
+    pointsAwarded: result.pointsAwarded,
     newBalance: result.newBalance,
     newTier: result.newTier
   };

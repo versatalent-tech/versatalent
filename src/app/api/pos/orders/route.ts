@@ -6,6 +6,7 @@ import {
 } from '@/lib/db/repositories/pos-orders';
 import type { CreatePOSOrderRequest, OrderStatus } from '@/lib/db/types';
 import { withPOSAuth } from '@/lib/auth/pos-auth';
+import { getMemberDiscount } from '@/lib/services/vip-points-service';
 
 // GET all orders with optional filters (requires staff/admin auth)
 export const GET = withPOSAuth(async (request: NextRequest) => {
@@ -66,7 +67,9 @@ export const POST = withPOSAuth(async (request: NextRequest) => {
       }
     }
 
-    const order = await createOrder(data);
+    // VIP members get their tier's discount; worked out here, never taken from the till
+    const memberDiscount = data.customer_user_id ? await getMemberDiscount(data.customer_user_id) : null;
+    const order = await createOrder(data, memberDiscount);
 
     return NextResponse.json(order, { status: 201 });
   } catch (error: any) {

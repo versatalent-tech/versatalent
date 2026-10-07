@@ -40,6 +40,9 @@ export async function getUserPurchaseHistory(
         o.status,
         o.payment_method,
         o.sumup_transaction_code,
+        o.discount_cents,
+        o.discount_percent,
+        o.discount_tier,
         o.notes,
         o.staff_user_id,
         u.name as staff_name,
@@ -59,7 +62,8 @@ export async function getUserPurchaseHistory(
       WHERE o.customer_user_id = ${userId}
         AND o.status = 'paid'
       GROUP BY o.id, o.created_at, o.total_cents, o.currency,
-               o.status, o.payment_method, o.sumup_transaction_code, o.notes,
+               o.status, o.payment_method, o.sumup_transaction_code,
+               o.discount_cents, o.discount_percent, o.discount_tier, o.notes,
                o.staff_user_id, u.name
       ORDER BY o.created_at DESC
     `;
@@ -79,6 +83,9 @@ export async function getUserPurchaseHistory(
       status: order.status,
       payment_method: order.payment_method,
       sumup_transaction_code: order.sumup_transaction_code,
+      discount_cents: order.discount_cents ?? 0,
+      discount_percent: Number(order.discount_percent ?? 0),
+      discount_tier: order.discount_tier,
       items: order.items as PurchaseHistoryItem[],
       notes: order.notes,
       staff_user: order.staff_user_id
@@ -190,6 +197,9 @@ export async function getUserPurchaseHistoryByDateRange(
         o.status,
         o.payment_method,
         o.sumup_transaction_code,
+        o.discount_cents,
+        o.discount_percent,
+        o.discount_tier,
         o.notes,
         o.staff_user_id,
         u.name as staff_name,
@@ -211,7 +221,8 @@ export async function getUserPurchaseHistoryByDateRange(
         AND o.created_at >= ${startDate.toISOString()}
         AND o.created_at <= ${endDate.toISOString()}
       GROUP BY o.id, o.created_at, o.total_cents, o.currency,
-               o.status, o.payment_method, o.sumup_transaction_code, o.notes,
+               o.status, o.payment_method, o.sumup_transaction_code,
+               o.discount_cents, o.discount_percent, o.discount_tier, o.notes,
                o.staff_user_id, u.name
       ORDER BY o.created_at DESC
     `;
@@ -224,6 +235,9 @@ export async function getUserPurchaseHistoryByDateRange(
       status: order.status,
       payment_method: order.payment_method,
       sumup_transaction_code: order.sumup_transaction_code,
+      discount_cents: order.discount_cents ?? 0,
+      discount_percent: Number(order.discount_percent ?? 0),
+      discount_tier: order.discount_tier,
       items: order.items as PurchaseHistoryItem[],
       notes: order.notes,
       staff_user: order.staff_user_id

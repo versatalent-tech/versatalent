@@ -76,16 +76,17 @@ export async function createProduct(data: CreateProductRequest): Promise<Product
     category,
     image_url,
     is_active = true,
-    stock_quantity = 0
+    stock_quantity = 0,
+    member_discount_excluded = false
   } = data;
 
   const rows = await sql`
     INSERT INTO products (
       name, description, price_cents, currency, category,
-      image_url, is_active, stock_quantity
+      image_url, is_active, stock_quantity, member_discount_excluded
     ) VALUES (
       ${name}, ${description || null}, ${price_cents}, ${currency}, ${category || null},
-      ${image_url || null}, ${is_active}, ${stock_quantity}
+      ${image_url || null}, ${is_active}, ${stock_quantity}, ${member_discount_excluded}
     )
     RETURNING *
   `;
@@ -100,7 +101,7 @@ export async function updateProduct(id: string, data: UpdateProductRequest): Pro
   // Define allowed fields (database columns only)
   const allowedFields = [
     'name', 'description', 'price_cents', 'currency', 'category',
-    'image_url', 'is_active', 'stock_quantity'
+    'image_url', 'is_active', 'stock_quantity', 'member_discount_excluded'
   ];
 
   const updates: string[] = [];

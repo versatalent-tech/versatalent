@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getVIPMembershipByUserId, updateVIPMembership } from '@/lib/db/repositories/vip-memberships';
+import { updateVIPMembership } from '@/lib/db/repositories/vip-memberships';
+import { getCurrentMembership } from '@/lib/services/vip-points-service';
+import { getTierProgress, getTierSettings } from '@/lib/services/vip-tiers';
 import { updateUserNFCCardsMetadata } from '@/lib/db/repositories/nfc-cards';
 import type { UpdateVIPMembershipRequest } from '@/lib/db/types';
 import { requireAdmin } from '@/lib/middleware/auth';
@@ -11,7 +13,7 @@ export async function GET(
 ) {
   try {
     const { user_id } = await params;
-    const membership = await getVIPMembershipByUserId(user_id);
+    const membership = await getCurrentMembership(user_id);
 
     if (!membership) {
       return NextResponse.json(
@@ -20,7 +22,9 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(membership);
+    // What the member needs to keep or reach a tier, for the VIP page
+    const progress = getTierProgress(membership, await getTierSettings());
+    return NextResponse.json({ ...membership, progress });
   } catch (error) {
     console.error('Error fetching VIP membership:', error);
     return NextResponse.json(

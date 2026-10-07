@@ -38,6 +38,8 @@ export default function POSPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  // Amount to charge, as worked out by the server (includes any member discount)
+  const [currentOrderTotal, setCurrentOrderTotal] = useState<number>(0);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
@@ -160,6 +162,7 @@ export default function POSPage() {
 
       const order = await orderResponse.json();
       setCurrentOrderId(order.id);
+      setCurrentOrderTotal(order.total_cents);
 
       // Take payment: SumUp card reader, SumUp app (Tap to Pay) or cash
       setShowCheckout(true);
@@ -430,7 +433,7 @@ export default function POSPage() {
       {showCheckout && currentOrderId && (
         <SumUpCheckout
           orderId={currentOrderId}
-          amount={getTotal()}
+          amount={currentOrderTotal}
           currency={POS_CURRENCY}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}

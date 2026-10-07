@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
+import type { TierProgress } from "@/lib/vip-tier-rules";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +40,7 @@ interface VIPMembership {
   lifetime_points: number;
   status: string;
   created_at: string;
+  progress?: TierProgress;
 }
 
 interface PointsLog {
@@ -164,17 +166,12 @@ export default function VIPPassPage() {
     }
   }
 
-  function getPointsToNextTier(points: number, tier: string): number | null {
-    if (tier === 'black') return null;
-    if (tier === 'gold') return 1750 - points;
-    if (tier === 'silver') return 500 - points;
-    return null;
+  function tierName(tier: string) {
+    return tier.charAt(0).toUpperCase() + tier.slice(1);
   }
 
-  function getNextTierName(tier: string): string | null {
-    if (tier === 'silver') return 'Gold';
-    if (tier === 'gold') return 'Black';
-    return null;
+  function formatDay(date: string) {
+    return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   if (loading) {
@@ -202,8 +199,9 @@ export default function VIPPassPage() {
 
   const tierColor = membership ? getTierColor(membership.tier) : 'from-gray-300 to-gray-400';
   const tierBadge = membership ? getTierBadge(membership.tier) : 'bg-gray-400 text-white';
-  const pointsToNext = membership ? getPointsToNextTier(membership.points_balance, membership.tier) : null;
-  const nextTier = membership ? getNextTierName(membership.tier) : null;
+  const progress = membership?.progress;
+  const pointsToNext = progress?.points_to_next ?? null;
+  const nextTier = progress?.next_tier ? tierName(progress.next_tier) : null;
 
   return (
     <MainLayout>
@@ -227,6 +225,29 @@ export default function VIPPassPage() {
               {/* Points Summary */}
               {membership && (
                 <div className="p-8 bg-gradient-to-r from-gold/10 to-amber-100">
+                  {progress && (
+                    <div className="mb-6 text-center">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {tierName(progress.tier)} member until {formatDay(progress.tier_secured_until)}
+                      </p>
+                      {progress.points_to_keep > 0 && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Earn {progress.points_to_keep} more points by {formatDay(progress.year_ends)} to keep {tierName(progress.tier)} for another year
+                        </p>
+                      )}
+                      {(progress.discount_percent > 0 || progress.points_multiplier > 1) && (
+                        <div className="mt-3 flex flex-wrap justify-center gap-2">
+                          {progress.discount_percent > 0 && (
+                            <Badge className="bg-black text-white">{progress.discount_percent}% off purchases</Badge>
+                          )}
+                          {progress.points_multiplier > 1 && (
+                            <Badge className="bg-black text-white">{progress.points_multiplier}x points</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center">
                       <div className="text-4xl font-bold text-gold mb-1">
@@ -236,18 +257,20 @@ export default function VIPPassPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-4xl font-bold text-gray-900 mb-1">
-                        {membership.lifetime_points}
+                        {progress?.status_points ?? 0}
                       </div>
-                      <div className="text-sm text-gray-600">Lifetime Points</div>
+                      <div className="text-sm text-gray-600">
+                        Points this year{progress ? ` (to ${formatDay(progress.year_ends)})` : ''}
+                      </div>
                     </div>
                     <div className="text-center">
-                      {pointsToNext !== null ? (
+                      {pointsToNext !== null && nextTier ? (
                         <>
                           <div className="text-4xl font-bold text-blue-600 mb-1">
                             {pointsToNext}
                           </div>
                           <div className="text-sm text-gray-600">
-                            Points to {nextTier}
+                            Points to {nextTier} this year
                           </div>
                         </>
                       ) : (
@@ -256,30 +279,34 @@ export default function VIPPassPage() {
                             <Star className="h-8 w-8 mx-auto" />
                           </div>
                           <div className="text-sm text-gray-600">
-                            Max Tier Reached!
+                            Top tier
                           </div>
                         </>
                       )}
                     </div>
                   </div>
 
-                  {/* Progress to next tier */}
-                  {pointsToNext !== null && nextTier && (
+                  {/* Progress to next tier this membership year */}
+                  {progress && pointsToNext !== null && nextTier && (
                     <div className="mt-6">
                       <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>{membership.tier.charAt(0).toUpperCase() + membership.tier.slice(1)}</span>
+                        <span>{tierName(progress.tier)}</span>
                         <span>{nextTier}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div
                           className="bg-gradient-to-r from-gold to-yellow-500 h-3 rounded-full transition-all"
                           style={{
-                            width: `${((membership.points_balance / (membership.points_balance + pointsToNext)) * 100)}%`
+                            width: `${progress.status_points + pointsToNext > 0 ? (progress.status_points / (progress.status_points + pointsToNext)) * 100 : 0}%`
                           }}
                         />
                       </div>
                     </div>
                   )}
+
+                  <p className="mt-4 text-center text-xs text-gray-500">
+                    Lifetime points: {membership.lifetime_points}
+                  </p>
                 </div>
               )}
 

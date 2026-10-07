@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllVIPMemberships, createVIPMembership } from '@/lib/db/repositories/vip-memberships';
 import { requireAdmin } from '@/lib/middleware/auth';
+import { rollOverMembershipYears } from '@/lib/services/vip-points-service';
 
 // GET all VIP memberships
 export async function GET(request: NextRequest) {
@@ -8,6 +9,8 @@ export async function GET(request: NextRequest) {
   if (denied) return denied;
 
   try {
+    // Move any memberships whose year has ended into their new year first
+    await rollOverMembershipYears();
     const memberships = await getAllVIPMemberships();
 
     return NextResponse.json(memberships);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNFCCardByUID } from '@/lib/db/repositories/nfc-cards';
 import { getUserById } from '@/lib/db/repositories/users';
-import { getVIPMembershipByUserId } from '@/lib/db/repositories/vip-memberships';
+import { getCurrentMembership, getMemberDiscount, MEMBER_ROLES } from '@/lib/services/vip-points-service';
 import { withPOSAuth } from '@/lib/auth/pos-auth';
 
 /**
@@ -48,8 +48,10 @@ export const POST = withPOSAuth(async (request: NextRequest) => {
 
     // Get VIP membership if exists
     let vipMembership = null;
-    if (user.role === 'vip') {
-      vipMembership = await getVIPMembershipByUserId(user.id);
+    let discount = null;
+    if (MEMBER_ROLES.includes(user.role)) {
+      vipMembership = await getCurrentMembership(user.id);
+      discount = await getMemberDiscount(user.id);
     }
 
     // Return customer info for POS
@@ -68,7 +70,9 @@ export const POST = withPOSAuth(async (request: NextRequest) => {
         tier: vipMembership.tier,
         points_balance: vipMembership.points_balance,
         lifetime_points: vipMembership.lifetime_points,
-        status: vipMembership.status
+        status: vipMembership.status,
+        // Percent off items not excluded from member discounts
+        discount_percent: discount?.percent ?? 0
       } : null
     });
 

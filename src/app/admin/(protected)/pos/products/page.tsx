@@ -46,7 +46,8 @@ export default function AdminProductsPage() {
     price_cents: 0,
     category: '',
     stock_quantity: 0,
-    is_active: true
+    is_active: true,
+    member_discount_excluded: false
   });
 
   useEffect(() => {
@@ -200,7 +201,8 @@ export default function AdminProductsPage() {
       price_cents: product.price_cents,
       category: product.category || '',
       stock_quantity: product.stock_quantity,
-      is_active: product.is_active
+      is_active: product.is_active,
+      member_discount_excluded: !!product.member_discount_excluded
     });
     setError(null);
     setIsEditDialogOpen(true);
@@ -213,7 +215,8 @@ export default function AdminProductsPage() {
       price_cents: 0,
       category: '',
       stock_quantity: 0,
-      is_active: true
+      is_active: true,
+      member_discount_excluded: false
     });
   };
 
@@ -296,9 +299,14 @@ export default function AdminProductsPage() {
                           </Badge>
                         )}
                       </div>
-                      {!product.is_active && (
-                        <Badge variant="secondary">Inactive</Badge>
-                      )}
+                      <div className="flex flex-col items-end gap-1">
+                        {!product.is_active && (
+                          <Badge variant="secondary">Inactive</Badge>
+                        )}
+                        {product.member_discount_excluded && (
+                          <Badge variant="outline" className="text-xs">No member discount</Badge>
+                        )}
+                      </div>
                     </div>
 
                     {product.description && (
@@ -424,6 +432,20 @@ export default function AdminProductsPage() {
                   className="rounded"
                 />
                 <label htmlFor="is_active" className="text-sm">Active (visible in POS)</label>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="member_discount_excluded"
+                  checked={formData.member_discount_excluded}
+                  onChange={(e) => setFormData({ ...formData, member_discount_excluded: e.target.checked })}
+                  className="rounded mt-1"
+                />
+                <label htmlFor="member_discount_excluded" className="text-sm">
+                  Excluded from member discounts
+                  <span className="block text-xs text-gray-500">VIP members pay full price for this item</span>
+                </label>
               </div>
             </div>
 
