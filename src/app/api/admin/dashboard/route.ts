@@ -7,7 +7,8 @@ import {
 } from '@/lib/db/repositories/dashboard';
 import { getCrmAttention, getCrmScope } from '@/lib/db/repositories/crm';
 import { getTalentScope } from '@/lib/db/repositories/team';
-import { countHoldsStartingSoon, getBookingScope, listUpcomingBookings } from '@/lib/db/repositories/bookings';
+import { countDeclinedUpcoming, countHoldsStartingSoon, getBookingScope, listUpcomingBookings } from '@/lib/db/repositories/bookings';
+import { sql } from '@/lib/db/client';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
 
@@ -26,11 +27,15 @@ export async function GET() {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
       countHoldsStartingSoon(bookingScope),
+      countDeclinedUpcoming(bookingScope),
+      can(session.role, 'portal.manage')
+        ? sql`SELECT COUNT(*) AS n FROM talent_profile_changes WHERE status = 'pending'`.then((r: any) => Number(r[0].n))
+        : Promise.resolve(0),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -43,6 +48,24 @@ export async function GET() {
             href: '/admin/bookings',
           }]
         : [];
+    if (declined > 0 && can(session.role, 'bookings.edit')) {
+      bookingItems.unshift({
+        key: 'declined-bookings',
+        severity: 'high',
+        label: `${plural(declined, 'upcoming booking')} declined by the talent`,
+        detail: 'Find a replacement or cancel with the client.',
+        href: '/admin/bookings',
+      });
+    }
+    if (profileRequests > 0) {
+      bookingItems.push({
+        key: 'profile-requests',
+        severity: 'low',
+        label: `${plural(profileRequests, 'profile change')} waiting for approval`,
+        detail: 'Talents suggested edits to their public profiles.',
+        href: '/admin/talent-portal',
+      });
+    }
     const attention = [...crmItems, ...bookingItems, ...summary.attention];
 
     const data =

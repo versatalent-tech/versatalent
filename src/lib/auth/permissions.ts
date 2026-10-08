@@ -37,6 +37,7 @@ export type Permission =
   | 'crm.delete' // admins only: deleting clients, contacts and deals
   | 'enquiries.view' // website enquiries aren't tied to a talent, so managers see them all
   | 'team.manage'
+  | 'portal.manage' // admins only: talent logins, artist perks, profile approvals
   | 'venue.manage'; // POS, NFC, VIP, content: the existing admin sections
 
 const ROLE_PERMISSIONS: Record<TeamRole, readonly Permission[] | '*'> = {

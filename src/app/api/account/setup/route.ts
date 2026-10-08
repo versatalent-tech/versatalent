@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
 
     await logAudit({ userId: result.userId, name: result.name }, `${result.purpose}_used`, 'team_member', result.userId);
 
-    // Staff sign in at the till; everyone else at the admin login
-    const signInPath = result.role === 'staff' ? '/staff/login' : '/admin/login';
+    // Staff sign in at the till, talents at the portal, the team at the admin login
+    const signInPath = result.role === 'staff' ? '/staff/login' : result.role === 'artist' ? '/portal/login' : '/admin/login';
     return successResponse({ signInPath }, 'Password set');
   } catch (error) {
     console.error('Error setting password from link:', error);

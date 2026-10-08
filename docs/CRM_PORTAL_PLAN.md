@@ -1,6 +1,6 @@
 # VersaTalent CRM, Outreach, KPI & Talent Portal: Plan
 
-_Status: Phases 0–2 built · decisions agreed 8 Oct 2026_
+_Status: Phases 0–3 built · decisions agreed 8 Oct 2026_
 
 ## 1. Goal
 
@@ -191,7 +191,7 @@ Each phase ships on its own and is usable without the next one.
 | **0. Foundation** ✅ built | Team roles + permission map; Team page with invite/reset links; talent assignments; login throttling; audit log; role-aware dashboard (see §9) | M | – |
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
 | **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
-| **3. Talent portal** | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
+| **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
 | **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
 | **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
@@ -322,3 +322,32 @@ Migration `026_bookings_calendar.sql` adds `talents.commission_percent`, `bookin
 **Moved to Phase 2b: documents** (contracts, riders, briefs). Current uploads are publicly readable by URL, so documents need a private store and a download route that checks access. That's worth building on its own.
 
 **Go-live:** run migration 026 on production before deploying this code.
+
+## 12. Phase 3: what was built
+
+Migration `027_talent_portal.sql` adds `artist_perks` and `talent_profile_changes`.
+
+**Sign-in:** talents use their existing `artist` account (linked by `users.talent_id`) at `/portal/login`. The portal has its own cookie (`talent_session`), which never counts as a team or staff session. Login, account and talent link are re-checked on every request, and sign-in is throttled like the other logins. The old `/dashboard` address redirects to `/portal`.
+
+**Portal (`/portal`, mobile-first):**
+- **Home:** bookings waiting for an answer, what's coming up, and points and perks.
+- **Bookings:** upcoming and past. Shows times, place, call time, on-site contact, brief and logistics, and **net pay only**. The client's name appears only when that booking's switch is on. Talents answer "I'm in" or "Can't do it"; the answer goes on the deal's timeline, and a decline raises a dashboard alert.
+- **Days off:** talents add or remove their own unavailable days, which show in the team calendar.
+- **Earnings:** net earned this year, net still to come from confirmed bookings, and a per-booking list.
+- **Rewards:**
+  - points balance, tier, and progress to the next tier (from the existing VIP membership);
+  - points history, with event names where known;
+  - artist perks: tier-locked ones show as "Unlocks at Gold";
+  - the tier's member benefits.
+- **Profile:** propose changes to tagline, bio, location, skills and links; an Admin approves before they go live. Also: change password, and a private calendar link for their phone (no money; client's name only when allowed).
+
+**Admin (`/admin/talent-portal`):**
+- **Logins:** each talent's portal status. Create a login, send an invite or reset link, or turn access on or off.
+- **Artist perks:** for all artists or one talent, with an optional minimum tier, dates, order, and a show/hide switch.
+- **Profile requests:** approve (publishes through `updateTalent`, which clears caches) or reject with a note.
+
+**Dashboard:** alerts for upcoming bookings a talent declined, and profile changes waiting for approval.
+
+**Not included:** talents uploading photos or portfolio items (still done by the team), and payout status (Phase 6).
+
+**Go-live:** run migration 027 on production before deploying. Then send each talent a link from Talent Portal → Logins. Seven talents already have passwords the team set earlier; sending them a reset link lets them choose their own.
