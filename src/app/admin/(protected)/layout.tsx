@@ -1,9 +1,10 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ADMIN_SESSION_COOKIE, verifySession } from '@/lib/auth/session';
+import { getTeamSession } from '@/lib/middleware/auth';
 
 /**
- * Server-side guard for every admin page except /admin/login.
+ * Server-side guard for every admin page except /admin/login: any team role
+ * (admin, manager, road manager) may enter. Sections only admins may use sit
+ * in the (admin-only) group, which has its own stricter guard.
  *
  * Done in a layout rather than middleware.ts because Next's edge middleware
  * crashes on Netlify ("snapshot is not a function"). API routes enforce
@@ -14,10 +15,9 @@ export default async function ProtectedAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const session = await verifySession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  const session = await getTeamSession();
 
-  if (session?.role !== 'admin') {
+  if (!session) {
     redirect('/admin/login');
   }
 

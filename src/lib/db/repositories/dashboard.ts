@@ -321,3 +321,106 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     attention,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Managers and road managers: only the talents assigned to them, no money
+// ---------------------------------------------------------------------------
+
+export interface ScopedTalent {
+  id: string;
+  name: string;
+  profession: string;
+  image_src: string | null;
+  is_active: boolean;
+  next_event: { title: string; start_time: string } | null;
+}
+
+export interface ScopedDashboardSummary {
+  generated_at: string;
+  talents: ScopedTalent[];
+  upcoming_events: DashboardUpcomingEvent[];
+  attention: DashboardAttentionItem[];
+}
+
+export async function getScopedDashboardSummary(talentIds: string[]): Promise<ScopedDashboardSummary> {
+  const ids = talentIds.map(String);
+
+  const [talentRows, eventRows] = await Promise.all([
+    sql`
+      SELECT
+        t.id, t.name, t.profession, t.image_src, t.is_active,
+        (SELECT json_build_object('title', e.title, 'start_time', e.start_time)
+           FROM events e
+          WHERE t.id::text = ANY(e.talent_ids) AND e.start_time >= NOW() AND e.status <> 'cancelled'
+          ORDER BY e.start_time ASC
+          LIMIT 1) AS next_event
+      FROM talents t
+      WHERE t.id::text = ANY(${ids})
+      ORDER BY t.name
+    `,
+    sql`
+      SELECT
+        e.id, e.title, e.start_time, e.venue->>'name' AS venue_name, e.is_published,
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name) FROM talents t
+            WHERE t.id::text = ANY(e.talent_ids) AND t.id::text = ANY(${ids})),
+          '{}'
+        ) AS talent_names
+      FROM events e
+      WHERE e.start_time >= NOW() AND e.status <> 'cancelled' AND e.talent_ids && ${ids}::text[]
+      ORDER BY e.start_time ASC
+      LIMIT 8
+    `,
+  ]);
+
+  const talents: ScopedTalent[] = (talentRows as any[]).map((row) => ({
+    id: row.id,
+    name: row.name,
+    profession: row.profession,
+    image_src: row.image_src,
+    is_active: row.is_active,
+    next_event: row.next_event ? { title: row.next_event.title, start_time: toIso(row.next_event.start_time) } : null,
+  }));
+
+  const upcoming = (eventRows as any[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+    start_time: toIso(row.start_time),
+    venue_name: row.venue_name,
+    talent_names: row.talent_names ?? [],
+    is_published: row.is_published,
+  }));
+
+  const attention: DashboardAttentionItem[] = [];
+  if (talents.length === 0) {
+    attention.push({
+      key: 'no-talents',
+      severity: 'medium',
+      label: 'No talents assigned to you yet',
+      detail: 'Ask an admin to assign the talents you look after.',
+      href: '/admin',
+    });
+  }
+  const unpublished = upcoming.filter((event) => !event.is_published).length;
+  if (unpublished > 0) {
+    attention.push({
+      key: 'unpublished-events',
+      severity: 'low',
+      label: `${unpublished} upcoming event${unpublished === 1 ? '' : 's'} not yet public`,
+      detail: 'An admin still needs to publish these.',
+      href: '/admin',
+    });
+  }
+  const idle = talents.filter((talent) => talent.is_active && !talent.next_event);
+  if (idle.length > 0 && talents.length > 0) {
+    attention.push({
+      key: 'talents-without-events',
+      severity: 'low',
+      label: `${idle.length} of your talents ${idle.length === 1 ? 'has' : 'have'} nothing scheduled`,
+      detail: idle.map((talent) => talent.name).slice(0, 3).join(', ') + (idle.length > 3 ? '…' : ''),
+      href: '/admin',
+    });
+  }
+
+  return { generated_at: new Date().toISOString(), talents, upcoming_events: upcoming, attention };
+}

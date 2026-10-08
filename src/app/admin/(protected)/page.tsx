@@ -23,12 +23,20 @@ import {
   Receipt,
   RefreshCw,
   Trophy,
+  UserCog,
   Users,
 } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { formatCurrency, PAYMENT_METHOD_LABELS } from "@/lib/utils/formatting";
-import type { CurrencyTotal, DashboardSummary } from "@/lib/db/repositories/dashboard";
+import type {
+  CurrencyTotal,
+  DashboardAttentionItem,
+  DashboardSummary,
+  DashboardUpcomingEvent,
+  ScopedDashboardSummary,
+} from "@/lib/db/repositories/dashboard";
+import { ROLE_LABELS } from "@/lib/auth/permissions";
 import type { PaymentMethod } from "@/lib/db/types";
 
 const SECTIONS = [
@@ -58,8 +66,9 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Reference",
+    title: "Team & reference",
     links: [
+      { title: "Team & access", description: "Logins, roles and assigned talents", icon: UserCog, href: "/admin/team" },
       { title: "System architecture", description: "Printable technical overview", icon: Layers, href: "/admin/architecture" },
     ],
   },
@@ -103,6 +112,130 @@ function RevenueLines({ current, previous }: { current: CurrencyTotal[]; previou
   );
 }
 
+type Viewer = { name: string | null; role: string };
+type DashboardResponse =
+  | ({ view: "full"; viewer: Viewer } & DashboardSummary)
+  | ({ view: "scoped"; viewer: Viewer } & ScopedDashboardSummary);
+
+function AttentionList({ items }: { items: DashboardAttentionItem[] }) {
+  return (
+    <section>
+      <h2 className="mb-3 text-lg font-semibold">Needs attention</h2>
+      {items.length === 0 ? (
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-green-900">
+          <CheckCircle2 className="h-5 w-5" />
+          All clear: nothing needs action right now.
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {items.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`flex items-start gap-3 rounded-lg border p-4 transition-shadow hover:shadow-sm ${SEVERITY_STYLES[item.severity]}`}
+            >
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{item.label}</p>
+                <p className="text-sm opacity-80">{item.detail}</p>
+              </div>
+              <ArrowRight className="mt-0.5 h-4 w-4 flex-shrink-0 opacity-60" />
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function UpcomingEventsCard({ events, linkToAll }: { events: DashboardUpcomingEvent[]; linkToAll: boolean }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">Coming up</CardTitle>
+        {linkToAll && (
+          <Link href="/admin/events" className="text-sm text-gray-500 hover:text-gold">
+            All events
+          </Link>
+        )}
+      </CardHeader>
+      <CardContent>
+        {events.length === 0 ? (
+          <p className="text-sm text-gray-500">No upcoming events.</p>
+        ) : (
+          <ul className="divide-y">
+            {events.map((event) => (
+              <li key={event.id} className="flex items-start justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{event.title}</p>
+                  <p className="text-sm text-gray-500">
+                    {format(new Date(event.start_time), "EEE d MMM, HH:mm")}
+                    {event.venue_name ? ` · ${event.venue_name}` : ""}
+                  </p>
+                  {event.talent_names.length > 0 && (
+                    <p className="truncate text-xs text-gray-500">{event.talent_names.join(", ")}</p>
+                  )}
+                </div>
+                {!event.is_published && <Badge variant="outline">Draft</Badge>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ScopedView({ summary }: { summary: ScopedDashboardSummary }) {
+  return (
+    <>
+      <AttentionList items={summary.attention} />
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Your talents</h2>
+        {summary.talents.length === 0 ? (
+          <p className="text-sm text-gray-500">No talents assigned yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {summary.talents.map((talent) => (
+              <Link
+                key={talent.id}
+                href={`/talents/${talent.id}`}
+                className="flex items-center gap-3 rounded-lg border bg-white p-4 transition-shadow hover:shadow-md"
+              >
+                {talent.image_src ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={talent.image_src} alt="" className="h-12 w-12 flex-shrink-0 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-50">
+                    <Users className="h-5 w-5 text-gold" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">
+                    {talent.name}
+                    {!talent.is_active && <span className="ml-2 text-xs font-normal text-gray-500">(inactive)</span>}
+                  </p>
+                  <p className="truncate text-sm text-gray-500">{talent.profession}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {talent.next_event
+                      ? `Next: ${talent.next_event.title}, ${format(new Date(talent.next_event.start_time), "d MMM")}`
+                      : "Nothing scheduled"}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <UpcomingEventsCard events={summary.upcoming_events} linkToAll={false} />
+      </section>
+    </>
+  );
+}
+
 function StatCard({
   label,
   href,
@@ -130,7 +263,7 @@ function StatCard({
 }
 
 export default function AdminPage() {
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [summary, setSummary] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,7 +288,7 @@ export default function AdminPage() {
     load();
   }, [load]);
 
-  const tiers = summary
+  const tiers = summary?.view === "full"
     ? Object.entries(summary.community.vip_by_tier)
         .map(([tier, n]) => `${n} ${tier}`)
         .join(" · ")
@@ -174,7 +307,7 @@ export default function AdminPage() {
                 </h1>
                 <p className="text-gray-300">
                   {summary
-                    ? `Live figures · updated ${formatDistanceToNow(new Date(summary.generated_at), { addSuffix: true })}`
+                    ? `${summary.viewer.name ? `${summary.viewer.name} · ` : ""}${ROLE_LABELS[summary.viewer.role] ?? summary.viewer.role} · updated ${formatDistanceToNow(new Date(summary.generated_at), { addSuffix: true })}`
                     : "What needs doing, and how the agency is tracking"}
                 </p>
               </div>
@@ -213,35 +346,11 @@ export default function AdminPage() {
               </div>
             )}
 
-            {summary && (
+            {summary?.view === "scoped" && <ScopedView summary={summary} />}
+
+            {summary?.view === "full" && (
               <>
-                {/* Needs attention */}
-                <section>
-                  <h2 className="mb-3 text-lg font-semibold">Needs attention</h2>
-                  {summary.attention.length === 0 ? (
-                    <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-green-900">
-                      <CheckCircle2 className="h-5 w-5" />
-                      All clear: nothing needs action right now.
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {summary.attention.map((item) => (
-                        <Link
-                          key={item.key}
-                          href={item.href}
-                          className={`flex items-start gap-3 rounded-lg border p-4 transition-shadow hover:shadow-sm ${SEVERITY_STYLES[item.severity]}`}
-                        >
-                          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium">{item.label}</p>
-                            <p className="text-sm opacity-80">{item.detail}</p>
-                          </div>
-                          <ArrowRight className="mt-0.5 h-4 w-4 flex-shrink-0 opacity-60" />
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                <AttentionList items={summary.attention} />
 
                 {/* Key figures */}
                 <section>
@@ -290,37 +399,7 @@ export default function AdminPage() {
 
                 {/* Upcoming events + recent orders */}
                 <section className="grid gap-6 lg:grid-cols-2">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle className="text-base">Coming up</CardTitle>
-                      <Link href="/admin/events" className="text-sm text-gray-500 hover:text-gold">
-                        All events
-                      </Link>
-                    </CardHeader>
-                    <CardContent>
-                      {summary.upcoming_events.length === 0 ? (
-                        <p className="text-sm text-gray-500">No upcoming events.</p>
-                      ) : (
-                        <ul className="divide-y">
-                          {summary.upcoming_events.map((event) => (
-                            <li key={event.id} className="flex items-start justify-between gap-3 py-3">
-                              <div className="min-w-0">
-                                <p className="truncate font-medium">{event.title}</p>
-                                <p className="text-sm text-gray-500">
-                                  {format(new Date(event.start_time), "EEE d MMM, HH:mm")}
-                                  {event.venue_name ? ` · ${event.venue_name}` : ""}
-                                </p>
-                                {event.talent_names.length > 0 && (
-                                  <p className="truncate text-xs text-gray-500">{event.talent_names.join(", ")}</p>
-                                )}
-                              </div>
-                              {!event.is_published && <Badge variant="outline">Draft</Badge>}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <UpcomingEventsCard events={summary.upcoming_events} linkToAll />
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -364,7 +443,7 @@ export default function AdminPage() {
             )}
 
             {/* Tools */}
-            {SECTIONS.map((section) => (
+            {summary?.view === "full" && SECTIONS.map((section) => (
               <section key={section.title}>
                 <h2 className="mb-3 text-lg font-semibold">{section.title}</h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

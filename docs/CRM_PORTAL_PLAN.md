@@ -1,6 +1,6 @@
 # VersaTalent CRM, Outreach, KPI & Talent Portal: Plan
 
-_Status: proposal · October 2026_
+_Status: Phase 0 built (branch `feat/team-roles-access`) · decisions agreed 8 Oct 2026_
 
 ## 1. Goal
 
@@ -10,6 +10,8 @@ Run the agency's commercial side from one place:
 - **Bookings:** confirmed jobs for each talent, with dates, fees, commission, documents and status.
 - **Outreach:** planned prospecting campaigns with follow-ups that don't get forgotten.
 - **KPIs:** a small set of numbers, with targets, that show whether the agency is growing.
+- **Calendar & meetings:** a calendar of confirmed bookings, and meeting records with AI-written notes and action items.
+- **Talent rewards:** talents see the points they earn at our events and the artist perks they're entitled to (perks set by the admin).
 - **Access by role:** each talent logs in and sees only their own work. Team members see what their job needs.
 
 ## 2. Where we start from (current state)
@@ -25,45 +27,51 @@ Run the agency's commercial side from one place:
 
 ## 3. Roles & access
 
-### 3.1 Roles
+### 3.1 Roles (agreed)
 
-| Role | Who | Purpose |
+| Role | Who today | Purpose |
 |---|---|---|
-| `owner` | Directors | Everything, including team management, finance and settings. |
-| `manager` | Talent managers / bookers | CRM, deals and bookings for the talents assigned to them (or all, if flagged). |
-| `outreach` | Marketing / business development | Organisations, contacts, campaigns, leads. No fees, contracts or payouts. |
-| `finance` | Bookkeeper / accountant | Bookings, invoices, payouts and commission reports. CRM is read-only. |
+| `admin` | Founder | Everything: team, sales, settings, all talents. |
+| `manager` | COO | The talents assigned to them, including fees, deals and client details. |
+| `road_manager` | The DJ's road manager | Schedule and logistics for assigned talents. No fees, deal values or commission. |
 | `staff` | Event & bar staff (existing) | POS and event-day check-in only. |
-| `talent` (today `artist`) | Each talent | Their own profile, bookings, availability, earnings and documents. |
+| `artist` (talent) | Each talent | Their own profile, bookings, availability, net earnings, points, perks and shared documents. |
 | `vip` | Members (existing) | Card page only. |
+
+Outreach and finance roles can be added later as entries in the permission map, with no schema change.
+
+**Agreed rules**
+- Managers and road managers see **only the talents assigned to them**.
+- Commission is set **per talent** (`talents.commission_percent`). Each booking copies the rate when it's created, so later changes don't rewrite history.
+- Talents see **only their net** earnings. Gross fee and commission are never sent to the talent role.
+- **Client visibility is decided per booking** by the admin or manager (`bookings.client_visible_to_talent`, default off). When it's off, the talent sees the event, venue, times and the on-site contact, but not the client's name.
 
 ### 3.2 Access matrix
 
 R = read, W = write, own = only rows tied to them, assigned = only talents assigned to them.
 
-| Resource | owner | manager | outreach | finance | staff | talent |
-|---|---|---|---|---|---|---|
-| Admin dashboard KPIs | R | R (assigned) | R (pipeline & outreach) | R (finance) | – | – |
-| Organisations & contacts | RW | RW | RW | R | – | – |
-| Deals / pipeline | RW | RW (assigned) | RW (until "proposal") | R | – | – |
-| Deal value & commission | RW | RW (assigned) | – | R | – | – |
-| Bookings | RW | RW (assigned) | R (no fees) | R | – | R (own) |
-| Booking fee / net earnings | RW | RW (assigned) | – | RW | – | R (own net + gross) |
-| Client contact details on a booking | RW | RW | R | R | – | Only the on-site contact the manager marks as shared |
-| Talent availability | RW | RW (assigned) | R | – | – | RW (own) |
-| Talent public profile | RW | RW (assigned) | R | – | – | Propose edits (approval needed) |
-| Documents (contracts, briefs) | RW | RW (assigned) | – | R | – | R (own, if shared) |
-| Outreach campaigns | RW | R | RW | – | – | – |
-| Invoices & payouts | RW | R (assigned) | – | RW | – | R (own payouts) |
-| Team & roles | RW | – | – | – | – | – |
-| POS, NFC, VIP (existing) | RW | R | – | R (sales) | POS / check-in | – |
-| Audit log | R | – | – | – | – | – |
+| Resource | admin | manager | road_manager | staff | talent |
+|---|---|---|---|---|---|
+| Admin dashboard | Full | Assigned talents, no sales | Assigned talents, no sales | – | – |
+| Organisations & contacts | RW | RW (deals on assigned talents) | – | – | – |
+| Deals / pipeline | RW | RW (assigned) | – | – | – |
+| Deal value, fees, commission | RW | RW (assigned) | – | – | Net only (own) |
+| Bookings & calendar | RW | RW (assigned) | R + logistics notes (assigned) | – | R (own) |
+| Client name on a booking | RW | RW, sets visibility | R (assigned) | – | Only if switched on for that booking |
+| Talent availability | RW | RW (assigned) | RW (assigned) | – | RW (own) |
+| Talent public profile | RW | Propose (assigned) | – | – | Propose edits (approval needed) |
+| Documents (contracts, riders, briefs) | RW | RW (assigned) | R riders & briefs (assigned) | – | R (own, if shared) |
+| Meetings & AI notes | RW | RW (own + assigned talents) | R (assigned talents) | – | Only meetings shared with them |
+| Points & perks | RW (edit perks) | R (assigned) | – | – | R (own) |
+| Team & roles | RW | – | – | – | – |
+| POS, NFC, VIP, content (existing) | RW | – | – | POS / check-in | – |
+| Audit log | R | – | – | – | – |
 
 ### 3.3 How it is enforced
 
-1. **One session cookie** (`vt_session`) carrying `userId`, `role`, `talentId?`. The env-var admin stays as a break-glass login only.
-2. **Permission map in code** (`src/lib/auth/permissions.ts`): `role → set of permissions` such as `deals.read` and `deals.write.fees`.
-3. **Scoping on the server, never from the client:** every talent query adds `WHERE talent_id = session.talentId`, and every manager query joins `talent_managers`. The API ignores any `talentId` the browser sends for a talent user.
+1. **Sessions:** team members use the admin session cookie (`getTeamSession()`, which re-reads role and active status from the database on every request). Staff keep the staff cookie (`getCurrentSession()`, which only accepts admin or staff). Talents will get their own portal session in Phase 3. The env-var admin stays as a fallback login.
+2. **Permission map in code** (`src/lib/auth/permissions.ts`): `role → set of permissions` such as `bookings.fees` and `team.manage`, checked by `requireTeamPermission()`.
+3. **Scoping on the server, never from the client:** every talent query adds `WHERE talent_id = session.talentId`, and every manager or road-manager query is limited by `getTalentScope()` (the `talent_assignments` table). The API ignores any `talentId` the browser sends for a talent user.
 4. **Field filtering:** the API strips fee and commission fields from responses for roles without `*.fees` permission. Hiding them in the UI is not enough.
 5. **Area guards:** `/admin/*` needs a team role, `/portal/*` needs the talent role, `/staff/*` stays as it is.
 6. **Audit log:** each create, update or delete on CRM, booking, finance or role tables writes `{who, what, before, after, when}`.
@@ -73,15 +81,9 @@ R = read, W = write, own = only rows tied to them, assigned = only talents assig
 Postgres on the existing Neon project. One migration per phase (`024_…`, `025_…`). Money is stored in integer cents with a currency, like `pos_orders`.
 
 ```sql
--- Phase 0: identity
-ALTER TABLE users
-  ADD COLUMN is_active boolean NOT NULL DEFAULT true,
-  ADD COLUMN last_login_at timestamptz;
--- role values: owner, manager, outreach, finance, staff, artist (talent), vip
-CREATE TABLE talent_managers (user_id uuid REFERENCES users, talent_id uuid REFERENCES talents, PRIMARY KEY (user_id, talent_id));
-CREATE TABLE auth_tokens (id uuid PK, user_id uuid, purpose text /* invite|reset */, token_hash text, expires_at timestamptz, used_at timestamptz);
-CREATE TABLE login_attempts (id bigserial PK, email text, ip text, success boolean, created_at timestamptz DEFAULT now());
-CREATE TABLE audit_log (id bigserial PK, user_id uuid, action text, entity text, entity_id uuid, before jsonb, after jsonb, created_at timestamptz DEFAULT now());
+-- Phase 0: identity (built: migrations/024_team_roles_and_access.sql)
+-- users.role: admin, manager, road_manager, staff, artist, vip; users.is_active, users.last_login_at
+-- talent_assignments, auth_tokens, login_attempts, audit_log
 
 -- Phase 1: CRM
 CREATE TABLE organisations (id uuid PK, name text, type text /* brand|agency|venue|promoter|production|private */,
@@ -98,10 +100,11 @@ CREATE TABLE activities (id uuid PK, type text /* note|call|email|meeting|task *
 CREATE TABLE enquiries (id uuid PK, form text /* contact|brand|talent */, payload jsonb, deal_id uuid, status text /* new|converted|spam|archived */, created_at);
 
 -- Phase 2: bookings
+ALTER TABLE talents ADD COLUMN commission_percent numeric(5,2); -- agreed: commission is per talent
 CREATE TABLE bookings (id uuid PK, deal_id uuid, talent_id uuid, event_id uuid NULL,
   title text, starts_at timestamptz, ends_at timestamptz, location text, call_time text, brief text,
   status text /* hold|confirmed|completed|cancelled */, fee_cents int, currency text, commission_percent numeric(5,2),
-  onsite_contact jsonb, shared_with_talent boolean DEFAULT true, talent_response text /* pending|accepted|declined */,
+  onsite_contact jsonb, client_visible_to_talent boolean DEFAULT false, shared_with_talent boolean DEFAULT true, talent_response text /* pending|accepted|declined */,
   created_at, updated_at);
 CREATE TABLE talent_availability (id uuid PK, talent_id uuid, starts_on date, ends_on date, kind text /* unavailable|tentative */, note text);
 CREATE TABLE documents (id uuid PK, booking_id uuid, deal_id uuid, talent_id uuid, kind text /* contract|brief|invoice|other */,
@@ -162,20 +165,20 @@ CREATE TABLE talent_payouts (id uuid PK, booking_id uuid, talent_id uuid, gross_
 
 | KPI | Definition | Who sees it |
 |---|---|---|
-| New leads | Deals created in period, by source | owner, manager, outreach |
-| Lead → won rate | Won ÷ (won + lost) for deals closed in period | owner, manager |
-| Weighted pipeline | Σ value × stage probability (lead 10%, qualified 25%, proposal 50%, negotiation 75%) | owner, manager, finance |
-| Average deal value | Mean `value_cents` of won deals | owner, manager, finance |
-| Sales cycle | Median days from created to won | owner, manager |
-| First response time | Median hours from enquiry received to first activity. Target under 24h. | owner, manager |
-| Outreach reply rate | Enrolments replied ÷ contacted | owner, outreach |
-| Meetings booked | Enrolments reaching `meeting` | owner, outreach |
-| Bookings confirmed | Count and gross value of bookings confirmed in period | owner, manager, finance |
-| Commission revenue | Σ fee × commission% for completed bookings | owner, finance |
-| Talent utilisation | Booked days ÷ available days, per talent | owner, manager (assigned), talent (own) |
-| Repeat client rate | Share of won deals from organisations with an earlier won deal | owner, manager |
-| Cancellation rate | Cancelled ÷ confirmed bookings | owner, manager |
-| Outstanding invoices | Unpaid invoice total and days overdue | owner, finance |
+| New leads | Deals created in period, by source | admin, manager |
+| Lead → won rate | Won ÷ (won + lost) for deals closed in period | admin, manager |
+| Weighted pipeline | Σ value × stage probability (lead 10%, qualified 25%, proposal 50%, negotiation 75%) | admin, manager |
+| Average deal value | Mean `value_cents` of won deals | admin, manager |
+| Sales cycle | Median days from created to won | admin, manager |
+| First response time | Median hours from enquiry received to first activity. Target under 24h. | admin, manager |
+| Outreach reply rate | Enrolments replied ÷ contacted | admin, manager |
+| Meetings booked | Enrolments reaching `meeting` | admin, manager |
+| Bookings confirmed | Count and gross value of bookings confirmed in period | admin, manager |
+| Commission revenue | Σ fee × commission% for completed bookings | admin |
+| Talent utilisation | Booked days ÷ available days, per talent | admin, manager (assigned), road manager (assigned), talent (own) |
+| Repeat client rate | Share of won deals from organisations with an earlier won deal | admin, manager |
+| Cancellation rate | Cancelled ÷ confirmed bookings | admin, manager |
+| Outstanding invoices | Unpaid invoice total and days overdue | admin |
 
 Targets live in `kpi_targets`, by month and optionally per person or talent. A nightly scheduled function writes `kpi_snapshots` so trends survive edits to old records.
 
@@ -185,26 +188,73 @@ Each phase ships on its own and is usable without the next one.
 
 | Phase | Scope | Size | Depends on |
 |---|---|---|---|
-| **0. Foundation** | Unified session + roles + permission map; team user management with invites; password reset; login rate limiting; audit log; migrate env-admin to a named `owner` account | M | – |
+| **0. Foundation** ✅ built | Team roles + permission map; Team page with invite/reset links; talent assignments; login throttling; audit log; role-aware dashboard (see §9) | M | – |
 | **1. CRM core** | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) | L | 0 |
-| **2. Bookings** | Bookings from deals, holds, availability, calendar, documents, clash detection | M | 1 |
-| **3. Talent portal** | `/portal` login, home, bookings, availability, earnings, profile change requests | M | 0, 2 |
+| **2. Bookings & calendar** | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
+| **3. Talent portal** | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
+| **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
 | **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
 | **6. Finance (optional)** | Invoices and talent payouts; sync with the accounting package | M | 2 |
 | **Later** | Outreach v2 (sending + tracking), e-signature for contracts, real profile-view analytics | – | – |
 
-Suggested order: 0 → 1 → 2 → 3 → 4 → 5. The talent portal comes after bookings so it has real content on day one.
+Suggested order: 0 → 1 → 2 → 3 → 3b → 4 → 5. The talent portal comes after bookings so it has real content on day one. Perks and points (part of 3) can ship early, since points already exist.
 
 ## 7. Build vs buy
 
 An off-the-shelf CRM (e.g. HubSpot's free tier) could cover contacts and a pipeline, but not talent bookings, holds, availability, commission or a talent-facing portal. Those would still need building and syncing. With the data already in Neon and the auth and repository patterns already in place, **building in-house is the better fit**. If a team member already uses an external CRM, Phase 1 can import its contacts from CSV.
 
-## 8. Decisions needed
+## 8. New features in detail
 
-1. **Team:** who holds which role today, and are managers limited to assigned talents?
-2. **Commission:** one standard rate per talent, or set per deal? Do talents see gross fee and commission, or only net?
-3. **Client visibility:** may talents see the client's name on a booking, or only the event?
-4. **Outreach:** is task-driven v1 enough to start, or is sending from the platform needed early?
-5. **Finance:** which accounting package (Xero, QuickBooks, none) should invoices sync with, if any?
-6. **Portal URL:** `/portal` on the main domain, or a subdomain such as `talent.versatalent…`?
+### 8.1 Bookings calendar (Phase 2)
+- Month, week and agenda views. Filter by talent, or all of the viewer's talents. Status shown by colour (hold, confirmed, completed, cancelled).
+- Click a day to create a booking, or drag to move one. Moving re-runs the clash check against other bookings and the talent's unavailable dates.
+- Each person sees only what their role allows: road managers get times and logistics, talents get their own bookings, managers their assigned talents.
+- **Calendar feed:** a private iCal link per person (`/api/calendar/<secret>.ics`) to subscribe from Google or Apple Calendar. The link is read-only and can be revoked and reissued.
+- Public events (`events`) appear as a separate layer, so the team can see what's already announced.
+
+### 8.2 Meetings with AI notes (Phase 3b)
+```sql
+CREATE TABLE meetings (id uuid PK, title text, starts_at timestamptz, ends_at timestamptz, location text,
+  organisation_id uuid, deal_id uuid, booking_id uuid, talent_ids uuid[], attendees jsonb,
+  transcript text, recording_blob_key text,
+  ai_summary text, ai_decisions jsonb, ai_action_items jsonb, ai_generated_at timestamptz, ai_model text,
+  notes text, shared_with_talent boolean DEFAULT false, created_by uuid, created_at, updated_at);
+```
+- Schedule meetings from a deal, organisation or talent, or log one afterwards.
+- **AI notes:** paste a transcript (e.g. from Google Meet, Zoom or Otter) or upload an audio recording to be transcribed. The AI then writes:
+  - a short summary,
+  - decisions made,
+  - action items with owner and due date.
+  One click turns action items into tasks (`activities`) on the deal or talent. The person reviews and edits the notes before saving; the AI output is a draft.
+- **Model:** Claude via the Anthropic API (`ANTHROPIC_API_KEY` as a server env var). Calls run server-side only, and the transcript isn't stored anywhere else.
+- **Consent:** UK law expects participants to be told before a call is recorded. The upload form asks you to confirm everyone was told.
+- Visibility follows the access matrix; a meeting can be shared with the talent it concerns.
+
+### 8.3 Talent points & artist perks (Phase 3)
+- **Points:** artists already earn points through the VIP system: check-ins at our events and purchases at the till. 3 artists hold memberships today. The portal shows their balance, lifetime points, tier, progress to the next tier, and a history of where points came from (`vip_points_log`).
+- **Artist perks:** a new list the admin manages, separate from customer VIP tier benefits:
+  ```sql
+  CREATE TABLE artist_perks (id uuid PK, title text, description text, talent_id uuid NULL /* NULL = every artist */,
+    min_tier text NULL /* optional: silver|gold|black */, valid_from date, valid_until date, is_active boolean DEFAULT true,
+    sort_order int, created_at, updated_at);
+  ```
+  Admin screen: add, edit, reorder and switch off perks, for all artists or for one talent (e.g. "2 guest-list places at every VersaTalent event", "free studio session per quarter"). The talent's profile shows the perks that apply to them now.
+- Point rules, tiers and customer benefits stay managed in the existing VIP section.
+
+## 9. Phase 0: what was built
+
+- **Roles:** `admin`, `manager`, `road_manager` added (migration `024_team_roles_and_access.sql`), plus `users.is_active` and `last_login_at`.
+- **Team page** (`/admin/team`, admin only):
+  - Add a person, choose their role and the talents they look after.
+  - Deactivate someone (takes effect immediately).
+  - Get one-time invite or reset links (7 days / 24 hours) to send them yourself.
+- **Sign-in:** team members sign in at `/admin/login` with email and password. The env admin login still works as a fallback. Repeated failures are throttled (5 per email or 20 per IP in 15 minutes). The staff login is throttled too, and refuses deactivated accounts.
+- **Enforcement:**
+  - Existing sections (talents, events, content, NFC, VIP, POS) are admin-only server-side.
+  - Manager and road-manager sessions can't reach the till or check-in tools.
+  - Roles and active status are re-read on every request, so changes apply at once.
+- **Dashboard:** managers and road managers see their assigned talents, those talents' upcoming events and alerts, with no sales figures.
+- **Audit log:** team changes and link use are recorded in `audit_log`.
+
+**Go-live order:** run migration 024 on production → deploy → sign in with the env admin → add yourself as Admin, the COO as Manager and the road manager as Road Manager (with the DJ assigned) → send their links.
