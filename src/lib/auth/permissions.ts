@@ -31,6 +31,7 @@ export type Permission =
   | 'bookings.client_visibility'
   | 'bookings.logistics' // call time and logistics notes only
   | 'availability.edit'
+  | 'payouts.manage' // see and record what's been paid to talents
   | 'rates.manage' // admins only: talents' commission rates
   | 'crm.view'
   | 'crm.edit'
@@ -52,6 +53,7 @@ const ROLE_PERMISSIONS: Record<TeamRole, readonly Permission[] | '*'> = {
     'bookings.client_visibility',
     'bookings.logistics',
     'availability.edit',
+    'payouts.manage',
     'crm.view',
     'crm.edit',
     'enquiries.view',

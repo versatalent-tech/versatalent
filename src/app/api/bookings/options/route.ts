@@ -50,6 +50,7 @@ export async function GET() {
         logistics: can(role, 'bookings.logistics'),
         availability: can(role, 'availability.edit'),
         rates: can(role, 'rates.manage'),
+        payouts: can(role, 'payouts.manage'),
         delete: can(role, 'crm.delete'),
       },
       hasPersonalAccount: Boolean(ctx.session.userId),

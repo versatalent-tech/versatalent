@@ -1,5 +1,5 @@
 import { sql } from '../client';
-import { netCents } from '@/lib/bookings/types';
+import { netCents, payoutState } from '@/lib/bookings/types';
 import { getCurrentMembership } from '@/lib/services/vip-points-service';
 import { getTierProgress, getTierSettings } from '@/lib/services/vip-tiers';
 import { getBenefitsByTier } from './vip-tier-benefits';
@@ -71,6 +71,9 @@ function mapTalentBooking(row: any): TalentBooking {
     currency: row.currency,
     talent_response: row.talent_response,
     can_respond: (row.status === 'hold' || row.status === 'confirmed') && new Date(startsAt) > new Date(),
+    payout: payoutState({ status: row.status, ends_at: iso(row.ends_at)!, fee_cents: fee, paid_at: iso(row.talent_paid_at) }),
+    paid_at: iso(row.talent_paid_at),
+    paid_cents: row.talent_paid_cents === null || row.talent_paid_cents === undefined ? null : Number(row.talent_paid_cents),
   };
 }
 
@@ -127,23 +130,34 @@ export async function respondToBooking(
   return true;
 }
 
+/**
+ * The talent's money: what's been paid (this year), what's owed for work
+ * already done, and what's to come from confirmed bookings. Owed work is
+ * included however old it is, so nothing unpaid drops off the list.
+ */
 export async function getEarnings(talentId: string): Promise<EarningsSummary> {
   const rows = await sql`
     ${talentBookingSelect()}
     WHERE b.talent_id = ${talentId} AND b.shared_with_talent
-      AND b.status IN ('confirmed', 'completed') AND b.fee_cents IS NOT NULL
-      AND b.starts_at >= date_trunc('year', NOW()) - INTERVAL '1 year'
+      AND (
+        (b.talent_paid_at IS NOT NULL AND b.talent_paid_at >= date_trunc('year', NOW()) - INTERVAL '1 year')
+        OR (b.talent_paid_at IS NULL AND b.status IN ('confirmed', 'completed') AND b.fee_cents IS NOT NULL)
+      )
     ORDER BY b.starts_at DESC
   `;
   const bookings = rows.map(mapTalentBooking);
   const thisYear = new Date().getFullYear();
-  const totals = new Map<string, { earned_this_year: number; upcoming: number }>();
+  const totals = new Map<string, { paid_this_year: number; owed: number; upcoming: number }>();
 
   for (const booking of bookings) {
-    const entry = totals.get(booking.currency) ?? { earned_this_year: 0, upcoming: 0 };
-    const net = booking.net_cents ?? 0;
-    if (new Date(booking.starts_at) > new Date()) entry.upcoming += net;
-    else if (new Date(booking.starts_at).getFullYear() === thisYear) entry.earned_this_year += net;
+    const entry = totals.get(booking.currency) ?? { paid_this_year: 0, owed: 0, upcoming: 0 };
+    if (booking.payout === 'paid') {
+      if (new Date(booking.paid_at!).getFullYear() === thisYear) entry.paid_this_year += booking.paid_cents ?? 0;
+    } else if (booking.payout === 'owed') {
+      entry.owed += booking.net_cents ?? 0;
+    } else if (booking.payout === 'upcoming') {
+      entry.upcoming += booking.net_cents ?? 0;
+    }
     totals.set(booking.currency, entry);
   }
 
