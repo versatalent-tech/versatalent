@@ -416,14 +416,32 @@ export async function hasCalendarFeed(userId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-/** The active team member a feed token belongs to, or null */
-export async function resolveCalendarFeed(token: string): Promise<{ userId: string; role: TeamRole; name: string } | null> {
+export type FeedOwner =
+  | { kind: 'team'; userId: string; role: TeamRole; name: string }
+  | { kind: 'talent'; userId: string; talentId: string; name: string };
+
+/** The active team member or talent a feed token belongs to, or null */
+export async function resolveCalendarFeed(token: string): Promise<FeedOwner | null> {
   const rows = await sql`
     UPDATE calendar_feeds f SET last_used_at = NOW()
     FROM users u
     WHERE f.user_id = u.id AND f.token_hash = ${hashToken(token)} AND u.is_active
-      AND u.role IN ('admin', 'manager', 'road_manager')
-    RETURNING u.id, u.role, u.name
+      AND (u.role IN ('admin', 'manager', 'road_manager') OR (u.role = 'artist' AND u.talent_id IS NOT NULL))
+    RETURNING u.id, u.role, u.name, u.talent_id
   `;
-  return rows[0] ? { userId: rows[0].id, role: rows[0].role, name: rows[0].name } : null;
+  const row = rows[0];
+  if (!row) return null;
+  return row.role === 'artist'
+    ? { kind: 'talent', userId: row.id, talentId: row.talent_id, name: row.name }
+    : { kind: 'team', userId: row.id, role: row.role, name: row.name };
+}
+
+/** Upcoming bookings a talent has said they can't do */
+export async function countDeclinedUpcoming(scope: BookingScope): Promise<number> {
+  const rows = await sql`
+    SELECT COUNT(*) AS n FROM bookings b
+    WHERE ${talentVisible(scope, 'b.talent_id')}
+      AND b.talent_response = 'declined' AND b.status IN ('hold', 'confirmed') AND b.starts_at > NOW()
+  `;
+  return Number(rows[0].n);
 }

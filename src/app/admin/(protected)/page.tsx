@@ -17,6 +17,7 @@ import {
   Calendar,
   CheckCircle2,
   CreditCard,
+  Gift,
   Instagram,
   Layers,
   Loader2,
@@ -84,6 +85,7 @@ const SECTIONS = [
     title: "Team & reference",
     links: [
       { title: "Team & access", description: "Logins, roles and assigned talents", icon: UserCog, href: "/admin/team" },
+      { title: "Talent portal", description: "Talent logins, artist perks, profile edits", icon: Gift, href: "/admin/talent-portal" },
       { title: "System architecture", description: "Printable technical overview", icon: Layers, href: "/admin/architecture" },
     ],
   },

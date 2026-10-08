@@ -8,15 +8,17 @@
 
 export const ADMIN_SESSION_COOKIE = 'admin_session';
 export const STAFF_SESSION_COOKIE = 'staff_session';
+export const TALENT_SESSION_COOKIE = 'talent_session';
 
 // Session duration: 24 hours
 export const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 
 // admin/staff run the venue tools; manager/road_manager are team roles that
-// only reach the admin areas their permissions allow (see lib/auth/permissions)
-export type SessionRole = 'admin' | 'staff' | 'manager' | 'road_manager';
+// only reach the admin areas their permissions allow (see lib/auth/permissions);
+// artist is a talent signed in to the talent portal (own cookie, own guard)
+export type SessionRole = 'admin' | 'staff' | 'manager' | 'road_manager' | 'artist';
 
-const SESSION_ROLES: readonly string[] = ['admin', 'staff', 'manager', 'road_manager'];
+const SESSION_ROLES: readonly string[] = ['admin', 'staff', 'manager', 'road_manager', 'artist'];
 
 export interface SessionPayload {
   userId?: string; // database user id; absent for the env-configured admin
