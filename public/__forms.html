@@ -3,7 +3,8 @@
 <head><title>Form Registration</title></head>
 <body>
   <!-- General Contact Form -->
-  <form name="versatalent-contact" data-netlify="true" hidden>
+  <form name="versatalent-contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="text" name="bot-field" />
     <input type="hidden" name="form-name" value="versatalent-contact" />
     <input type="text" name="firstName" />
     <input type="text" name="lastName" />
@@ -14,7 +15,8 @@
   </form>
 
   <!-- Talent Application Form -->
-  <form name="versatalent-talent" data-netlify="true" hidden>
+  <form name="versatalent-talent" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="text" name="bot-field" />
     <input type="hidden" name="form-name" value="versatalent-talent" />
     <input type="text" name="name" />
     <input type="email" name="email" />
@@ -26,7 +28,8 @@
   </form>
 
   <!-- Brand Partnership Form -->
-  <form name="versatalent-brand" data-netlify="true" hidden>
+  <form name="versatalent-brand" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="text" name="bot-field" />
     <input type="hidden" name="form-name" value="versatalent-brand" />
     <input type="text" name="firstName" />
     <input type="text" name="lastName" />

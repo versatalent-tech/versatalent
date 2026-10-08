@@ -31,6 +31,8 @@ export type Permission =
   | 'bookings.client_visibility'
   | 'crm.view'
   | 'crm.edit'
+  | 'crm.delete' // admins only: deleting clients, contacts and deals
+  | 'enquiries.view' // website enquiries aren't tied to a talent, so managers see them all
   | 'team.manage'
   | 'venue.manage'; // POS, NFC, VIP, content: the existing admin sections
 
@@ -46,6 +48,7 @@ const ROLE_PERMISSIONS: Record<TeamRole, readonly Permission[] | '*'> = {
     'bookings.client_visibility',
     'crm.view',
     'crm.edit',
+    'enquiries.view',
   ],
   road_manager: ['dashboard.view', 'talents.view', 'events.view', 'bookings.view'],
 };
