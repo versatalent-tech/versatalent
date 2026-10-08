@@ -7,7 +7,14 @@ import {
 } from '@/lib/db/repositories/dashboard';
 import { getCrmAttention, getCrmScope } from '@/lib/db/repositories/crm';
 import { getTalentScope } from '@/lib/db/repositories/team';
-import { countDeclinedUpcoming, countHoldsStartingSoon, getBookingScope, listUpcomingBookings } from '@/lib/db/repositories/bookings';
+import {
+  countDeclinedUpcoming,
+  countHoldsStartingSoon,
+  getBookingScope,
+  listUpcomingBookings,
+  summariseOwedPayouts,
+} from '@/lib/db/repositories/bookings';
+import { formatCurrency } from '@/lib/utils/formatting';
 import { sql } from '@/lib/db/client';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
@@ -27,7 +34,7 @@ export async function GET() {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -36,6 +43,7 @@ export async function GET() {
       can(session.role, 'portal.manage')
         ? sql`SELECT COUNT(*) AS n FROM talent_profile_changes WHERE status = 'pending'`.then((r: any) => Number(r[0].n))
         : Promise.resolve(0),
+      can(session.role, 'payouts.manage') ? summariseOwedPayouts(bookingScope) : Promise.resolve({ count: 0, totals: [] }),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -55,6 +63,15 @@ export async function GET() {
         label: `${plural(declined, 'upcoming booking')} declined by the talent`,
         detail: 'Find a replacement or cancel with the client.',
         href: '/admin/bookings',
+      });
+    }
+    if (owed.count > 0) {
+      bookingItems.push({
+        key: 'payouts-owed',
+        severity: 'medium',
+        label: `${plural(owed.count, 'finished job')} not paid to the talent yet`,
+        detail: `${owed.totals.map((t) => formatCurrency(t.cents, t.currency)).join(' + ')} owed in total.`,
+        href: '/admin/bookings/payouts',
       });
     }
     if (profileRequests > 0) {

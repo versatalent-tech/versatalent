@@ -111,7 +111,8 @@ export function TalentBookingCard({
         <p className="text-sm">
           {booking.net_cents != null ? (
             <>
-              You receive <span className="font-semibold">{formatMoney(booking.net_cents, booking.currency)}</span>
+              {booking.payout === "paid" ? "You received" : "You receive"}{" "}
+              <span className="font-semibold">{formatMoney(booking.payout === "paid" ? booking.paid_cents : booking.net_cents, booking.currency)}</span>
             </>
           ) : (
             <span className="text-gray-400">Fee to be confirmed</span>
@@ -128,6 +129,10 @@ export function TalentBookingCard({
               I&apos;m in
             </Button>
           </div>
+        ) : booking.payout === "paid" ? (
+          <span className="text-xs font-medium text-green-700">Paid {booking.paid_at ? format(new Date(booking.paid_at), "d MMM") : ""}</span>
+        ) : booking.payout === "owed" ? (
+          <span className="text-xs font-medium text-amber-700">Payment due</span>
         ) : booking.talent_response !== "pending" ? (
           <span className={`text-xs font-medium ${booking.talent_response === "accepted" ? "text-green-700" : "text-red-700"}`}>
             {booking.talent_response === "accepted" ? "You accepted" : "You declined"}

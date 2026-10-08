@@ -2,7 +2,7 @@
  * Talent portal shapes, shared by the API and the portal pages.
  * Nothing here may carry a gross fee, commission or hidden client name.
  */
-import type { BookingStatus, TalentResponse } from '@/lib/bookings/types';
+import type { BookingStatus, PayoutState, TalentResponse } from '@/lib/bookings/types';
 
 export type Tier = 'silver' | 'gold' | 'black';
 export const TIER_LABELS: Record<Tier, string> = { silver: 'Silver', gold: 'Gold', black: 'Black' };
@@ -25,6 +25,11 @@ export interface TalentBooking {
   currency: string;
   talent_response: TalentResponse;
   can_respond: boolean;
+  /** paid / owed (job done, not paid yet) / upcoming / none (no fee or not going ahead) */
+  payout: PayoutState;
+  /** When paid: the date and the amount actually paid */
+  paid_at: string | null;
+  paid_cents: number | null;
 }
 
 export interface TalentAvailability {
@@ -36,7 +41,15 @@ export interface TalentAvailability {
 }
 
 export interface EarningsSummary {
-  currency_totals: { currency: string; earned_this_year: number; upcoming: number }[];
+  currency_totals: {
+    currency: string;
+    /** Paid out in the current calendar year */
+    paid_this_year: number;
+    /** Jobs done but not paid yet */
+    owed: number;
+    /** Confirmed jobs still to come */
+    upcoming: number;
+  }[];
   bookings: TalentBooking[];
 }
 

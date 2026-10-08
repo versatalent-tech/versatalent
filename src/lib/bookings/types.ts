@@ -53,6 +53,10 @@ export interface Booking {
     commission_percent: number | null;
     commission_cents: number | null;
     net_cents: number | null;
+    /** Payment of the net to the talent, once recorded */
+    paid_at: string | null;
+    paid_cents: number | null;
+    paid_reference: string | null;
   };
   created_at: string;
   updated_at: string;
@@ -93,6 +97,19 @@ export interface TalentRate {
   name: string;
   is_active: boolean;
   commission_percent: number | null;
+}
+
+export const PAYOUT_STATES = { paid: 'Paid', owed: 'To pay', upcoming: 'Not due yet', none: 'No fee set' } as const;
+export type PayoutState = keyof typeof PAYOUT_STATES;
+
+/**
+ * Where a booking stands for paying the talent: owed once the job has
+ * finished (confirmed or completed, with a fee) until a payment is recorded.
+ */
+export function payoutState(b: { status: string; ends_at: string; fee_cents: number | null; paid_at: string | null }): PayoutState {
+  if (b.paid_at) return 'paid';
+  if (b.fee_cents === null || (b.status !== 'confirmed' && b.status !== 'completed')) return 'none';
+  return new Date(b.ends_at) <= new Date() ? 'owed' : 'upcoming';
 }
 
 /** Fee minus commission, in cents (null when there's no fee) */

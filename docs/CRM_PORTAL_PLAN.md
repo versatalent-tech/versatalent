@@ -1,6 +1,6 @@
 # VersaTalent CRM, Outreach, KPI & Talent Portal: Plan
 
-_Status: Phases 0–3 built · decisions agreed 8 Oct 2026_
+_Status: Phases 0–3 built, plus talent payouts · decisions agreed 8 Oct 2026_
 
 ## 1. Goal
 
@@ -348,6 +348,28 @@ Migration `027_talent_portal.sql` adds `artist_perks` and `talent_profile_change
 
 **Dashboard:** alerts for upcoming bookings a talent declined, and profile changes waiting for approval.
 
-**Not included:** talents uploading photos or portfolio items (still done by the team), and payout status (Phase 6).
+**Not included:** talents uploading photos or portfolio items (still done by the team).
 
 **Go-live:** run migration 027 on production before deploying. Then send each talent a link from Talent Portal → Logins. Seven talents already have passwords the team set earlier; sending them a reset link lets them choose their own.
+
+## 13. Talent payouts (brought forward from Phase 6)
+
+Migration `028_talent_payouts.sql` adds `talent_paid_at`, `talent_paid_cents`, `talent_paid_reference` and `talent_paid_by` to `bookings`.
+
+**When a booking is owed:** it's confirmed or completed, has a fee, has finished, and has no payment recorded. Cancelled and on-hold bookings are never owed.
+
+**Payouts page (`/admin/bookings/payouts`):**
+- Admins see every talent; Managers see their assigned talents (`payouts.manage`). Road Managers have no access, since they never see money.
+- **To pay:** grouped by talent with totals. Tick bookings (or a whole talent), then "Mark as paid" with the date and an optional reference.
+- **Paid:** the last 4 months, with an undo for payments recorded by mistake.
+- Bookings that aren't finished, aren't the person's talents, or are already paid are skipped, and the page says how many.
+- The amount paid is stored when marked, so later fee or commission edits don't change it. Every payment and undo is in the audit log.
+
+**Talent portal Earnings:**
+- **Paid to you** (this year), **Owed to you** (jobs done, not paid yet) and **Coming up** (confirmed future jobs).
+- Each booking shows "Paid 3 Oct" or "Payment due".
+- Talents never see the reference, fee or commission.
+
+**Also:** a dashboard alert for finished jobs not paid yet (with the total owed), a Payouts button on the calendar, and the payment status in the booking form.
+
+**Go-live:** run migration 028 on production before deploying.

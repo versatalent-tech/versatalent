@@ -102,6 +102,9 @@ export function mapBooking(row: any, withMoney: boolean): Booking {
             commission_percent: pct,
             commission_cents: commissionCents(fee, pct),
             net_cents: netCents(fee, pct),
+            paid_at: row.talent_paid_at ? iso(row.talent_paid_at) : null,
+            paid_cents: row.talent_paid_cents === null || row.talent_paid_cents === undefined ? null : Number(row.talent_paid_cents),
+            paid_reference: row.talent_paid_reference ?? null,
           },
         }
       : {}),
@@ -444,4 +447,95 @@ export async function countDeclinedUpcoming(scope: BookingScope): Promise<number
       AND b.talent_response = 'declined' AND b.status IN ('hold', 'confirmed') AND b.starts_at > NOW()
   `;
   return Number(rows[0].n);
+}
+
+// ---------------------------------------------------------------------------
+// Talent payouts
+// ---------------------------------------------------------------------------
+
+/** Finished, fee-bearing bookings with no payment recorded yet (oldest first) */
+export async function listOwedPayouts(scope: BookingScope): Promise<Booking[]> {
+  const rows = await sql`
+    ${bookingSelect()}
+    WHERE ${talentVisible(scope, 'b.talent_id')}
+      AND b.talent_paid_at IS NULL AND b.fee_cents IS NOT NULL
+      AND b.status IN ('confirmed', 'completed') AND b.ends_at <= NOW()
+    ORDER BY t.name, b.starts_at
+    LIMIT 1000
+  `;
+  return rows.map((row: any) => mapBooking(row, true));
+}
+
+/** Payments recorded in the last `days` days (newest first) */
+export async function listRecentPayouts(scope: BookingScope, days = 120): Promise<Booking[]> {
+  const rows = await sql`
+    ${bookingSelect()}
+    WHERE ${talentVisible(scope, 'b.talent_id')}
+      AND b.talent_paid_at > NOW() - make_interval(days => ${days})
+    ORDER BY b.talent_paid_at DESC, t.name
+    LIMIT 500
+  `;
+  return rows.map((row: any) => mapBooking(row, true));
+}
+
+/**
+ * Record payment of the talent's net for these bookings. Only finished,
+ * unpaid, fee-bearing bookings the person can see are marked; the amount
+ * paid is the net at this moment (fee minus commission, rounded like the UI).
+ */
+export async function markPayoutsPaid(
+  scope: BookingScope,
+  actor: BookingActor,
+  bookingIds: string[],
+  paidOn: string, // YYYY-MM-DD, UK date
+  reference: string | null
+): Promise<{ id: string; title: string; talent_name: string; paid_cents: number; currency: string }[]> {
+  const rows = await sql`
+    UPDATE bookings b SET
+      talent_paid_at = (${paidOn}::date + TIME '12:00') AT TIME ZONE ${AGENCY_TIME_ZONE},
+      talent_paid_cents = b.fee_cents - ROUND(b.fee_cents * COALESCE(b.commission_percent, 0) / 100)::int,
+      talent_paid_reference = ${reference},
+      talent_paid_by = ${actor.userId},
+      updated_at = NOW()
+    WHERE b.id = ANY(${bookingIds}::uuid[])
+      AND ${talentVisible(scope, 'b.talent_id')}
+      AND b.talent_paid_at IS NULL AND b.fee_cents IS NOT NULL
+      AND b.status IN ('confirmed', 'completed') AND b.ends_at <= NOW()
+    RETURNING b.id, b.title, b.talent_paid_cents, b.currency, (SELECT name FROM talents WHERE id = b.talent_id) AS talent_name
+  `;
+  return rows.map((row: any) => ({
+    id: row.id,
+    title: row.title,
+    talent_name: row.talent_name,
+    paid_cents: Number(row.talent_paid_cents),
+    currency: row.currency,
+  }));
+}
+
+/** Undo a recorded payment (e.g. marked by mistake) */
+export async function clearPayout(scope: BookingScope, bookingId: string): Promise<boolean> {
+  const rows = await sql`
+    UPDATE bookings b SET talent_paid_at = NULL, talent_paid_cents = NULL, talent_paid_reference = NULL,
+      talent_paid_by = NULL, updated_at = NOW()
+    WHERE b.id = ${bookingId} AND ${talentVisible(scope, 'b.talent_id')} AND b.talent_paid_at IS NOT NULL
+    RETURNING b.id
+  `;
+  return rows.length > 0;
+}
+
+/** Count and total owed, per currency (dashboard) */
+export async function summariseOwedPayouts(scope: BookingScope): Promise<{ count: number; totals: { currency: string; cents: number }[] }> {
+  const rows = await sql`
+    SELECT b.currency, COUNT(*) AS n,
+      SUM(b.fee_cents - ROUND(b.fee_cents * COALESCE(b.commission_percent, 0) / 100)::int) AS cents
+    FROM bookings b
+    WHERE ${talentVisible(scope, 'b.talent_id')}
+      AND b.talent_paid_at IS NULL AND b.fee_cents IS NOT NULL
+      AND b.status IN ('confirmed', 'completed') AND b.ends_at <= NOW()
+    GROUP BY b.currency
+  `;
+  return {
+    count: rows.reduce((sum: number, row: any) => sum + Number(row.n), 0),
+    totals: rows.map((row: any) => ({ currency: row.currency, cents: Number(row.cents) })),
+  };
 }

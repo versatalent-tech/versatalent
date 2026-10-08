@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CRM_CURRENCIES } from "@/lib/crm/types";
-import { BOOKING_STATUSES, TALENT_RESPONSES, commissionCents, netCents, type Booking, type BookingStatus, type Clash } from "@/lib/bookings/types";
+import { BOOKING_STATUSES, TALENT_RESPONSES, commissionCents, netCents, payoutState, type Booking, type BookingStatus, type Clash } from "@/lib/bookings/types";
 import { Field, errorMessage, formatMoney, parseMoney, selectClass } from "@/components/crm/shared";
 
 export interface BookingOptions {
@@ -23,6 +23,7 @@ export interface BookingOptions {
     logistics: boolean;
     availability: boolean;
     rates: boolean;
+    payouts: boolean;
     delete: boolean;
   };
   hasPersonalAccount: boolean;
@@ -434,6 +435,26 @@ export function BookingDialog({
                 </div>
               </div>
               <p className="text-xs text-gray-500">The talent only ever sees what they receive.</p>
+              {booking?.money && (() => {
+                const state = payoutState({ status: booking.status, ends_at: booking.ends_at, fee_cents: booking.money.fee_cents, paid_at: booking.money.paid_at });
+                if (state === "paid")
+                  return (
+                    <p className="text-xs font-medium text-green-700">
+                      Paid to talent {new Date(booking.money.paid_at!).toLocaleDateString("en-GB")}: {formatMoney(booking.money.paid_cents, booking.money.currency)}
+                      {booking.money.paid_reference ? ` (ref ${booking.money.paid_reference})` : ""}
+                    </p>
+                  );
+                if (state === "owed")
+                  return (
+                    <p className="text-xs font-medium text-amber-700">
+                      Talent not paid yet ·{" "}
+                      <Link href="/admin/bookings/payouts" className="underline">
+                        Payouts
+                      </Link>
+                    </p>
+                  );
+                return null;
+              })()}
             </div>
           )}
 

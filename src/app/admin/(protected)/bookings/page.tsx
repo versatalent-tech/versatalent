@@ -18,7 +18,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { CalendarPlus, ChevronLeft, ChevronRight, Loader2, Percent, Plus, Rss, X } from "lucide-react";
+import { Banknote, CalendarPlus, ChevronLeft, ChevronRight, Loader2, Percent, Plus, Rss, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
@@ -263,6 +263,14 @@ export default function BookingsCalendarPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              {options?.can.payouts && (
+                <Button asChild variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white hover:text-black">
+                  <Link href="/admin/bookings/payouts">
+                    <Banknote className="mr-2 h-4 w-4" />
+                    Payouts
+                  </Link>
+                </Button>
+              )}
               {options?.can.rates && (
                 <Button asChild variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white hover:text-black">
                   <Link href="/admin/bookings/rates">
