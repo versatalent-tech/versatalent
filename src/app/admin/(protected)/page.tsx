@@ -41,12 +41,14 @@ import type {
   ScopedDashboardSummary,
 } from "@/lib/db/repositories/dashboard";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
+import { BOOKING_STATUSES, type Booking } from "@/lib/bookings/types";
 import type { PaymentMethod } from "@/lib/db/types";
 
 const SECTIONS = [
   {
-    title: "Clients & sales pipeline",
+    title: "Bookings & sales",
     links: [
+      { title: "Bookings calendar", description: "Holds, confirmed jobs, availability", icon: Calendar, href: "/admin/bookings" },
       { title: "Pipeline", description: "Deals from lead to won", icon: KanbanSquare, href: "/admin/crm" },
       { title: "Enquiries", description: "Website form messages", icon: Inbox, href: "/admin/crm/enquiries" },
       { title: "Clients", description: "Brands, venues and contacts", icon: Building2, href: "/admin/crm/clients" },
@@ -127,8 +129,44 @@ function RevenueLines({ current, previous }: { current: CurrencyTotal[]; previou
 
 type Viewer = { name: string | null; role: string; canUseCrm: boolean };
 type DashboardResponse =
-  | ({ view: "full"; viewer: Viewer } & DashboardSummary)
-  | ({ view: "scoped"; viewer: Viewer } & ScopedDashboardSummary);
+  | ({ view: "full"; viewer: Viewer; upcoming_bookings: Booking[] } & DashboardSummary)
+  | ({ view: "scoped"; viewer: Viewer; upcoming_bookings: Booking[] } & ScopedDashboardSummary);
+
+function NextBookingsCard({ bookings }: { bookings: Booking[] }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">Next bookings</CardTitle>
+        <Link href="/admin/bookings" className="text-sm text-gray-500 hover:text-gold">
+          Calendar
+        </Link>
+      </CardHeader>
+      <CardContent>
+        {bookings.length === 0 ? (
+          <p className="text-sm text-gray-500">Nothing booked yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {bookings.map((b) => (
+              <li key={b.id} className="flex items-start justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {b.talent.name}: {b.title}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {format(new Date(b.starts_at), "EEE d MMM, HH:mm")}
+                    {b.location ? ` · ${b.location}` : ""}
+                  </p>
+                  {b.call_time && <p className="text-xs text-gray-500">Call: {b.call_time}</p>}
+                </div>
+                {b.status === "hold" && <Badge variant="outline">{BOOKING_STATUSES.hold}</Badge>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function AttentionList({ items }: { items: DashboardAttentionItem[] }) {
   return (
@@ -199,16 +237,25 @@ function UpcomingEventsCard({ events, linkToAll }: { events: DashboardUpcomingEv
   );
 }
 
-function ScopedView({ summary, canUseCrm }: { summary: ScopedDashboardSummary; canUseCrm: boolean }) {
+function ScopedView({
+  summary,
+  canUseCrm,
+  bookings,
+}: {
+  summary: ScopedDashboardSummary;
+  canUseCrm: boolean;
+  bookings: Booking[];
+}) {
   return (
     <>
       <AttentionList items={summary.attention} />
 
-      {canUseCrm && (
-        <section>
-          <h2 className="mb-3 text-lg font-semibold">Clients & sales</h2>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {SECTIONS[0].links.map((link) => {
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">{canUseCrm ? "Bookings & sales" : "Bookings"}</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          {SECTIONS[0].links
+            .filter((link) => canUseCrm || link.href === "/admin/bookings")
+            .map((link) => {
               const Icon = link.icon;
               return (
                 <Link key={link.href} href={link.href} className="flex items-center gap-3 rounded-lg border bg-white p-4 transition-shadow hover:shadow-md">
@@ -217,9 +264,8 @@ function ScopedView({ summary, canUseCrm }: { summary: ScopedDashboardSummary; c
                 </Link>
               );
             })}
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Your talents</h2>
@@ -260,6 +306,7 @@ function ScopedView({ summary, canUseCrm }: { summary: ScopedDashboardSummary; c
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
+        <NextBookingsCard bookings={bookings} />
         <UpcomingEventsCard events={summary.upcoming_events} linkToAll={false} />
       </section>
     </>
@@ -376,7 +423,9 @@ export default function AdminPage() {
               </div>
             )}
 
-            {summary?.view === "scoped" && <ScopedView summary={summary} canUseCrm={summary.viewer.canUseCrm} />}
+            {summary?.view === "scoped" && (
+              <ScopedView summary={summary} canUseCrm={summary.viewer.canUseCrm} bookings={summary.upcoming_bookings} />
+            )}
 
             {summary?.view === "full" && (
               <>
@@ -429,6 +478,7 @@ export default function AdminPage() {
 
                 {/* Upcoming events + recent orders */}
                 <section className="grid gap-6 lg:grid-cols-2">
+                  <NextBookingsCard bookings={summary.upcoming_bookings} />
                   <UpcomingEventsCard events={summary.upcoming_events} linkToAll />
 
                   <Card>

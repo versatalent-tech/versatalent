@@ -1,6 +1,6 @@
 # VersaTalent CRM, Outreach, KPI & Talent Portal: Plan
 
-_Status: Phases 0–1 built · decisions agreed 8 Oct 2026_
+_Status: Phases 0–2 built · decisions agreed 8 Oct 2026_
 
 ## 1. Goal
 
@@ -190,7 +190,7 @@ Each phase ships on its own and is usable without the next one.
 |---|---|---|---|
 | **0. Foundation** ✅ built | Team roles + permission map; Team page with invite/reset links; talent assignments; login throttling; audit log; role-aware dashboard (see §9) | M | – |
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
-| **2. Bookings & calendar** | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
+| **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
 | **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
@@ -281,3 +281,44 @@ Migration `025_crm_core.sql` adds `organisations`, `contacts`, `deals`, `activit
 **Dashboard:** new enquiries, your overdue tasks and quiet deals appear under "Needs attention", with CRM links for Admins and Managers.
 
 **Go-live:** run migration 025 on production before deploying this code.
+
+## 11. Phase 2: what was built
+
+Migration `026_bookings_calendar.sql` adds `talents.commission_percent`, `bookings`, `talent_availability` and `calendar_feeds`.
+
+**Calendar (`/admin/bookings`, all team roles):**
+- Month, week and list views, with a talent filter.
+- Holds are dashed, confirmed bookings green, completed grey and cancelled struck through.
+- Unavailable days are striped. Public events can be shown as an optional ★ layer.
+- Click a day to add a booking, or drag a booking to another day; times are kept and clashes are checked.
+
+**Booking form:**
+- Talent, status, times, location, link to a deal and client, on-site contact, brief, call time and logistics notes.
+- Fee and commission %, with the agency's share and the talent's net worked out as you type.
+- "Show to talent" switch, and "talent can see client's name" switch (default off).
+
+**Commission rates (`/admin/bookings/rates`, Admin only):** one rate per talent. A new booking copies the current rate; changing a rate later doesn't change existing bookings.
+
+**Clashes:** a booking that overlaps another hold or confirmed booking, or falls on an unavailable day (UK dates), gets a warning listing the clashes, with "Save anyway".
+
+**Access:**
+
+| | Admin | Manager | Road Manager |
+|---|---|---|---|
+| See bookings | all | assigned talents | assigned talents |
+| Fees, commission, net | ✓ | ✓ | removed by the server |
+| Create / edit / cancel | ✓ | ✓ | – |
+| Call time & logistics notes | ✓ | ✓ | ✓ |
+| Availability | ✓ | assigned | assigned |
+| Client-visibility switch | ✓ | ✓ | – |
+| Delete bookings, commission rates | ✓ | – | – |
+
+**Calendar subscription:** a private iCal link per person (`/api/calendar/ics/<token>.ics`) for Google, Apple or Outlook. It covers bookings and unavailable days from 60 days back to a year ahead, never includes money, and can be revoked or reissued. It needs a personal account, not the env admin login.
+
+**Links to the rest:**
+- Deals have a Bookings card. "Add" is prefilled from the deal, and when there's one talent the deal value becomes the fee. Booking changes are logged on the deal's timeline.
+- Dashboard: a "Next bookings" list for every role, a calendar link, and an alert for holds within 14 days.
+
+**Moved to Phase 2b: documents** (contracts, riders, briefs). Current uploads are publicly readable by URL, so documents need a private store and a download route that checks access. That's worth building on its own.
+
+**Go-live:** run migration 026 on production before deploying this code.

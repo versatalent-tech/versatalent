@@ -7,6 +7,7 @@ import {
 } from '@/lib/db/repositories/dashboard';
 import { getCrmAttention, getCrmScope } from '@/lib/db/repositories/crm';
 import { getTalentScope } from '@/lib/db/repositories/team';
+import { countHoldsStartingSoon, getBookingScope, listUpcomingBookings } from '@/lib/db/repositories/bookings';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
 
@@ -24,15 +25,30 @@ export async function GET() {
 
   try {
     const scope = await getTalentScope(session);
-    const [summary, crmItems] = await Promise.all([
+    const bookingScope = await getBookingScope(session);
+    const [summary, crmItems, upcomingBookings, holdsSoon] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
+      listUpcomingBookings(bookingScope),
+      countHoldsStartingSoon(bookingScope),
     ]);
+
+    const bookingItems: DashboardAttentionItem[] =
+      holdsSoon > 0 && can(session.role, 'bookings.edit')
+        ? [{
+            key: 'holds-soon',
+            severity: 'medium',
+            label: `${plural(holdsSoon, 'booking')} in the next 14 days still on hold`,
+            detail: 'Confirm with the client or release the date.',
+            href: '/admin/bookings',
+          }]
+        : [];
+    const attention = [...crmItems, ...bookingItems, ...summary.attention];
 
     const data =
       scope === 'all'
-        ? { view: 'full' as const, viewer, ...summary, attention: [...crmItems, ...summary.attention] }
-        : { view: 'scoped' as const, viewer, ...summary, attention: [...crmItems, ...summary.attention] };
+        ? { view: 'full' as const, viewer, ...summary, upcoming_bookings: upcomingBookings, attention }
+        : { view: 'scoped' as const, viewer, ...summary, upcoming_bookings: upcomingBookings, attention };
 
     const response = successResponse(data);
     response.headers.set('Cache-Control', 'private, no-store');
