@@ -192,14 +192,14 @@ Each phase ships on its own and is usable without the next one.
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
 | **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
-| **3c. Member accounts** | Customers sign in by email link to see their tier, points, benefits, history and cards, edit their profile and consents; card-tap page tightened (see §14) | M | email provider + own domain |
+| **3c. Member accounts** ⏸ deferred to a later stage | Customers sign in by email link to see their tier, points, benefits, history and cards, edit their profile and consents; card-tap page tightened (see §14) | M | email provider + own domain |
 | **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
 | **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
 | **6. Finance (optional)** | Invoices and talent payouts; sync with the accounting package | M | 2 |
 | **Later** | Outreach v2 (sending + tracking), e-signature for contracts, real profile-view analytics | – | – |
 
-Suggested order: 0 → 1 → 2 → 3 → 3c → 3b → 4 → 5. The talent portal comes after bookings so it has real content on day one. Perks and points (part of 3) can ship early, since points already exist.
+Suggested order: 0 → 1 → 2 → 3 → 3b → 4 → 5, with 3c (member accounts) at a later stage. The talent portal comes after bookings so it has real content on day one. Perks and points (part of 3) can ship early, since points already exist.
 
 ## 7. Build vs buy
 
@@ -375,7 +375,9 @@ Migration `028_talent_payouts.sql` adds `talent_paid_at`, `talent_paid_cents`, `
 
 **Go-live:** run migration 028 on production before deploying.
 
-## 14. Member accounts for customers (Phase 3c, planned)
+## 14. Member accounts for customers (Phase 3c, deferred)
+
+_Deferred on 8 Oct 2026: customers keep using the card tap for now. This section holds the design for when it's picked up._
 
 ### Why
 Today, VIP customers see their tier, points, benefits and history only by **tapping their NFC card**, which opens `/vip/<member id>`. That works, but:
