@@ -10,6 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   AlertTriangle,
   ArrowRight,
+  Building2,
+  CheckSquare,
+  Inbox,
+  KanbanSquare,
   Calendar,
   CheckCircle2,
   CreditCard,
@@ -40,6 +44,15 @@ import { ROLE_LABELS } from "@/lib/auth/permissions";
 import type { PaymentMethod } from "@/lib/db/types";
 
 const SECTIONS = [
+  {
+    title: "Clients & sales pipeline",
+    links: [
+      { title: "Pipeline", description: "Deals from lead to won", icon: KanbanSquare, href: "/admin/crm" },
+      { title: "Enquiries", description: "Website form messages", icon: Inbox, href: "/admin/crm/enquiries" },
+      { title: "Clients", description: "Brands, venues and contacts", icon: Building2, href: "/admin/crm/clients" },
+      { title: "Tasks", description: "Your follow-ups", icon: CheckSquare, href: "/admin/crm/tasks" },
+    ],
+  },
   {
     title: "Roster & content",
     links: [
@@ -112,7 +125,7 @@ function RevenueLines({ current, previous }: { current: CurrencyTotal[]; previou
   );
 }
 
-type Viewer = { name: string | null; role: string };
+type Viewer = { name: string | null; role: string; canUseCrm: boolean };
 type DashboardResponse =
   | ({ view: "full"; viewer: Viewer } & DashboardSummary)
   | ({ view: "scoped"; viewer: Viewer } & ScopedDashboardSummary);
@@ -186,10 +199,27 @@ function UpcomingEventsCard({ events, linkToAll }: { events: DashboardUpcomingEv
   );
 }
 
-function ScopedView({ summary }: { summary: ScopedDashboardSummary }) {
+function ScopedView({ summary, canUseCrm }: { summary: ScopedDashboardSummary; canUseCrm: boolean }) {
   return (
     <>
       <AttentionList items={summary.attention} />
+
+      {canUseCrm && (
+        <section>
+          <h2 className="mb-3 text-lg font-semibold">Clients & sales</h2>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {SECTIONS[0].links.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link key={link.href} href={link.href} className="flex items-center gap-3 rounded-lg border bg-white p-4 transition-shadow hover:shadow-md">
+                  <Icon className="h-5 w-5 flex-shrink-0 text-gold" />
+                  <span className="font-medium">{link.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Your talents</h2>
@@ -346,7 +376,7 @@ export default function AdminPage() {
               </div>
             )}
 
-            {summary?.view === "scoped" && <ScopedView summary={summary} />}
+            {summary?.view === "scoped" && <ScopedView summary={summary} canUseCrm={summary.viewer.canUseCrm} />}
 
             {summary?.view === "full" && (
               <>

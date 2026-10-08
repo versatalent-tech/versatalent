@@ -1,6 +1,6 @@
 # VersaTalent CRM, Outreach, KPI & Talent Portal: Plan
 
-_Status: Phase 0 built (branch `feat/team-roles-access`) · decisions agreed 8 Oct 2026_
+_Status: Phases 0–1 built · decisions agreed 8 Oct 2026_
 
 ## 1. Goal
 
@@ -189,7 +189,7 @@ Each phase ships on its own and is usable without the next one.
 | Phase | Scope | Size | Depends on |
 |---|---|---|---|
 | **0. Foundation** ✅ built | Team roles + permission map; Team page with invite/reset links; talent assignments; login throttling; audit log; role-aware dashboard (see §9) | M | – |
-| **1. CRM core** | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) | L | 0 |
+| **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
 | **2. Bookings & calendar** | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
 | **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
@@ -258,3 +258,26 @@ CREATE TABLE meetings (id uuid PK, title text, starts_at timestamptz, ends_at ti
 - **Audit log:** team changes and link use are recorded in `audit_log`.
 
 **Go-live order:** run migration 024 on production → deploy → sign in with the env admin → add yourself as Admin, the COO as Manager and the road manager as Road Manager (with the DJ assigned) → send their links.
+
+## 10. Phase 1: what was built
+
+Migration `025_crm_core.sql` adds `organisations`, `contacts`, `deals`, `activities` and `enquiries`.
+
+**Screens (`/admin/crm`, for Admins and Managers; Road Managers are redirected):**
+- **Pipeline:** a board by stage with drag-and-drop (a stage menu on phones). Shows open, weighted and recently won totals per currency. Flags overdue tasks and deals with no activity for 14 days.
+- **Deal page:** stage buttons, details, contact, and a timeline. Log notes, calls, emails and meetings, or add tasks with a due date and owner. Stage moves are logged automatically.
+- **Enquiries inbox:** website contact, brand and talent forms. Convert a message to a deal, reusing the contact (by email) and client (by name) if they exist, or archive it or mark it as spam. Talent applications can't become deals.
+- **Clients:** organisations and people, with search and tags. Contacts record their GDPR lawful basis and a do-not-contact flag.
+- **My tasks:** overdue, today, upcoming and recently done; mine or everyone's.
+
+**Visibility:**
+- Managers see deals they own or created, or that involve their assigned talents, plus the clients, contacts and activities around those deals.
+- They can only add their own talents to a deal. Talents already on a deal stay when it's edited.
+- Website enquiries are visible to Admins and Managers (permission `enquiries.view`), because they aren't tied to a talent yet.
+- Only Admins can delete deals, clients and contacts. Notes can be deleted by whoever logged them.
+
+**Website forms:** each submission still goes to Netlify Forms (email alerts) and now also to `/api/enquiries`. The form counts as sent if either accepts it. There's a hidden honeypot field (also registered with Netlify) and a limit of 5 messages per hour per IP.
+
+**Dashboard:** new enquiries, your overdue tasks and quiet deals appear under "Needs attention", with CRM links for Admins and Managers.
+
+**Go-live:** run migration 025 on production before deploying this code.
