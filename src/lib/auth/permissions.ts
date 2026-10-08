@@ -29,6 +29,9 @@ export type Permission =
   | 'bookings.edit'
   | 'bookings.fees'
   | 'bookings.client_visibility'
+  | 'bookings.logistics' // call time and logistics notes only
+  | 'availability.edit'
+  | 'rates.manage' // admins only: talents' commission rates
   | 'crm.view'
   | 'crm.edit'
   | 'crm.delete' // admins only: deleting clients, contacts and deals
@@ -46,11 +49,13 @@ const ROLE_PERMISSIONS: Record<TeamRole, readonly Permission[] | '*'> = {
     'bookings.edit',
     'bookings.fees',
     'bookings.client_visibility',
+    'bookings.logistics',
+    'availability.edit',
     'crm.view',
     'crm.edit',
     'enquiries.view',
   ],
-  road_manager: ['dashboard.view', 'talents.view', 'events.view', 'bookings.view'],
+  road_manager: ['dashboard.view', 'talents.view', 'events.view', 'bookings.view', 'bookings.logistics', 'availability.edit'],
 };
 
 export function isTeamRole(role: string | undefined | null): role is TeamRole {

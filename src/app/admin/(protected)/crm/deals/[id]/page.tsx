@@ -11,6 +11,7 @@ import { DEAL_SOURCES, DEAL_STAGES, type Activity, type Deal, type DealStage } f
 import { CrmShell, StageBadge, api, errorMessage, formatMoney, useCrmOptions } from "@/components/crm/shared";
 import { DealDialog } from "@/components/crm/DealDialog";
 import { ActivityComposer, Timeline } from "@/components/crm/Timeline";
+import { DealBookings } from "@/components/bookings/DealBookings";
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -168,6 +169,8 @@ export default function DealPage() {
               </dl>
             </CardContent>
           </Card>
+
+          <DealBookings deal={deal} />
 
           {deal.contact && (
             <Card>
