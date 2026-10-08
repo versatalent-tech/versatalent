@@ -72,9 +72,9 @@ function LoginFormContent() {
                 <Lock className="h-6 w-6 text-gold" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
+            <CardTitle className="text-2xl text-center">Team Sign In</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access the admin panel
+              Admins, managers and road managers
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -88,14 +88,14 @@ function LoginFormContent() {
 
               <div className="space-y-2">
                 <label htmlFor="username" className="text-sm font-medium">
-                  Username
+                  Email
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Enter username"
+                    placeholder="you@example.com"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="pl-10"
@@ -133,15 +133,9 @@ function LoginFormContent() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-500">
-              <p>Default credentials (development only):</p>
-              <p className="font-mono text-xs mt-1">
-                Username: admin | Password: changeme
-              </p>
-              <p className="text-xs mt-2 text-amber-600">
-                ⚠️ Change credentials in production via environment variables
-              </p>
-            </div>
+            <p className="mt-6 text-center text-sm text-gray-500">
+              New to the team or forgotten your password? Ask an admin for a sign-in link.
+            </p>
           </CardContent>
         </Card>
       </section>

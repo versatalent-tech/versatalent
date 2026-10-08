@@ -12,7 +12,11 @@ export const STAFF_SESSION_COOKIE = 'staff_session';
 // Session duration: 24 hours
 export const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 
-export type SessionRole = 'admin' | 'staff';
+// admin/staff run the venue tools; manager/road_manager are team roles that
+// only reach the admin areas their permissions allow (see lib/auth/permissions)
+export type SessionRole = 'admin' | 'staff' | 'manager' | 'road_manager';
+
+const SESSION_ROLES: readonly string[] = ['admin', 'staff', 'manager', 'road_manager'];
 
 export interface SessionPayload {
   userId?: string; // database user id; absent for the env-configured admin
@@ -111,7 +115,7 @@ export async function verifySession(token: string | undefined | null): Promise<S
     if (typeof payload.exp !== 'number' || Date.now() > payload.exp) {
       return null;
     }
-    if (payload.role !== 'admin' && payload.role !== 'staff') {
+    if (!SESSION_ROLES.includes(payload.role)) {
       return null;
     }
 

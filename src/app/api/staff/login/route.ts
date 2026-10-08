@@ -7,6 +7,8 @@ import {
   SESSION_COOKIE_OPTIONS,
   signSession,
 } from '@/lib/auth/session';
+import { getClientIp, isLoginThrottled, recordLoginAttempt, THROTTLED_MESSAGE } from '@/lib/auth/login-throttle';
+import { recordLogin } from '@/lib/db/repositories/team';
 
 /**
  * Staff Login API
@@ -26,15 +28,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const ip = getClientIp(request);
+
+    if (await isLoginThrottled(normalizedEmail, ip)) {
+      return NextResponse.json({ success: false, error: THROTTLED_MESSAGE }, { status: 429 });
+    }
+
     // Find user by email
     const users = await sql`
       SELECT id, name, email, password_hash, role
       FROM users
-      WHERE email = ${email.toLowerCase()}
+      WHERE email = ${normalizedEmail} AND is_active = true
       LIMIT 1
     `;
 
     if (users.length === 0) {
+      await recordLoginAttempt(normalizedEmail, ip, false);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -62,6 +72,7 @@ export async function POST(request: NextRequest) {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
+      await recordLoginAttempt(normalizedEmail, ip, false);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -78,6 +89,8 @@ export async function POST(request: NextRequest) {
 
     const cookieStore = await cookies();
     cookieStore.set(STAFF_SESSION_COOKIE, sessionToken, SESSION_COOKIE_OPTIONS);
+    await recordLoginAttempt(normalizedEmail, ip, true);
+    await recordLogin(user.id);
 
     // Return success with user data (no sensitive info)
     return NextResponse.json({

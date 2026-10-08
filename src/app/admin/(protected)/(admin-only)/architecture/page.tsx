@@ -96,25 +96,25 @@ export default function ArchitecturePage() {
               System Architecture & Technical Overview
             </h2>
             <div className="border-t border-gray-700 pt-8 mt-8">
-              <p className="text-gray-400 mb-2">Version 2.0 | February 2026</p>
+              <p className="text-gray-400 mb-2">Version 2.1 | October 2026</p>
               <p className="text-gray-400">Prepared for: Shareholders, Investors, Technical Partners</p>
             </div>
             <div className="mt-16 grid grid-cols-4 gap-6 text-center">
               <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-3xl font-bold text-gold">60+</p>
-                <p className="text-sm text-gray-400">API Endpoints</p>
+                <p className="text-3xl font-bold text-gold">100+</p>
+                <p className="text-sm text-gray-400">API Handlers (60 routes)</p>
               </div>
               <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-3xl font-bold text-gold">15+</p>
+                <p className="text-3xl font-bold text-gold">21</p>
                 <p className="text-sm text-gray-400">Database Tables</p>
               </div>
               <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-3xl font-bold text-gold">25+</p>
-                <p className="text-sm text-gray-400">Frontend Pages</p>
+                <p className="text-3xl font-bold text-gold">35</p>
+                <p className="text-sm text-gray-400">Pages</p>
               </div>
               <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-3xl font-bold text-gold">100K+</p>
-                <p className="text-sm text-gray-400">User Capacity</p>
+                <p className="text-3xl font-bold text-gold">3</p>
+                <p className="text-sm text-gray-400">Payment Methods</p>
               </div>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function ArchitecturePage() {
             Executive Summary
           </h2>
           <p className="text-lg text-gray-600 mb-8">
-            VersaTalent is an <strong>enterprise-grade, full-stack SaaS platform</strong> designed for talent management agencies, event organizers, and hospitality businesses.
+            VersaTalent runs on a <strong>custom full-stack web platform</strong> that combines the public agency website with the tools behind it: talent and event management, NFC membership cards, a VIP loyalty programme, and a point-of-sale system for events.
           </p>
 
           <div className="grid grid-cols-2 gap-6 mb-8">
@@ -157,21 +157,21 @@ export default function ArchitecturePage() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 <h4 className="font-semibold text-green-800">Production-Deployed</h4>
               </div>
-              <p className="text-sm text-green-700">Already running on Netlify Edge with SSL, CDN, DDoS protection</p>
+              <p className="text-sm text-green-700">Live on Netlify with automatic SSL and CDN delivery</p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <h4 className="font-semibold text-green-800">Multi-Tenant Ready</h4>
+                <h4 className="font-semibold text-green-800">Role-Based Access</h4>
               </div>
-              <p className="text-sm text-green-700">Role-based access control, supports multiple organizations</p>
+              <p className="text-sm text-green-700">Admin and staff areas guarded server-side; talent and VIP roles already in the data model</p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 <h4 className="font-semibold text-green-800">Modular & Extensible</h4>
               </div>
-              <p className="text-sm text-green-700">JSONB fields for flexibility, components can be replaced independently</p>
+              <p className="text-sm text-green-700">Repository layer per domain, JSONB for industry-specific talent data, swappable payment provider</p>
             </div>
           </div>
         </section>
@@ -210,8 +210,8 @@ export default function ArchitecturePage() {
               <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-gold flex-shrink-0 mt-1" />
                 <div>
-                  <h4 className="font-semibold">Analytics Dashboard</h4>
-                  <p className="text-sm text-gray-600">Real-time metrics for sales, engagement, and performance</p>
+                  <h4 className="font-semibold">Admin Dashboard</h4>
+                  <p className="text-sm text-gray-600">Live figures for sales, events, VIP members and check-ins, plus a list of items needing action</p>
                 </div>
               </div>
             </div>
@@ -230,23 +230,23 @@ export default function ArchitecturePage() {
               <tbody>
                 <tr className="border-b">
                   <td className="p-3 font-medium">Admin</td>
-                  <td className="p-3 text-gray-600">Platform owner/manager</td>
+                  <td className="p-3 text-gray-600">Agency management (single login configured on the server)</td>
                   <td className="p-3"><span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">Full Access</span></td>
                 </tr>
                 <tr className="border-b bg-gray-50">
                   <td className="p-3 font-medium">Staff</td>
-                  <td className="p-3 text-gray-600">Event/retail employees</td>
+                  <td className="p-3 text-gray-600">Event and bar staff (individual logins)</td>
                   <td className="p-3"><span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">POS & Check-ins</span></td>
                 </tr>
                 <tr className="border-b">
                   <td className="p-3 font-medium">Talent</td>
-                  <td className="p-3 text-gray-600">Models, musicians, athletes</td>
-                  <td className="p-3"><span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Profile Management</span></td>
+                  <td className="p-3 text-gray-600">Models, musicians, athletes. Accounts linked to profiles; portal in planning</td>
+                  <td className="p-3"><span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Public Profile (portal planned)</span></td>
                 </tr>
                 <tr className="border-b bg-gray-50">
                   <td className="p-3 font-medium">VIP Customer</td>
                   <td className="p-3 text-gray-600">NFC card holders</td>
-                  <td className="p-3"><span className="bg-gold/20 text-yellow-800 px-2 py-1 rounded text-sm">Loyalty Dashboard</span></td>
+                  <td className="p-3"><span className="bg-gold/20 text-yellow-800 px-2 py-1 rounded text-sm">Membership Card Page</span></td>
                 </tr>
                 <tr>
                   <td className="p-3 font-medium">Public Visitor</td>
@@ -268,37 +268,40 @@ export default function ArchitecturePage() {
           <div className="bg-gray-900 text-white p-6 rounded-lg font-mono text-sm overflow-x-auto mb-8">
             <pre className="whitespace-pre">
 {`┌─────────────────────────────────────────────────────────────────┐
-│                        EXTERNAL CLIENTS                          │
-│   Admin Dashboard │ Staff POS │ Talent │ VIP Members │ Public    │
+│                            USERS                                 │
+│  Admin  │  Staff (POS, event day)  │  VIP card pages  │  Public  │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   CDN / EDGE NETWORK (Netlify)                   │
-│        Static Assets • SSL/TLS • DDoS Protection • Caching       │
+│                     NETLIFY (CDN + Functions)                    │
+│          SSL • Static assets • Git-based deploys                 │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      FRONTEND (Next.js 15)                       │
-│    React 18 • TypeScript • Tailwind CSS • shadcn/ui • Motion    │
+│                       NEXT.JS 15 APP                             │
+│   React 18 • TypeScript • Tailwind CSS • shadcn/ui               │
+│   Page guards: signed admin/staff session checked server-side    │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   API LAYER (60+ Endpoints)                      │
-│  /admin/* │ /staff/* │ /pos/* │ /vip/* │ /talents/* │ /events/* │
-│              Middleware: Auth • Validation • Rate Limiting       │
+│                  API ROUTES (60 routes, 103 handlers)            │
+│  /admin/* │ /staff/* │ /pos/* │ /vip/* │ /nfc/* │ /talents/* ... │
+│  Each route checks its own role • parameterised SQL              │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
-        ┌───────────────────────┼───────────────────────┐
-        │                       │                       │
-        ▼                       ▼                       ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│     NEON      │     │     SUMUP     │     │  INSTAGRAM    │
-│  PostgreSQL   │     │   Payments    │     │     API       │
-│  (Serverless) │     │   Webhooks    │     │  Social Feed  │
-└───────────────┘     └───────────────┘     └───────────────┘`}
+     ┌──────────────┬───────────┴──┬──────────────┬──────────────┐
+     ▼              ▼              ▼              ▼              ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│   NEON   │  │  SUMUP   │  │ NETLIFY  │  │INSTAGRAM │  │ NETLIFY  │
+│ Postgres │  │ Payments │  │  Blobs   │  │  oEmbed  │  │  Forms   │
+│21 tables │  │+webhooks │  │ (images) │  │ (posts)  │  │(enquiry) │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘
+
+  NFC readers at the till connect through a local bridge
+  (nfc-bridge-server) that relays card taps to the POS page.`}
             </pre>
           </div>
 
@@ -322,17 +325,17 @@ export default function ArchitecturePage() {
                 <li>• Neon PostgreSQL</li>
                 <li>• SumUp Integration</li>
                 <li>• bcryptjs Auth</li>
-                <li>• Zod Validation</li>
+                <li>• Netlify Blobs (uploads)</li>
               </ul>
             </div>
             <div className="border rounded-lg p-4">
               <Shield className="h-6 w-6 text-gold mb-2" />
               <h4 className="font-semibold mb-1">Infrastructure</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Netlify Edge</li>
+                <li>• Netlify Functions</li>
                 <li>• Global CDN</li>
                 <li>• Auto SSL</li>
-                <li>• DDoS Protection</li>
+                <li>• Git-based deploys</li>
                 <li>• Auto-scaling</li>
               </ul>
             </div>
@@ -347,18 +350,18 @@ export default function ArchitecturePage() {
           </h2>
 
           <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-4">API Domains (60+ Endpoints)</h3>
+            <h3 className="text-xl font-semibold mb-4">API Domains (60 routes, 103 handlers)</h3>
             <div className="grid grid-cols-3 gap-4">
               {[
-                { name: "Authentication", endpoints: "/api/admin/auth/*, /api/staff/*", count: 6 },
-                { name: "Talents", endpoints: "/api/talents/*", count: 5 },
-                { name: "Events", endpoints: "/api/events/*", count: 6 },
-                { name: "VIP System", endpoints: "/api/vip/*", count: 10 },
-                { name: "NFC Cards", endpoints: "/api/nfc/*", count: 8 },
-                { name: "POS System", endpoints: "/api/pos/*", count: 12 },
-                { name: "Content", endpoints: "/api/blogs/*, /api/newsletter/*", count: 6 },
-                { name: "Analytics", endpoints: "/api/analytics/*", count: 4 },
-                { name: "Webhooks", endpoints: "/api/webhooks/*", count: 2 },
+                { name: "Authentication", endpoints: "/api/admin/auth/*, /api/staff/login|logout|auth", count: 6 },
+                { name: "Staff Operations", endpoints: "/api/staff/event-day/*, /api/staff/pos/*", count: 4 },
+                { name: "Talents", endpoints: "/api/talents/*", count: 2 },
+                { name: "Events", endpoints: "/api/events/*", count: 3 },
+                { name: "VIP Programme", endpoints: "/api/vip/*, /api/admin/tier-benefits/*", count: 10 },
+                { name: "NFC & Members", endpoints: "/api/nfc/*, /api/users/*", count: 12 },
+                { name: "POS & Payments", endpoints: "/api/pos/*, /api/admin/sumup/*, /api/webhooks/sumup", count: 13 },
+                { name: "Content", endpoints: "/api/blogs/*, /api/newsletter/*, /api/instagram/*", count: 7 },
+                { name: "Uploads & Dashboard", endpoints: "/api/upload, /api/uploads/*, /api/admin/dashboard", count: 3 },
               ].map((domain) => (
                 <div key={domain.name} className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
@@ -372,15 +375,16 @@ export default function ArchitecturePage() {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4">Database Schema (15+ Tables)</h3>
+            <h3 className="text-xl font-semibold mb-4">Database Schema (21 Tables)</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h4 className="font-medium text-gray-700 mb-2">Core Entities</h4>
                 <ul className="text-sm space-y-1 text-gray-600">
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>users</code> - User accounts & roles</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>users</code> - Accounts &amp; roles (admin, staff, artist, vip)</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>talents</code> - Talent profiles & portfolios</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>events</code> - Event records</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>blogs</code> - Content management</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>blog_posts</code> - Blog content</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>newsletter_subscribers</code> - Mailing list</li>
                 </ul>
               </div>
               <div>
@@ -390,13 +394,15 @@ export default function ArchitecturePage() {
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>vip_points_log</code> - Transaction history</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>vip_point_rules</code> - Earning rules</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>vip_tier_benefits</code> - Tier perks</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>vip_consumptions</code>, <code>vip_profiles</code>, <code>vip_checkin_awards</code></li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-medium text-gray-700 mb-2">NFC System</h4>
                 <ul className="text-sm space-y-1 text-gray-600">
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>nfc_cards</code> - Physical cards</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>nfc_checkins</code> - Check-in records</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>checkins</code> - Check-in records</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>nfc_scan_logs</code> - Card scan audit trail</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>nfc_events</code> - NFC-enabled events</li>
                 </ul>
               </div>
@@ -406,7 +412,7 @@ export default function ArchitecturePage() {
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>products</code> - Product catalog</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>pos_orders</code> - Orders</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>pos_order_items</code> - Line items</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>inventory</code> - Stock tracking</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> <code>inventory_movements</code> - Stock changes</li>
                 </ul>
               </div>
             </div>
@@ -435,21 +441,21 @@ export default function ArchitecturePage() {
                   <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Session Management</p>
-                    <p className="text-sm text-gray-600">HTTP-only cookies, SameSite=Strict</p>
+                    <p className="text-sm text-gray-600">HMAC-signed, HTTP-only cookies (SameSite=Lax, Secure), 24-hour expiry</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Transport Security</p>
-                    <p className="text-sm text-gray-600">TLS 1.3 enforced (HTTPS)</p>
+                    <p className="text-sm text-gray-600">HTTPS everywhere via Netlify-managed certificates</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Input Validation</p>
-                    <p className="text-sm text-gray-600">Zod schemas, SQL injection prevention</p>
+                    <p className="font-medium">Injection Protection</p>
+                    <p className="text-sm text-gray-600">Parameterised SQL throughout; blog HTML sanitised with DOMPurify</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -476,21 +482,21 @@ export default function ArchitecturePage() {
                   <Zap className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Global CDN</p>
-                    <p className="text-sm text-gray-600">~50ms latency worldwide</p>
+                    <p className="text-sm text-gray-600">Pages and assets served from Netlify&apos;s CDN</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Zap className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Database Auto-scaling</p>
-                    <p className="text-sm text-gray-600">Neon serverless PostgreSQL</p>
+                    <p className="text-sm text-gray-600">Neon PostgreSQL 17, compute scales 0.25–2 CU</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Zap className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">Caching Layer</p>
-                    <p className="text-sm text-gray-600">In-memory + CDN edge caching</p>
+                    <p className="text-sm text-gray-600">CDN caching of public pages; short-lived in-memory cache per function</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -502,6 +508,17 @@ export default function ArchitecturePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
+            <h3 className="text-xl font-semibold mb-4">Known Gaps &amp; Roadmap</h3>
+            <ul className="text-sm text-gray-700 space-y-2">
+              <li><strong>Login rate limiting:</strong> not yet in place on admin and staff sign-in.</li>
+              <li><strong>Admin accounts:</strong> one shared admin login from server settings; moving to individual accounts with roles.</li>
+              <li><strong>Audit trail:</strong> card scans are logged; admin changes are not yet.</li>
+              <li><strong>Enquiries:</strong> contact, brand and talent forms go to Netlify Forms, outside the database.</li>
+              <li><strong>Planned:</strong> CRM and booking pipeline, talent portal, role-based team access, KPI tracking.</li>
+            </ul>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-6">
@@ -532,7 +549,7 @@ export default function ArchitecturePage() {
                 </tr>
                 <tr>
                   <td className="p-2 font-medium">Auth</td>
-                  <td className="p-2 text-gray-600">Custom JWT</td>
+                  <td className="p-2 text-gray-600">Custom signed session cookies</td>
                   <td className="p-2 text-gray-600">Auth0, Clerk, NextAuth.js</td>
                 </tr>
               </tbody>
@@ -563,7 +580,7 @@ export default function ArchitecturePage() {
               </ol>
             </div>
             <p className="text-sm text-gray-500">
-              Document Version 2.0 | February 2026 | VersaTalent Engineering Team
+              Document Version 2.1 | October 2026 | VersaTalent Engineering Team
             </p>
           </div>
         </section>
