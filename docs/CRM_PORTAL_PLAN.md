@@ -192,13 +192,14 @@ Each phase ships on its own and is usable without the next one.
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
 | **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
+| **3c. Member accounts** ⏸ deferred to a later stage | Customers sign in by email link to see their tier, points, benefits, history and cards, edit their profile and consents; card-tap page tightened (see §14) | M | email provider + own domain |
 | **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
 | **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
 | **6. Finance (optional)** | Invoices and talent payouts; sync with the accounting package | M | 2 |
 | **Later** | Outreach v2 (sending + tracking), e-signature for contracts, real profile-view analytics | – | – |
 
-Suggested order: 0 → 1 → 2 → 3 → 3b → 4 → 5. The talent portal comes after bookings so it has real content on day one. Perks and points (part of 3) can ship early, since points already exist.
+Suggested order: 0 → 1 → 2 → 3 → 3b → 4 → 5, with 3c (member accounts) at a later stage. The talent portal comes after bookings so it has real content on day one. Perks and points (part of 3) can ship early, since points already exist.
 
 ## 7. Build vs buy
 
@@ -373,3 +374,73 @@ Migration `028_talent_payouts.sql` adds `talent_paid_at`, `talent_paid_cents`, `
 **Also:** a dashboard alert for finished jobs not paid yet (with the total owed), a Payouts button on the calendar, and the payment status in the booking form.
 
 **Go-live:** run migration 028 on production before deploying.
+
+## 14. Member accounts for customers (Phase 3c, deferred)
+
+_Deferred on 8 Oct 2026: customers keep using the card tap for now. This section holds the design for when it's picked up._
+
+### Why
+Today, VIP customers see their tier, points, benefits and history only by **tapping their NFC card**, which opens `/vip/<member id>`. That works, but:
+- there's no way in without the card, and they can't update anything themselves;
+- the page works like a hidden link: anyone who taps or reads someone else's card can see that member's points history and the events they checked in to. Email addresses are already hidden.
+
+### What members get (`/member`)
+- **Home:** tier card, points balance, progress to the next tier, and when the membership year ends (same rules as the VIP section).
+- **Benefits:** the benefits for their tier (from VIP → Tier benefits), plus what the next tier unlocks.
+- **History:** points earned and spent, event check-ins, and purchases at the till.
+- **Cards:** their linked NFC cards, with **"Report lost"**, which blocks the card straight away so a found card can't be used.
+- **Profile:** the `vip_profiles` fields that already exist (phone, age range, city, interests). Consents for email, SMS and post are recorded with a timestamp, as UK GDPR/PECR require.
+- **Sign out everywhere.**
+
+### Sign-in: email link, no password
+- The member enters their email and gets a one-time link that's valid for 15 minutes. Clicking it signs them in, with a 30-day session on that device.
+- The reply is always "If that email belongs to a member, we've sent a link", so the form never reveals who is a member.
+- Requests are throttled per email and per IP, using the existing `login_attempts` table.
+- Links are single-use and stored hashed, using the existing `auth_tokens` table with a new `magic` purpose.
+- Members get their own cookie (`member_session`), which is never accepted by team, staff or talent checks.
+
+### Card tap after this phase
+- **Signed in on that phone:** goes straight to `/member`.
+- **Not signed in:** a short public card showing the member's first name, tier and tier benefits (what staff at the door need), plus "Sign in to see your points and history".
+- Points history and check-ins move behind sign-in, which closes the privacy gap. Staff and admins still see everything from the admin side.
+
+### Who can have an account
+**Decision needed:**
+- **(a) Existing members only:** accounts are created by staff when a card is issued, as today.
+- **(b) Open sign-up:** anyone can create an account, then link a card by tapping it while signed in (or have staff link it).
+
+Recommendation: start with (a). It's simpler, and it avoids unverified accounts.
+
+### Data changes (migration 029)
+- `auth_tokens.purpose`: add `'magic'`.
+- `users.email_verified_at`: set the first time a member signs in by link.
+- `member_sessions` (id, user_id, created_at, last_seen_at, revoked_at, user_agent): so "sign out everywhere" and lost-phone revocation work. The signed cookie carries the session id.
+- Reused as they are: `vip_memberships`, `vip_points_log`, `checkins`, `nfc_cards`, `vip_profiles`, `vip_tier_benefits`, and purchase history.
+
+### Email
+- **Transactional only:** sign-in links and a one-off welcome. No marketing.
+- **Plain, branded HTML:** the agency name and logo, with no tracking pixels.
+- **One small module (`lib/email.ts`)** that the rest of the platform will reuse:
+  - "Forgot password" self-service for talents and the team, replacing the hand-sent links;
+  - notifying a talent when a booking is shared with them;
+  - outreach emails later, in Phase 4 v2.
+
+### Email provider
+
+| | Resend (recommended) | Postmark | Brevo |
+|---|---|---|---|
+| Best at | Simple developer API, good deliverability | Best-in-class transactional deliverability | Newsletters with a visual editor, plus transactional |
+| Free tier | 3,000 emails/month (100/day), 1 domain | Test credits only | Daily free allowance |
+| Paid | Pro $20/month for 50,000 | Paid plans; check current pricing | Paid plans; check current pricing |
+| Fit for VersaTalent | ✔ Sign-in links and notifications at your volume fit the free tier | Overkill for now | Consider later if you want to send the newsletter from a proper tool |
+
+Third-party reviews from mid-2026 put Resend's free tier at 3,000 emails/month with a 100/day cap, and Pro at $20/month for 50,000. Check resend.com/pricing before signing up.
+
+### What you need to set up (about 15–30 minutes)
+1. **A domain you own.** The site currently only has `versatalent.netlify.app`, and `versatalent.co.uk` belongs to someone else. You can't send from a Gmail address. Register one (for example through Netlify Domains or any registrar), then attach it to the Netlify site and set `NEXT_PUBLIC_SITE_URL` to it. Links in emails and calendar subscriptions will then use your domain.
+2. **A Resend account.** Add the domain (or a subdomain such as `mail.<domain>`) and add the DNS records it shows (SPF, DKIM). Also add a DMARC record (`p=none` to start).
+3. **An API key, set on Netlify:** `RESEND_API_KEY`, and `EMAIL_FROM` (for example `VersaTalent <hello@<domain>>`). Never paste the key in chat or into the repo.
+4. Tell me when it's done. I'll send a test email, and build Phase 3c once the domain shows as verified.
+
+### Size
+About the same as the talent portal (M): migration 029, the email module, sign-in and sessions, five member pages, the card-tap change, admin tweaks (resend a sign-in link, see last sign-in), and an end-to-end test on a Neon branch.
