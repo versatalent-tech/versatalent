@@ -307,13 +307,17 @@ export default function MembershipCardsPage() {
                         <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-normal">{CARD_REQUEST_STATUSES[r.status]}</span>
                         <span
                           className={`rounded px-2 py-0.5 text-xs font-normal ${
-                            r.payment_status === "paid" || r.payment_status === "waived" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                            ["paid", "waived", "included"].includes(r.payment_status) ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
                           }`}
                         >
                           {PAYMENT_STATUSES[r.payment_status]}
                           {r.payment_status === "paid" ? ` ${money(r.fee_cents)}` : ""}
                         </span>
-                        {r.founding_interest && <span className="rounded bg-gold/20 px-2 py-0.5 text-xs font-normal">Founding interest</span>}
+                        {r.joins_founding ? (
+                          <span className="rounded bg-black px-2 py-0.5 text-xs font-normal text-gold">V•PRIVILEGE Founding</span>
+                        ) : (
+                          r.founding_interest && <span className="rounded bg-gold/20 px-2 py-0.5 text-xs font-normal">Founding interest</span>
+                        )}
                         {r.needs_refund && <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-normal text-red-800">Refund a duplicate payment</span>}
                       </p>
                       <address className="text-sm not-italic text-gray-700">
@@ -337,7 +341,7 @@ export default function MembershipCardsPage() {
                         Refund done
                       </Button>
                     )}
-                    {r.status === "awaiting_payment" && (
+                    {r.status === "awaiting_payment" && !r.joins_founding && (
                       <Button size="sm" variant="outline" onClick={() => act(r, { action: "waive_fee" }, `Waive the delivery fee for ${r.recipient_name}? Their membership starts now.`)}>
                         Waive fee
                       </Button>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCheckoutRecord } from '@/lib/db/repositories/membership';
-import { confirmCheckout } from '@/lib/services/membership-payments';
+import { confirmAnyCheckout } from '@/lib/services/membership-payments';
 
 /**
  * POST /api/webhooks/sumup-online
@@ -16,11 +15,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Any payment page we ever created for a card request, not just the latest
-    const record = await getCheckoutRecord(body.id);
-    if (!record) return new NextResponse(null, { status: 204 });
-    const state = await confirmCheckout(record);
-    console.log(`[sumup-online] Card request ${record.request_id}, checkout ${record.checkout_id}: ${state}`);
+    // Any payment page we ever created (card fee or Founding Membership), not just the latest
+    const result = await confirmAnyCheckout(body.id);
+    if (result) console.log(`[sumup-online] Checkout ${body.id}: ${result}`);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error('[sumup-online] Error:', error);

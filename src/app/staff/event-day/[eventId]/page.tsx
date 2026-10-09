@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useBridgeCardTaps } from "@/lib/hooks/useBridgeCardTaps";
 import type { EventDayCheckin, EventDayEvent } from "@/lib/db/repositories/event-day";
+import type { FoundingBadge } from "@/lib/membership/founding";
 
 // How long a check-in result stays on screen before returning to "Tap your card"
 const RESULT_DISPLAY_MS = 6000;
@@ -33,6 +34,7 @@ interface CheckinResult {
   checked_in_at?: string;
   points?: { awarded: number; already_awarded?: boolean; balance: number; tier: string } | null;
   points_error?: boolean;
+  founding?: FoundingBadge | null;
   error?: string;
 }
 
@@ -366,6 +368,16 @@ function ResultView({ result }: { result: CheckinResult }) {
         <AlertTriangle className="mb-6 h-24 w-24 text-amber-400" />
       )}
       <p className="text-4xl font-bold lg:text-5xl">{isNew ? `Welcome, ${firstName}!` : `Welcome back, ${firstName}`}</p>
+      {result.founding?.state === "active" && (
+        <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-gold bg-gold/15 px-4 py-1.5 text-lg font-semibold tracking-wide text-gold">
+          V•PRIVILEGE Founding{result.founding.founding_number ? ` No. ${String(result.founding.founding_number).padStart(3, "0")}` : ""}
+        </p>
+      )}
+      {result.founding?.state === "expired" && (
+        <p className="mt-4 rounded-full border border-gray-600 px-4 py-1.5 text-sm text-gray-400">
+          V•PRIVILEGE expired {new Date(result.founding.ends_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}: standard entry
+        </p>
+      )}
       <p className="mt-3 text-lg text-gray-300">
         {isNew
           ? "You're checked in. Enjoy the event!"

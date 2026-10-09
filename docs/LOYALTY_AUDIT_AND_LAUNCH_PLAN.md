@@ -99,6 +99,14 @@ The goal is for people to join online today, with their card posted home.
 - **Admin:** see active members, expiry dates and a reconciliation of SumUp payments against memberships, with a switch to pause sales.
 - **Before it goes on sale, you need to define:** the benefits, each benefit's capacity or cost, and the membership terms.
 
+**Status (9 Oct 2026): built, off sale.** Migration `030_founding_membership.sql`; admin at `/admin/founding-members`.
+- Bought on the join form (card delivery included), from the member pass (`/vip/[id]`), or recorded in person by staff (card reader, SumUp app or cash).
+- Benefits are admin-managed records (offered / paused / retired). Each purchase stores the benefits it was sold with. Launch set seeded from `docs/vprivilege-benefit-sheet.html`; no booking fee and free cloakroom are paused.
+- Founding numbers (cap 500, editable) are kept on renewal. Renewal opens 30 days before expiry; the new year starts when the current one ends.
+- The door check-in screen shows a Founding badge, or "expired".
+- Payments check tab lists every payment against its membership; extra payments are flagged for refund.
+- Not yet: renewal reminder emails (Stage 4), redeeming drinks and guest passes (Stage 3 claims). Draft terms are in section 9 of `/membership/terms`.
+
 ### Stage 3: Two ledgers and the first three rewards
 
 - **Two balances:** status points (drive tier) and reward points (spendable), each with its own transaction history. The ledger type is set on every entry, updates are atomic, and every earn has a unique source key, so duplicates are impossible.

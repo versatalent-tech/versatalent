@@ -27,7 +27,24 @@ function latestBirthDate(): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function MembershipForm({ feeCents }: { feeCents: number }) {
+export interface FoundingOffer {
+  priceCents: number;
+  /** All numbered places taken */
+  soldOut: boolean;
+}
+
+export function MembershipForm({
+  feeCents,
+  founding,
+  initialPlan = "free",
+}: {
+  feeCents: number;
+  /** Set when the Founding Membership is on sale */
+  founding?: FoundingOffer | null;
+  initialPlan?: "free" | "founding";
+}) {
+  const foundingAvailable = Boolean(founding && !founding.soldOut);
+  const [plan, setPlan] = useState<"free" | "founding">(foundingAvailable ? initialPlan : "free");
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -42,13 +59,16 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
   });
   const [interests, setInterests] = useState<string[]>([]);
   const [consents, setConsents] = useState({ consent_email: false, consent_sms: false, consent_post: false });
-  const [founding, setFounding] = useState(false);
+  const [interested, setInterested] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [trap, setTrap] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fee = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(feeCents / 100);
+  const gbp = (cents: number) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(cents / 100);
+  const fee = gbp(feeCents);
+  const foundingPrice = founding ? gbp(founding.priceCents) : "";
+  const joinsFounding = plan === "founding";
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -69,7 +89,8 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
           referral_source: form.referral_source || null,
           interests,
           ...consents,
-          founding_interest: founding,
+          founding_interest: interested || joinsFounding,
+          plan,
           accept_terms: true,
           [HONEYPOT_FIELD]: trap,
         }),
@@ -78,6 +99,8 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
       if (!response.ok || !body.success) throw new Error(body.error || "Something went wrong. Please try again.");
       if (body.data.paymentUrl) {
         window.location.href = body.data.paymentUrl; // SumUp's secure payment page
+      } else if (body.data.membershipId) {
+        window.location.href = `/membership/welcome?f=${body.data.membershipId}`;
       } else if (body.data.requestId) {
         window.location.href = `/membership/welcome?r=${body.data.requestId}`;
       }
@@ -95,6 +118,56 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
           Leave empty <input value={trap} onChange={(e) => setTrap(e.target.value)} tabIndex={-1} autoComplete="off" />
         </label>
       </p>
+
+      {founding && (
+        <fieldset className="space-y-3">
+          <legend className="mb-2 text-lg font-semibold">Choose your membership</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                {
+                  key: "free",
+                  title: "VIP membership",
+                  price: "Free",
+                  text: `${fee} card delivery. Points, tiers and member discounts.`,
+                  disabled: false,
+                },
+                {
+                  key: "founding",
+                  title: "V•PRIVILEGE Founding",
+                  price: `${foundingPrice} for 12 months`,
+                  text: founding.soldOut
+                    ? "All Founding places have been taken."
+                    : "Everything in VIP, plus a numbered Founding card and extra benefits. Card delivery included. No auto-renewal.",
+                  disabled: founding.soldOut,
+                },
+              ] as const
+            ).map((option) => (
+              <label
+                key={option.key}
+                className={`flex cursor-pointer gap-3 rounded-lg border p-4 ${
+                  plan === option.key ? "border-gold bg-gold/10 ring-1 ring-gold" : "border-gray-200"
+                } ${option.disabled ? "cursor-not-allowed opacity-50" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="plan"
+                  value={option.key}
+                  checked={plan === option.key}
+                  disabled={option.disabled}
+                  onChange={() => setPlan(option.key)}
+                  className="mt-1 h-4 w-4 accent-[#D4AF37]"
+                />
+                <span>
+                  <span className="block font-semibold">{option.title}</span>
+                  <span className="block text-sm font-medium text-gray-900">{option.price}</span>
+                  <span className="mt-1 block text-sm text-gray-600">{option.text}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <fieldset className="space-y-4">
         <legend className="mb-2 text-lg font-semibold">About you</legend>
@@ -125,7 +198,11 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
 
       <fieldset className="space-y-4">
         <legend className="mb-1 text-lg font-semibold">Where should we post your card?</legend>
-        <p className="text-sm text-gray-600">UK addresses only. Your card is free; the {fee} covers postage and packaging.</p>
+        <p className="text-sm text-gray-600">
+          {joinsFounding
+            ? "UK addresses only. Delivery is included in your Founding Membership."
+            : `UK addresses only. Your card is free; the ${fee} covers postage and packaging.`}
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="line1">Address line 1</Label>
@@ -176,10 +253,12 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
             ))}
           </select>
         </div>
+        {!founding && (
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" checked={founding} onChange={(e) => setFounding(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#D4AF37]" />
+          <input type="checkbox" checked={interested} onChange={(e) => setInterested(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#D4AF37]" />
           <span>I&apos;m interested in the V•PRIVILEGE Founding Membership (£29.99 a year) when it launches. This doesn&apos;t commit you to anything.</span>
         </label>
+        )}
       </fieldset>
 
       <fieldset className="space-y-3 rounded-lg border p-4">
@@ -232,7 +311,7 @@ export function MembershipForm({ feeCents }: { feeCents: number }) {
       <div className="space-y-2">
         <Button type="submit" disabled={submitting} className="w-full bg-gold py-6 text-base text-black hover:bg-gold/90 sm:w-auto sm:px-10">
           {submitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-          Continue to pay {fee} delivery
+          {joinsFounding ? `Continue to pay ${foundingPrice}` : `Continue to pay ${fee} delivery`}
         </Button>
         <p className="flex items-center gap-1.5 text-xs text-gray-500">
           <Lock className="h-3.5 w-3.5" /> You&apos;ll pay on SumUp&apos;s secure page. We never see your card details.

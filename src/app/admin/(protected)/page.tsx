@@ -30,6 +30,7 @@ import {
   Trophy,
   UserCog,
   Users,
+  Crown,
 } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -72,6 +73,7 @@ const SECTIONS = [
       { title: "NFC cards & check-ins", description: "Users, cards, events and scans", icon: Nfc, href: "/admin/nfc" },
       { title: "VIP programme", description: "Tiers, points and benefits", icon: Trophy, href: "/admin/vip" },
       { title: "Membership cards", description: "Online applications and cards to post", icon: CreditCard, href: "/admin/membership-cards" },
+      { title: "V•PRIVILEGE Founding", description: "Paid memberships, benefits and payments", icon: Crown, href: "/admin/founding-members" },
     ],
   },
   {

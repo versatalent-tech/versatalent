@@ -18,7 +18,19 @@ import {
   type CheckoutRecord,
   type PaymentTarget,
 } from '@/lib/db/repositories/membership';
+import {
+  activateMembership,
+  getFoundingCheckout,
+  getLatestFoundingCheckout,
+  getPendingPurchase,
+  markFoundingUnpaid,
+  recordFoundingCheckout,
+  setFoundingCheckoutOutcome,
+  type FoundingCheckoutRecord,
+  type PendingPurchase,
+} from '@/lib/db/repositories/founding';
 import { createHostedCheckout, getCheckout, judgeOnlineCheckout } from '@/lib/services/sumup';
+import { FOUNDING_NAME } from '@/lib/membership/founding';
 
 export type CardPaymentState = 'paid' | 'pending' | 'failed' | 'expired';
 
@@ -29,6 +41,7 @@ export async function startCardPayment(requestId: string, origin: string): Promi
   if (target.status !== 'awaiting_payment' || target.payment_status === 'paid' || target.payment_status === 'waived') {
     return { error: 'This application has already been paid for' };
   }
+  if (target.paid_membership_id) return { error: 'Your card is included in your Founding Membership' };
 
   // A new, unique reference per attempt (SumUp rejects reused references)
   const reference = `vtcard-${target.id}-${target.payment_attempts + 1}`;
@@ -75,8 +88,78 @@ export async function confirmCheckout(record: CheckoutRecord): Promise<CardPayme
 
 /** For the welcome page: check the request's latest payment page */
 export async function confirmCardPayment(target: PaymentTarget): Promise<CardPaymentState> {
-  if (target.payment_status === 'paid' || target.payment_status === 'waived') return 'paid';
+  if (['paid', 'waived', 'included'].includes(target.payment_status)) return 'paid';
   if (!target.sumup_checkout_id) return 'pending';
   const record = await getCheckoutRecord(target.sumup_checkout_id);
   return record ? confirmCheckout(record) : 'pending';
+}
+
+// ---------------------------------------------------------------------------
+// Founding Membership (same rules: only a PAID checkout we read back counts)
+// ---------------------------------------------------------------------------
+
+/** Send the member to SumUp to pay for a prepared Founding purchase */
+export async function startFoundingPayment(purchase: PendingPurchase, origin: string): Promise<{ url: string } | { error: string }> {
+  const reference = `vtfound-${purchase.id}-${purchase.payment_attempts + 1}`;
+  const checkout = await createHostedCheckout({
+    reference,
+    amountCents: purchase.price_cents,
+    currency: purchase.currency,
+    description: FOUNDING_NAME,
+    redirectUrl: `${origin}/membership/welcome?f=${purchase.id}`,
+    returnUrl: `${origin}/api/webhooks/sumup-online`,
+  });
+  if (!(await recordFoundingCheckout(purchase, checkout.id, reference))) {
+    return { error: 'This membership has already been paid for' };
+  }
+  return { url: checkout.url };
+}
+
+/** Pay again for an unpaid purchase (thank-you page "Pay now") */
+export async function restartFoundingPayment(membershipId: string, origin: string): Promise<{ url: string } | { error: string }> {
+  const purchase = await getPendingPurchase(membershipId);
+  if (!purchase) return { error: 'Membership not found' };
+  if (purchase.status !== 'pending' && purchase.status !== 'payment_failed') {
+    return { error: purchase.status === 'active' ? 'This membership has already been paid for' : 'This purchase is closed. Start a new one from your pass.' };
+  }
+  return startFoundingPayment(purchase, origin);
+}
+
+export async function confirmFoundingCheckout(record: FoundingCheckoutRecord): Promise<CardPaymentState> {
+  const checkout = await getCheckout(record.checkout_id);
+  if (!checkout) return 'pending';
+
+  const outcome = judgeOnlineCheckout(checkout, {
+    amountCents: record.amount_cents,
+    currency: record.currency,
+    reference: record.reference,
+  });
+
+  if (outcome.state === 'paid') {
+    await setFoundingCheckoutOutcome(record.checkout_id, 'paid', outcome.transactionCode);
+    await activateMembership(record.membership_id, { checkoutId: record.checkout_id, transactionCode: outcome.transactionCode, source: 'online' });
+    return 'paid';
+  }
+  if (outcome.state === 'failed' || outcome.state === 'expired') {
+    console.warn(`[founding] Checkout ${record.checkout_id}: ${outcome.reason}`);
+    await setFoundingCheckoutOutcome(record.checkout_id, outcome.state);
+    await markFoundingUnpaid(record.membership_id, record.checkout_id);
+    return outcome.state;
+  }
+  return 'pending';
+}
+
+/** Thank-you page: check the purchase's latest payment page */
+export async function confirmFoundingPayment(membershipId: string): Promise<void> {
+  const record = await getLatestFoundingCheckout(membershipId);
+  if (record && record.outcome === 'pending') await confirmFoundingCheckout(record);
+}
+
+/** Webhook: any payment page we created, for a card fee or a Founding purchase */
+export async function confirmAnyCheckout(checkoutId: string): Promise<string | null> {
+  const card = await getCheckoutRecord(checkoutId);
+  if (card) return `Card request ${card.request_id}: ${await confirmCheckout(card)}`;
+  const founding = await getFoundingCheckout(checkoutId);
+  if (founding) return `Founding purchase ${founding.membership_id}: ${await confirmFoundingCheckout(founding)}`;
+  return null;
 }
