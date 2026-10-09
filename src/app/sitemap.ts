@@ -16,6 +16,9 @@ const STATIC_PAGES: { path: string; changeFrequency: 'daily' | 'weekly' | 'month
   { path: '/for-brands', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/about', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/contact', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/membership', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/membership/terms', changeFrequency: 'monthly', priority: 0.3 },
+  { path: '/privacy', changeFrequency: 'monthly', priority: 0.3 },
   { path: '/blog', changeFrequency: 'weekly', priority: 0.6 },
 ];
 

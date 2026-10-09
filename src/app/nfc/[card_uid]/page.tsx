@@ -27,7 +27,7 @@ export default function NFCRoutePage() {
           return;
         }
 
-        // Log the check-in (the server works out the member from the card)
+        // Record the tap (not a check-in: only staff check people in at the door)
         await fetch('/api/nfc/checkins', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
