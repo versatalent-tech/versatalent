@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateVIPMembership } from '@/lib/db/repositories/vip-memberships';
-import { getCurrentMembership } from '@/lib/services/vip-points-service';
+import { adjustPointsManually, getCurrentMembership } from '@/lib/services/vip-points-service';
 import { getTierProgress, getTierSettings } from '@/lib/services/vip-tiers';
 import { updateUserNFCCardsMetadata } from '@/lib/db/repositories/nfc-cards';
 import type { UpdateVIPMembershipRequest } from '@/lib/db/types';
-import { requireAdmin } from '@/lib/middleware/auth';
+import { getCurrentSession, requireAdmin } from '@/lib/middleware/auth';
+import { logAudit } from '@/lib/db/repositories/audit-log';
 
 // GET VIP membership by user_id
 export async function GET(
@@ -44,9 +45,28 @@ export async function PUT(
 
   try {
     const { user_id } = await params;
-    const data: UpdateVIPMembershipRequest = await request.json();
+    const { points_balance, ...data }: UpdateVIPMembershipRequest = await request.json();
+    const session = await getCurrentSession();
 
-    const membership = await updateVIPMembership(user_id, data);
+    // A new balance is recorded as an adjustment, so the ledger still adds up
+    if (points_balance !== undefined) {
+      const current = await getCurrentMembership(user_id);
+      const delta = Math.trunc(Number(points_balance)) - (current?.points_balance ?? 0);
+      if (!Number.isFinite(delta) || Number(points_balance) < 0) {
+        return NextResponse.json({ error: 'Enter a balance of zero or more' }, { status: 400 });
+      }
+      if (delta !== 0) {
+        await adjustPointsManually(user_id, delta, 'Balance set by admin', session?.userId, 'reward');
+      }
+    }
+
+    const membership =
+      data.tier !== undefined || data.status !== undefined
+        ? await updateVIPMembership(user_id, data)
+        : await getCurrentMembership(user_id);
+    await logAudit({ userId: session?.userId, name: session?.name }, 'update', 'vip_membership', user_id, {
+      after: { ...data, ...(points_balance !== undefined ? { points_balance } : {}) },
+    });
 
     // If tier was updated, update all NFC cards metadata for this user
     if (data.tier) {

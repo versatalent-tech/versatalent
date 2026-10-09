@@ -51,6 +51,9 @@ export default function EventDayPickerPage() {
             <h1 className="text-3xl font-bold">Event Day Check-in</h1>
             <p className="text-gray-400">Choose the event you&apos;re running the door for</p>
           </div>
+          <Link href="/staff/rewards" className="ml-auto rounded-md border border-gold/60 px-3 py-2 text-sm text-gold hover:bg-gold/10">
+            Rewards
+          </Link>
         </div>
 
         {loading && (

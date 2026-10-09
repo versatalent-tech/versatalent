@@ -37,7 +37,8 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
       user_id: order.customer_user_id,
       amount: amountPaid,
       currency: order.currency,
-      description: `POS Order #${order.id.slice(0, 8)}`
+      description: `POS Order #${order.id.slice(0, 8)}`,
+      order_id: order.id,
     });
 
     // Award loyalty points based on consumption
@@ -45,7 +46,8 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
       order.customer_user_id,
       amountPaid,
       order.currency,
-      consumption.id
+      consumption.id,
+      order.id
     );
 
     return {

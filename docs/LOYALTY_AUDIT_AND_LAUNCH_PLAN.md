@@ -118,6 +118,15 @@ The goal is for people to join online today, with their card posted home.
 - **Reports:** claims, redemption rate, direct cost and outstanding liability.
 - **Black discount** reduced to 10%, a settings change.
 
+**Status (9 Oct 2026): built, rewards closed.** Migration `031_rewards_ledger.sql`; admin at `/admin/rewards`, staff screen at `/staff/rewards`.
+- `vip_points_log` is now the ledger for both balances (`ledger` = status / reward; older rows kept as `legacy`). Balances change only through the database function `loyalty_post`, which locks the member, refuses a repeated `source_key` and writes the entry in one step. Opening entries carry over today's balances, so every balance equals its ledger sum (Balance check tab).
+- Reward points are the existing `points_balance` (what members already see); status points stay `status_points`. Earning: status gets the full amount, reward gets a configurable share (default 100%). A new membership year resets status points as a logged `year_end` entry.
+- Rewards: point cost, our cost, stock, per-member limit (ever / per year), event-only with places per event and a booking deadline, guest name, minimum tier, Founding-only, birthday month, validity dates. Six seeded, all off: selected drink, ticket upgrade, guest pass, and the three Founding benefits (welcome drink, birthday drink, two guest passes a year). Point costs are placeholders.
+- Claims: reserved → redeemed / cancelled / expired. Points are taken on claiming and returned on cancel or expiry. Unique 8-character codes; staff redeem by code or card tap, and a used code is refused with the time it was used. Staff can also give a reward on the spot.
+- Till refunds: Admin → Till orders → Refund. Returns stock and takes back the order's points, never below zero (any shortfall is recorded). Paid orders can no longer be cancelled.
+- Admin edits of a balance and manual adjustments are ledger entries with a reason and an audit-log record.
+- Report: points held, open claims and their cost, used / expired in 30 days and their cost, redemption rate, points earned and spent.
+
 ### Stage 4: Retention and referrals (needs an email provider and an owned domain)
 
 - **Retention:** welcome, post-event follow-up, inactivity and "approaching the next tier" messages. Each has consent checks, deduplication, cooldowns and an on/off switch.

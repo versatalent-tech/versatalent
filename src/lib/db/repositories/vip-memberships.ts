@@ -101,10 +101,7 @@ export async function updateVIPMembership(
     updates.push(`status = $${paramIndex++}`);
     values.push(data.status);
   }
-  if (data.points_balance !== undefined) {
-    updates.push(`points_balance = $${paramIndex++}`);
-    values.push(data.points_balance);
-  }
+  // Balances only change through the points ledger (repositories/loyalty.ts)
 
   if (updates.length === 0) {
     throw new Error('No fields to update');
@@ -120,26 +117,6 @@ export async function updateVIPMembership(
 
   // Dynamic SQL: neon 1.x only accepts sql`...` templates when called directly
   const memberships = (await sql.query(query, values)) as VIPMembership[];
-  return normalize(memberships[0]);
-}
-
-/**
- * Add (or remove) points. They also count towards this year's status points.
- * The caller updates the tier (see vip-points-service).
- */
-export async function addPointsToMembership(
-  userId: string,
-  points: number
-): Promise<VIPMembership> {
-  const memberships = await sql<VIPMembership[]>`
-    UPDATE vip_memberships
-    SET
-      points_balance = points_balance + ${points},
-      lifetime_points = lifetime_points + GREATEST(${points}, 0),
-      status_points = GREATEST(0, status_points + ${points})
-    WHERE user_id = ${userId}
-    RETURNING *
-  `;
   return normalize(memberships[0]);
 }
 
@@ -173,27 +150,7 @@ export async function getMembershipsDueForNewYear(userId?: string): Promise<Arra
   return rows as any;
 }
 
-/**
- * Start the membership year after `yearsEnded` years with a new secured tier.
- * Only applies if the year hasn't already been moved on (safe to run twice).
- */
-export async function startNewMembershipYear(
-  userId: string,
-  previousYearStart: string,
-  yearsEnded: number,
-  tier: VIPTier
-): Promise<boolean> {
-  const rows = await sql`
-    UPDATE vip_memberships
-    SET year_start = (year_start + make_interval(years => ${yearsEnded}::int))::date,
-        base_tier = ${tier},
-        tier = ${tier},
-        status_points = 0
-    WHERE user_id = ${userId} AND year_start = ${previousYearStart}::date
-    RETURNING id
-  `;
-  return rows.length > 0;
-}
+// Starting a new membership year: see loyalty_start_year (repositories/loyalty.ts)
 
 export async function getVIPMembershipsByTier(tier: string): Promise<VIPMembership[]> {
   const memberships = await sql<VIPMembership[]>`

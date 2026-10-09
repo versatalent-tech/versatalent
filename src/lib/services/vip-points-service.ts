@@ -1,13 +1,13 @@
 import { getPointRuleByActionType } from '../db/repositories/vip-point-rules';
+import { randomUUID } from 'crypto';
 import {
   getVIPMembershipByUserId,
   createVIPMembership,
-  addPointsToMembership,
   setMembershipTier,
   getMembershipsDueForNewYear,
-  startNewMembershipYear,
 } from '../db/repositories/vip-memberships';
-import { createPointsLogEntry } from '../db/repositories/vip-points-log';
+import { getLoyaltySettings, postPoints, startMembershipYear } from '../db/repositories/loyalty';
+import type { Ledger } from '../loyalty/types';
 import { updateUserNFCCardsMetadata } from '../db/repositories/nfc-cards';
 import { getUserById } from '../db/repositories/users';
 import { sql } from '../db/client';
@@ -30,7 +30,8 @@ export async function rollOverMembershipYears(userId?: string): Promise<void> {
   const { thresholds } = await getTierSettings();
   for (const m of due) {
     const tier = tierAfterYearsEnded(m.base_tier, m.status_points, m.years_ended, thresholds);
-    const moved = await startNewMembershipYear(m.user_id, m.year_start, m.years_ended, tier);
+    // Status points go back to zero as a ledger entry (reward points carry on)
+    const moved = await startMembershipYear(m.user_id, m.year_start, m.years_ended, tier);
     if (moved && tier !== m.tier) {
       await updateUserNFCCardsMetadata(m.user_id).catch((error) =>
         console.error('Error updating NFC cards metadata after new membership year:', error)
@@ -67,62 +68,53 @@ function wholePoints(value: number): number {
 }
 
 /**
- * Award points to a user for an action. With applyTierMultiplier, the points
- * are multiplied by the member's tier rate (e.g. Gold 1.5x); use it for
- * check-ins and purchases, not manual adjustments.
+ * Award points for an action. Status points (towards the tier) get the full
+ * amount; reward points (to spend) get the configured share of it. With
+ * applyTierMultiplier, the amount is multiplied by the member's tier rate
+ * (e.g. Gold 1.5x). `sourceKey` makes the award happen at most once.
  */
 export async function awardPoints(
   userId: string,
   source: PointsSource,
   amount: number,
-  metadata?: Record<string, any>,
-  refId?: string,
-  options: { applyTierMultiplier?: boolean } = {}
+  metadata: Record<string, any> | undefined,
+  refId: string | undefined,
+  options: { applyTierMultiplier?: boolean; sourceKey: string }
 ): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
-  try {
-    let membership = await getCurrentMembership(userId);
-    if (!membership) {
-      membership = await createVIPMembership(userId);
-    }
-    const settings = await getTierSettings();
-
-    const multiplier = options.applyTierMultiplier ? settings.multipliers[membership.tier] ?? 1 : 1;
-    const points = multiplier === 1 ? amount : wholePoints(amount * multiplier);
-
-    const updated = await addPointsToMembership(userId, points);
-
-    // Moving up happens straight away; within the year the tier never drops
-    // below the one secured for it
-    const newTier = currentTier(updated.base_tier, updated.status_points, settings.thresholds);
-    if (newTier !== updated.tier) {
-      await setMembershipTier(userId, newTier);
-      try {
-        await updateUserNFCCardsMetadata(userId);
-      } catch (error) {
-        console.error('Error updating NFC cards metadata after tier change:', error);
-        // Don't fail the points award if metadata update fails
-      }
-    }
-
-    await createPointsLogEntry(
-      userId,
-      source,
-      points,
-      updated.points_balance,
-      multiplier === 1 ? metadata : { ...metadata, base_points: amount, tier_multiplier: multiplier, tier: membership.tier },
-      refId
-    );
-
-    return {
-      success: true,
-      pointsAwarded: points,
-      newBalance: updated.points_balance,
-      newTier
-    };
-  } catch (error) {
-    console.error('Error awarding points:', error);
-    throw error;
+  let membership = await getCurrentMembership(userId);
+  if (!membership) {
+    membership = await createVIPMembership(userId);
   }
+  const [settings, loyalty] = await Promise.all([getTierSettings(), getLoyaltySettings()]);
+
+  const multiplier = options.applyTierMultiplier ? settings.multipliers[membership.tier] ?? 1 : 1;
+  const points = multiplier === 1 ? amount : wholePoints(amount * multiplier);
+  const rewardPoints = wholePoints((points * loyalty.reward_earn_percent) / 100);
+  const details = multiplier === 1 ? metadata : { ...metadata, base_points: amount, tier_multiplier: multiplier, tier: membership.tier };
+
+  const status = await postPoints({ userId, ledger: 'status', delta: points, source, sourceKey: options.sourceKey, refId, metadata: details });
+  const reward = await postPoints({ userId, ledger: 'reward', delta: rewardPoints, source, sourceKey: options.sourceKey, refId, metadata: details });
+
+  // Moving up happens straight away; within the year the tier never drops
+  // below the one secured for it
+  const updated = await getVIPMembershipByUserId(userId);
+  const newTier = currentTier(updated!.base_tier, updated!.status_points, settings.thresholds);
+  if (newTier !== updated!.tier) {
+    await setMembershipTier(userId, newTier);
+    try {
+      await updateUserNFCCardsMetadata(userId);
+    } catch (error) {
+      console.error('Error updating NFC cards metadata after tier change:', error);
+      // Don't fail the points award if metadata update fails
+    }
+  }
+
+  return {
+    success: true,
+    pointsAwarded: status.duplicate ? 0 : status.applied,
+    newBalance: reward.balance,
+    newTier,
+  };
 }
 
 /**
@@ -200,7 +192,7 @@ export async function processEventCheckin(
         timestamp: new Date().toISOString()
       },
       checkinId,
-      { applyTierMultiplier: true }
+      { applyTierMultiplier: true, sourceKey: `checkin:${userId}:${awardKey}` }
     );
 
     return {
@@ -224,7 +216,8 @@ export async function processConsumption(
   userId: string,
   amount: number,
   currency: string = POS_CURRENCY,
-  consumptionId?: string
+  consumptionId?: string,
+  orderId?: string
 ): Promise<{ success: boolean; pointsAwarded: number; newBalance: number; newTier: VIPTier }> {
   // Get point rule for consumption
   const rule = await getPointRuleByActionType('consumption');
@@ -239,10 +232,15 @@ export async function processConsumption(
       amount,
       currency,
       consumption_id: consumptionId,
+      order_id: orderId,
       timestamp: new Date().toISOString()
     },
     consumptionId,
-    { applyTierMultiplier: true }
+    {
+      applyTierMultiplier: true,
+      // A till order earns once; a consumption entered by hand earns once
+      sourceKey: orderId ? `order:${orderId}` : `consumption:${consumptionId ?? randomUUID()}`,
+    }
   );
   return {
     success: result.success,
@@ -252,27 +250,35 @@ export async function processConsumption(
   };
 }
 /**
- * Manual points adjustment (admin only)
+ * Manual points adjustment (admin only), on one ledger. Never takes a
+ * balance below zero. Status changes can move the tier up (a tier is never
+ * lost mid-year).
  */
 export async function adjustPointsManually(
   userId: string,
   deltaPoints: number,
   reason: string,
-  adminId?: string
-): Promise<{ success: boolean; newBalance: number; newTier: VIPTier }> {
-  const result = await awardPoints(
+  adminId?: string,
+  ledger: Ledger = 'reward'
+): Promise<{ success: boolean; applied: number; newBalance: number; newTier: VIPTier }> {
+  if (!(await getCurrentMembership(userId))) await createVIPMembership(userId);
+  const result = await postPoints({
     userId,
-    'manual_adjust',
-    deltaPoints,
-    {
-      reason,
-      adjusted_by: adminId,
-      timestamp: new Date().toISOString()
-    }
-  );
-  return {
-    success: result.success,
-    newBalance: result.newBalance,
-    newTier: result.newTier
-  };
+    ledger,
+    delta: deltaPoints,
+    source: 'manual_adjust',
+    sourceKey: `manual:${randomUUID()}`,
+    metadata: { reason, adjusted_by: adminId },
+    actorId: adminId ?? null,
+    mode: 'clamp',
+  });
+
+  const settings = await getTierSettings();
+  const updated = await getVIPMembershipByUserId(userId);
+  const newTier = currentTier(updated!.base_tier, updated!.status_points, settings.thresholds);
+  if (newTier !== updated!.tier) {
+    await setMembershipTier(userId, newTier);
+    await updateUserNFCCardsMetadata(userId).catch((error) => console.error('Error updating NFC cards metadata:', error));
+  }
+  return { success: true, applied: result.applied, newBalance: result.balance, newTier: updated!.tier === newTier ? updated!.tier : newTier };
 }
