@@ -1,6 +1,6 @@
 # VersaTalent NFC VIP: Audit and Launch Plan
 
-_Prepared 9 October 2026 in response to the strategist's brief "VersaTalent NFC VIP: Technical Audit, Product Specification & 30-Day Implementation Brief". Findings come from reading the code in this repository and querying the production database (read-only), not from reported functionality._
+_Prepared 9 October 2026 (corrected the same day: see §2a) in response to the strategist's brief "VersaTalent NFC VIP: Technical Audit, Product Specification & 30-Day Implementation Brief". Findings come from reading the code in this repository and querying the production database (read-only), not from reported functionality._
 
 ## 1. Summary
 
@@ -37,22 +37,31 @@ Status key: ✅ Verified (code inspected, behaviour confirmed) · 🟡 Partially
 | Authentication and roles | ✅ | HMAC-signed session cookies (`lib/auth/session.ts`); roles admin, manager, road_manager, staff, artist; permission map `lib/auth/permissions.ts` | Login throttling and `audit_log` added 8 Oct. VIP members have **no login** (card-tap page only). |
 | NFC cards | ✅ | `nfc_cards` (2 VIP, 4 artist, all active); statuses active, inactive, blocked; `WriteCardUrl` writes the card's URL | Blocked or inactive cards are refused at check-in (`api/nfc/checkins`, `api/staff/event-day/[eventId]/checkin`). |
 | Desktop NFC Bridge | 🟡 | Separate repo `nfc-bridge-server` v1.1.0; the site connects to `ws://localhost:9876` (`useBridgeCardTaps`) | Code exists. Reconnection, rapid taps and restarts need testing on the venue laptop and reader (brief §5.2). |
-| Card tap vs attendance | ✅ | `api/nfc/[card_uid]` only looks up the card and redirects; it creates no check-in | Meets "a card tap is not attendance". |
+| Card tap vs attendance | ⚠️ → fixed in #35 | **Corrected.** The card-tap *page* `app/nfc/[card_uid]` posts to `api/nfc/checkins`, which created a check-in and awarded the daily check-in points with no staff involved | Anyone holding a card (or its URL) could earn that member's points. Fixed in PR #35: taps are logged in `nfc_scan_logs` only. |
 | Event check-in points | ✅ | `processEventCheckin`: an atomic `vip_checkin_awards (user_id, award_key)` claim means once per event per UK day | Rule: `event_checkin` = 5 points × tier multiplier. |
 | Till transactions | ✅ | `completeOrderPayment` marks the order paid once (`markOrderPaid` transition), then awards points once; SumUp reader, SumUp app and cash | Points = 1 per £3 paid (after discount) × tier multiplier. |
 | Tier discounts | ✅ | Calculated server-side in `api/pos/orders` ("never taken from the till"); per-product `member_discount_excluded`; order stores `discount_cents`, `discount_percent`, `discount_tier` | **Black is currently 20%.** Set `tier_discount_black` to 10 in VIP → Point Rules (no code change). |
 | Silver/Gold/Black progression | ✅ | `lib/vip-tier-rules.ts` (pure, testable): thresholds 500 / 1,750, anniversary year, "never more than one tier below" soft landing; settings in `vip_point_rules` | Matches the brief. Needs boundary tests written (QA-01/02/09). |
-| Single vs separate ledgers | ⚠️ | `vip_memberships` has `points_balance`, `lifetime_points` and `status_points`, but **one delta updates all three** (`addPointsToMembership`); one log, `vip_points_log` | Status is tracked separately by year, but a negative adjustment also reduces status. Must be split before rewards launch (QA-03). |
+| Single vs separate ledgers | ⚠️ (worse than first reported) | `vip_memberships` has `points_balance`, `lifetime_points` and `status_points`, but **one delta updates all three** (`addPointsToMembership`); one log, `vip_points_log` | Status is tracked separately by year, but a negative adjustment also reduces status. **Also: none of the 5 members' balances equal the sum of their log entries**, because the admin "edit membership" route can overwrite `points_balance` with no log entry, and awards aren't one transaction. Must be rebuilt before rewards launch (QA-03, QA-21). |
 | Reward redemption | ❌ | No redemption tables, routes or UI. `vip_tier_benefits` are descriptive text only | Reported as existing; it isn't. Build in Stage 3. |
-| Refunds and voids | ❌ | `pos_orders.status`: pending, paid, cancelled, failed; no refund state; points are never reversed | QA-08 would fail. Add a refund flow that reverses points (Stage 3). |
+| Refunds and voids | ❌ | `pos_orders.status`: pending, paid, cancelled, failed; no refund state. A paid order can be set to cancelled (stock is restored) but its points and consumption record stay | QA-08 would fail. Add a refund flow that reverses points (Stage 3). |
 | Manual adjustments | 🟡 | `api/vip/points/adjust`: admin-only, reason required, logged in `vip_points_log` with `adjusted_by` | Not yet in `audit_log`; can push status below the year's earned level. |
-| Member profiles and consent | 🟡 | `vip_profiles`: phone, age range, address, interests, referral source, `consent_email`/`sms`/`post` with timestamp | Table exists but **0 rows**. Nothing captures it from members yet. |
+| Member profiles and consent | 🟡 | `vip_profiles`: phone, age range, address, interests, referral source, `consent_email`/`sms`/`post` with timestamp | Table exists but **0 rows**; captured by the sign-up form in #35. Member data endpoints (`api/vip/memberships/[user_id]`, `api/vip/points-log?user_id=`, `api/nfc/checkins?user_id=`) are public, protected only by the unguessable member ID. |
 | Paid membership | ❌ | No product, entitlement or online checkout. SumUp is configured for the till (API key + merchant code) | SumUp's Checkouts API supports a hosted online payment page with the same account, so no new provider is needed. |
 | Automated retention | ❌ | No email/SMS provider, scheduler or templates | Needs an email provider and an owned sending domain (see roadmap §14). |
 | Referrals | ❌ | No codes, attribution or rewards (`referral_source` is a free-text profile field) | Stage 4. |
 | Admin controls | 🟡 | VIP admin: point rules, tier benefits, memberships, consumption tracker; Team roles; audit log for team/CRM/bookings | Missing: rewards, claims, paid memberships, campaign switches, kill switches. |
 | Reporting | 🟡 | Admin dashboard: till revenue per currency, VIP counts by tier, check-ins | No loyalty or reward-liability reports, and no reconciliation. |
 | Backups | ⚠️ | Neon project `history_retention_seconds = 21600` (**6 hours** point-in-time restore) | Too short for a financial ledger. Raise retention (plan permitting) or schedule daily snapshots before launch. |
+
+## 2a. Corrections (9 October 2026)
+
+A second, independent audit of the same brief (`docs/LOYALTY_AUDIT.md`, not written by me) found two things this audit missed. I checked both against the code and production data, and both are correct:
+
+1. **Card taps earned points.** I had checked only the API route `api/nfc/[card_uid]`, not the page that calls it. Now fixed in #35.
+2. **Balances don't reconcile with the points log** for any of the 5 members. Stage 3 already plans a new ledger; this makes it a requirement rather than an improvement.
+
+Neither changes the staged plan below. #1 is fixed as part of Stage 1.
 
 ## 3. Proposed stages
 
