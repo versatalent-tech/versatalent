@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FoundingPassCard } from "@/components/membership/FoundingPassCard";
 import type { TierProgress } from "@/lib/vip-tier-rules";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -318,6 +319,8 @@ export default function VIPPassPage() {
                 </div>
               </div>
             </div>
+
+            <FoundingPassCard memberId={vipUser.id} />
 
             {/* Activity Tabs */}
             <div className="bg-white rounded-2xl shadow-2xl p-8">

@@ -4,6 +4,7 @@ import { CreditCard, Gift, Nfc, Sparkles, Star } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MembershipForm } from '@/components/membership/MembershipForm';
 import { getProgrammeSettings } from '@/lib/db/repositories/membership';
+import { getFoundingOffer } from '@/lib/db/repositories/founding';
 import { getActiveTierBenefits } from '@/lib/db/repositories/vip-tier-benefits';
 import { getTierSettings } from '@/lib/services/vip-tiers';
 
@@ -21,8 +22,16 @@ const TIERS = [
   { key: 'black', name: 'Black', style: 'from-gray-800 to-black text-white' },
 ] as const;
 
-export default async function MembershipPage() {
-  const [settings, tiers, benefits] = await Promise.all([getProgrammeSettings(), getTierSettings(), getActiveTierBenefits()]);
+export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
+  const [settings, tiers, benefits, offer, query] = await Promise.all([
+    getProgrammeSettings(),
+    getTierSettings(),
+    getActiveTierBenefits(),
+    getFoundingOffer(),
+    searchParams,
+  ]);
+  const onSale = offer.settings.founding_on_sale;
+  const foundingPrice = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(offer.settings.founding_price_cents / 100);
   const fee = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(settings.card_delivery_fee_cents / 100);
   const threshold = { silver: 0, gold: tiers.thresholds.gold, black: tiers.thresholds.black };
 
@@ -108,18 +117,67 @@ export default async function MembershipPage() {
               );
             })}
           </div>
-          <div className="mt-8 flex items-start gap-3 rounded-xl border border-gold/40 bg-white p-5">
-            <Sparkles className="mt-0.5 h-6 w-6 flex-shrink-0 text-gold" />
-            <div>
-              <p className="font-semibold">Coming soon: V•PRIVILEGE Founding Membership, £29.99 a year</p>
-              <p className="text-sm text-gray-600">
-                Extra member benefits for our earliest supporters. Tick the box when you join to hear first. It&apos;s separate
-                from your tier, which you always earn through points.
+          {!onSale && (
+            <div className="mt-8 flex items-start gap-3 rounded-xl border border-gold/40 bg-white p-5">
+              <Sparkles className="mt-0.5 h-6 w-6 flex-shrink-0 text-gold" />
+              <div>
+                <p className="font-semibold">Coming soon: V•PRIVILEGE Founding Membership, {foundingPrice} a year</p>
+                <p className="text-sm text-gray-600">
+                  Extra member benefits for our earliest supporters. Tick the box when you join to hear first. It&apos;s separate
+                  from your tier, which you always earn through points.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {onSale && (
+        <section id="founding" className="scroll-mt-24 bg-black py-14 text-white">
+          <div className="container mx-auto max-w-5xl px-4">
+            <p className="mb-2 text-sm uppercase tracking-widest text-gold">V•PRIVILEGE</p>
+            <h2 className="mb-3 text-3xl font-bold">Founding Membership</h2>
+            <p className="mb-2 max-w-2xl text-gray-300">
+              {foundingPrice} for 12 months, paid once. Nothing renews automatically: you choose whether to buy another
+              year, and you can renew up to 30 days before it ends.
+            </p>
+            <p className="mb-8 max-w-2xl text-sm text-gray-400">
+              It&apos;s about access, not money off. It doesn&apos;t change your tier, points or bar discount, and if it lapses
+              you keep your tier and points.
+              {offer.places_left > 0
+                ? ` ${offer.places_left.toLocaleString('en-GB')} of ${offer.settings.founding_cap.toLocaleString('en-GB')} numbered places left.`
+                : ' All numbered places have been taken.'}
+            </p>
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {offer.benefits.map((b) => (
+                <li key={b.title} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <Star className="h-4 w-4 flex-shrink-0 text-gold" />
+                    {b.title}
+                  </p>
+                  {b.description && <p className="mt-1 text-sm text-gray-300">{b.description}</p>}
+                  {(b.limit_text || b.eligibility_text) && (
+                    <p className="mt-1 text-xs text-gray-400">{[b.limit_text, b.eligibility_text].filter(Boolean).join(' · ')}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              {settings.signup_open && offer.places_left > 0 && (
+                <a href="/membership?plan=founding#join" className="rounded-md bg-gold px-8 py-3 font-semibold text-black hover:bg-gold/90">
+                  Join as a Founding Member
+                </a>
+              )}
+              <p className="text-sm text-gray-400">
+                Already a member? Buy it from your member pass (tap your card), or ask at the bar at our next event.{' '}
+                <Link href="/membership/terms#founding" className="text-gold underline">
+                  Founding terms
+                </Link>
               </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section id="join" className="scroll-mt-24 bg-white py-14">
         <div className="container mx-auto max-w-2xl px-4">
@@ -129,7 +187,11 @@ export default async function MembershipPage() {
               <p className="mb-8 text-gray-600">
                 Takes two minutes. Your card is usually posted within 5 working days of payment.
               </p>
-              <MembershipForm feeCents={settings.card_delivery_fee_cents} />
+              <MembershipForm
+                feeCents={settings.card_delivery_fee_cents}
+                founding={onSale ? { priceCents: offer.settings.founding_price_cents, soldOut: offer.places_left <= 0 } : null}
+                initialPlan={query.plan === 'founding' ? 'founding' : 'free'}
+              />
             </>
           ) : (
             <p className="rounded-lg border bg-gray-50 p-6 text-gray-700">

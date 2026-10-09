@@ -21,6 +21,7 @@ export const PAYMENT_STATUSES = {
   expired: 'Payment expired',
   waived: 'Fee waived',
   refunded: 'Refunded',
+  included: 'Included in Founding Membership',
 } as const;
 export type CardPaymentStatus = keyof typeof PAYMENT_STATUSES;
 
@@ -50,6 +51,8 @@ export interface CardRequest {
   tracking_reference: string | null;
   notes: string | null;
   founding_interest: boolean;
+  /** Joined as a Founding Member: the membership payment covers this card */
+  joins_founding: boolean;
   /** Money arrived that we don't need (e.g. paid twice): refund in SumUp */
   needs_refund: boolean;
   created_at: string;

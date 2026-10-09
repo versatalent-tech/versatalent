@@ -17,6 +17,7 @@ import {
 import { formatCurrency } from '@/lib/utils/formatting';
 import { sql } from '@/lib/db/client';
 import { countCardRequests } from '@/lib/db/repositories/membership';
+import { getFoundingSettings, getFoundingStats } from '@/lib/db/repositories/founding';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
 
@@ -35,7 +36,7 @@ export async function GET() {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -46,6 +47,9 @@ export async function GET() {
         : Promise.resolve(0),
       can(session.role, 'payouts.manage') ? summariseOwedPayouts(bookingScope) : Promise.resolve({ count: 0, totals: [] }),
       can(session.role, 'venue.manage') ? countCardRequests() : Promise.resolve(null),
+      can(session.role, 'venue.manage')
+        ? getFoundingSettings().then(getFoundingStats).catch(() => null)
+        : Promise.resolve(null),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -84,6 +88,15 @@ export async function GET() {
         label: `${plural(cardsToSend, 'membership card')} to post`,
         detail: 'Paid online applications: link a card, write it and post it.',
         href: '/admin/membership-cards',
+      });
+    }
+    if (founding && founding.needs_refund > 0) {
+      bookingItems.unshift({
+        key: 'founding-refunds',
+        severity: 'high',
+        label: `${plural(founding.needs_refund, 'Founding Membership payment')} to refund`,
+        detail: 'Money arrived that didn’t start a membership year (e.g. paid twice). Refund it in SumUp.',
+        href: '/admin/founding-members',
       });
     }
     if (profileRequests > 0) {

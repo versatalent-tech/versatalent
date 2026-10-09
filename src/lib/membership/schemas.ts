@@ -25,6 +25,8 @@ export const applicationSchema = z
     consent_sms: z.boolean().default(false),
     consent_post: z.boolean().default(false),
     founding_interest: z.boolean().default(false),
+    /** free: pay card delivery; founding: buy the Founding Membership (delivery included) */
+    plan: z.enum(['free', 'founding']).default('free'),
     accept_terms: z.literal(true, { errorMap: () => ({ message: 'Please accept the membership terms' }) }),
   })
   .superRefine((data, ctx) => {
@@ -40,3 +42,35 @@ export const applicationSchema = z
   });
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullable()
+    .optional()
+    .transform((v) => (v ? v : null));
+
+/** Admin: a Founding Membership benefit */
+export const benefitSchema = z.object({
+  title: text(1, 120, 'Give the benefit a title'),
+  description: optionalText(500),
+  limit_text: optionalText(300),
+  eligibility_text: optionalText(300),
+  owner: optionalText(100),
+  unit_cost_cents: z.number().int().min(0).max(1_000_000).nullable().optional().transform((v) => v ?? null),
+  status: z.enum(['active', 'paused', 'retired']).default('active'),
+  sort_order: z.number().int().min(0).max(10_000).default(0),
+});
+
+/** Admin: record a Founding Membership paid in person */
+export const inPersonSaleSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email().optional(),
+    card_uid: z.string().trim().max(40).optional(),
+    method: z.enum(['sumup_reader', 'sumup_app', 'cash']),
+    reference: optionalText(100),
+    price_cents: z.number().int().min(0).max(100_000),
+  })
+  .refine((d) => d.email || d.card_uid, { message: 'Enter the member’s email or card UID', path: ['email'] });

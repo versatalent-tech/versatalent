@@ -2,6 +2,8 @@ import { randomUUID } from 'crypto';
 import { sql } from '../client';
 import { createNFCCard, getNFCCardByUID } from './nfc-cards';
 import { createVIPMembership, getVIPMembershipByUserId } from './vip-memberships';
+import { preparePurchase } from './founding';
+import type { FoundingSettings } from '@/lib/membership/founding';
 import type { ApplicationInput } from '@/lib/membership/schemas';
 import {
   ageOn,
@@ -64,15 +66,23 @@ export async function updateProgrammeSettings(changes: Partial<ProgrammeSettings
 // ---------------------------------------------------------------------------
 
 export type ApplicationResult =
-  | { ok: true; requestId: string; feeCents: number; resumed: boolean }
-  | { ok: false; reason: 'email_in_use' };
+  | { ok: true; requestId: string; feeCents: number; resumed: boolean; membershipId: string | null }
+  | { ok: false; reason: 'email_in_use' }
+  | { ok: false; reason: 'founding_unavailable'; error: string };
 
 /**
  * Create (or, for someone who started but never paid, update) an
  * application. Anyone else already using the email is refused without
  * saying why, so the form can't be used to check who is a member.
  */
-export async function submitApplication(input: ApplicationInput, settings: ProgrammeSettings): Promise<ApplicationResult> {
+export async function submitApplication(
+  input: ApplicationInput,
+  settings: ProgrammeSettings,
+  founding: FoundingSettings
+): Promise<ApplicationResult> {
+  const joinsFounding = input.plan === 'founding';
+  // Founding Members' card delivery is included in the membership price
+  const feeCents = joinsFounding ? 0 : settings.card_delivery_fee_cents;
   const postcode = normaliseUkPostcode(input.postcode)!;
   const name = `${input.first_name} ${input.last_name}`;
   const ageRange = ageRangeFor(ageOn(input.date_of_birth));
@@ -81,7 +91,8 @@ export async function submitApplication(input: ApplicationInput, settings: Progr
   const existing = await sql`
     SELECT u.id, u.role,
       (SELECT id FROM card_requests r WHERE r.user_id = u.id AND r.status = 'awaiting_payment' AND r.payment_status <> 'paid' LIMIT 1) AS unpaid_request,
-      (SELECT COUNT(*) FROM card_requests r WHERE r.user_id = u.id AND r.payment_status IN ('paid', 'waived')) AS paid_requests
+      (SELECT paid_membership_id FROM card_requests r WHERE r.user_id = u.id AND r.status = 'awaiting_payment' AND r.payment_status <> 'paid' LIMIT 1) AS unpaid_membership,
+      (SELECT COUNT(*) FROM card_requests r WHERE r.user_id = u.id AND r.payment_status IN ('paid', 'waived', 'included')) AS paid_requests
     FROM users u WHERE u.email = ${input.email} LIMIT 1
   `;
   const user = existing[0];
@@ -109,17 +120,28 @@ export async function submitApplication(input: ApplicationInput, settings: Progr
 
   // Started before but never paid: let them try again with fresh details
   if (user && user.role === 'vip' && user.unpaid_request && Number(user.paid_requests) === 0) {
+    let membershipId: string | null = null;
+    if (joinsFounding) {
+      const prepared = await preparePurchase(user.id, founding, settings.terms_version);
+      if ('error' in prepared) return { ok: false, reason: 'founding_unavailable', error: prepared.error };
+      membershipId = prepared.purchase.id;
+    }
     await sql.transaction([
       sql`UPDATE users SET name = ${name}, updated_at = NOW() WHERE id = ${user.id}`,
       profile(user.id),
       sql`
         UPDATE card_requests SET recipient_name = ${name}, address_line1 = ${input.address_line1},
           address_line2 = ${input.address_line2 || null}, city = ${input.city}, postcode = ${postcode},
-          fee_cents = ${settings.card_delivery_fee_cents}, updated_at = NOW()
+          fee_cents = ${feeCents}, paid_membership_id = ${membershipId}, updated_at = NOW()
         WHERE id = ${user.unpaid_request}
       `,
+      // Switched from Founding to free: the unpaid Founding purchase is no longer wanted
+      sql`
+        UPDATE paid_memberships SET status = 'cancelled', notes = 'Chose the free membership instead', updated_at = NOW()
+        WHERE id = ${user.unpaid_membership} AND id IS DISTINCT FROM ${membershipId}::uuid AND status IN ('pending', 'payment_failed')
+      `,
     ]);
-    return { ok: true, requestId: user.unpaid_request, feeCents: settings.card_delivery_fee_cents, resumed: true };
+    return { ok: true, requestId: user.unpaid_request, feeCents, resumed: true, membershipId };
   }
   if (user) return { ok: false, reason: 'email_in_use' };
 
@@ -131,10 +153,22 @@ export async function submitApplication(input: ApplicationInput, settings: Progr
     sql`
       INSERT INTO card_requests (id, user_id, recipient_name, address_line1, address_line2, city, postcode, fee_cents)
       VALUES (${requestId}, ${userId}, ${name}, ${input.address_line1}, ${input.address_line2 || null}, ${input.city},
-              ${postcode}, ${settings.card_delivery_fee_cents})
+              ${postcode}, ${feeCents})
     `,
   ]);
-  return { ok: true, requestId, feeCents: settings.card_delivery_fee_cents, resumed: false };
+
+  let membershipId: string | null = null;
+  if (joinsFounding) {
+    const prepared = await preparePurchase(userId, founding, settings.terms_version);
+    if ('error' in prepared) {
+      // Sold out at the same moment: they're still a free member-to-be at the normal fee
+      await sql`UPDATE card_requests SET fee_cents = ${settings.card_delivery_fee_cents} WHERE id = ${requestId}`;
+      return { ok: false, reason: 'founding_unavailable', error: prepared.error };
+    }
+    membershipId = prepared.purchase.id;
+    await sql`UPDATE card_requests SET paid_membership_id = ${membershipId} WHERE id = ${requestId}`;
+  }
+  return { ok: true, requestId, feeCents, resumed: false, membershipId };
 }
 
 export interface PaymentTarget {
@@ -147,6 +181,8 @@ export interface PaymentTarget {
   sumup_checkout_id: string | null;
   sumup_checkout_reference: string | null;
   payment_attempts: number;
+  /** Joining as a Founding Member: the membership payment covers the card */
+  paid_membership_id: string | null;
 }
 
 export async function getPaymentTarget(by: { requestId: string } | { checkoutId: string }): Promise<PaymentTarget | null> {
@@ -166,6 +202,7 @@ export async function getPaymentTarget(by: { requestId: string } | { checkoutId:
         sumup_checkout_id: r.sumup_checkout_id,
         sumup_checkout_reference: r.sumup_checkout_reference,
         payment_attempts: Number(r.payment_attempts),
+        paid_membership_id: r.paid_membership_id ?? null,
       }
     : null;
 }
@@ -264,7 +301,7 @@ export async function markCardFeeUnpaid(requestId: string, checkoutId: string, o
 }
 
 /** The free programme starts once the card is paid for (or the fee waived) */
-async function startMembership(userId: string): Promise<void> {
+export async function startMembership(userId: string): Promise<void> {
   if (!(await getVIPMembershipByUserId(userId))) {
     try {
       await createVIPMembership(userId);
@@ -318,6 +355,7 @@ function mapRequest(row: any): CardRequest {
     tracking_reference: row.tracking_reference,
     notes: row.notes,
     founding_interest: Boolean(row.founding_interest),
+    joins_founding: Boolean(row.paid_membership_id),
     needs_refund: Boolean(row.needs_refund),
     created_at: iso(row.created_at)!,
   };
@@ -437,6 +475,7 @@ export async function purgeStaleApplications(): Promise<number> {
         WHERE r.user_id = u.id AND (r.status <> 'awaiting_payment' OR r.created_at > NOW() - INTERVAL '6 months')
       )
       AND NOT EXISTS (SELECT 1 FROM vip_memberships m WHERE m.user_id = u.id)
+      AND NOT EXISTS (SELECT 1 FROM paid_memberships p WHERE p.user_id = u.id AND p.paid_at IS NOT NULL)
       AND NOT EXISTS (SELECT 1 FROM nfc_cards c WHERE c.user_id = u.id)
       AND NOT EXISTS (SELECT 1 FROM pos_orders o WHERE o.customer_user_id = u.id)
       AND NOT EXISTS (SELECT 1 FROM checkins k WHERE k.user_id = u.id)
