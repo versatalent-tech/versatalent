@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createScanLog } from '@/lib/db/repositories/nfc-scan-logs';
 import { getAllCheckIns, createCheckIn, getCheckInsByUserId, getCheckInsByEventId } from '@/lib/db/repositories/checkins';
 import { getUserById } from '@/lib/db/repositories/users';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
@@ -102,12 +103,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      data = {
-        user_id: card.user.id,
+      // A tap on someone's phone is not attendance: anyone holding the card
+      // (or its URL) could do it. Record it in the scan log only; check-ins
+      // and their points come from staff at the door.
+      await createScanLog({
+        card_uid: card.card_uid,
         nfc_card_id: card.id,
-        source: card.type === 'artist' ? 'artist_profile' : 'vip_pass',
-        metadata: { card_uid: card.card_uid, via: 'card_tap' },
-      };
+        user_id: card.user.id,
+        scan_type: 'read',
+        success: true,
+        metadata: { via: 'card_tap', counts_as_checkin: false },
+      });
+      return NextResponse.json({ logged: true, checkin: null, points: null }, { status: 200 });
     }
 
     data.ip_address = ip;
