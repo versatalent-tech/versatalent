@@ -4,6 +4,7 @@ import { firstIssue } from '@/lib/crm/schemas';
 import { HONEYPOT_FIELD } from '@/lib/crm/types';
 import { getProgrammeSettings, submitApplication } from '@/lib/db/repositories/membership';
 import { getFoundingSettings, getPendingPurchase } from '@/lib/db/repositories/founding';
+import { attachReferral, findReferralCodeOwner, getReferralConfig } from '@/lib/db/repositories/referrals';
 import { startCardPayment, startFoundingPayment } from '@/lib/services/membership-payments';
 import { getClientIp, isLoginThrottled, recordLoginAttempt } from '@/lib/auth/login-throttle';
 import { SumUpNotConfiguredError } from '@/lib/services/sumup';
@@ -35,6 +36,13 @@ export async function POST(request: NextRequest) {
     return ApiErrors.BadRequest('The Founding Membership isn’t on sale at the moment. Choose the free membership to join now.');
   }
 
+  // A referral code must belong to another member (checked before anything is saved)
+  if (input.referral_code) {
+    const [referrer, referrals] = await Promise.all([findReferralCodeOwner(input.referral_code), getReferralConfig()]);
+    if (!referrals.open || !referrer) return ApiErrors.BadRequest('That referral code isn’t valid. Check it, or leave it empty.');
+    if (referrer.email.toLowerCase() === input.email) return ApiErrors.BadRequest('You can’t use your own referral code.');
+  }
+
   // At most 5 applications per email and 20 per connection in 15 minutes
   const ip = getClientIp(request);
   const throttleKey = `membership-apply:${input.email}`;
@@ -55,6 +63,9 @@ export async function POST(request: NextRequest) {
     return ApiErrors.BadRequest(result.reason === 'founding_unavailable' ? `${result.error} Choose the free membership to join now.` : EMAIL_IN_USE);
   }
   const ids = { requestId: result.requestId, membershipId: result.membershipId };
+  if (input.referral_code) {
+    await attachReferral(result.userId, input.referral_code).catch((error) => console.error('Referral attribution failed:', error));
+  }
 
   try {
     let payment: { url: string } | { error: string };

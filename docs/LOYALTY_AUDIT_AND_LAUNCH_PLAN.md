@@ -132,6 +132,13 @@ The goal is for people to join online today, with their card posted home.
 - **Retention:** welcome, post-event follow-up, inactivity and "approaching the next tier" messages. Each has consent checks, deduplication, cooldowns and an on/off switch.
 - **Referrals:** a unique code per member, attribution at sign-up, and approval only after a qualifying action (for example a first verified paid attendance). Self-referral, duplicate-account and per-member caps are blocked, and the reward goes to reward points only.
 
+**Status (9 Oct 2026): built without an email provider; referrals closed.** Migration `032_referrals_outreach.sql`; admin at `/admin/referrals` and `/admin/outreach`.
+- Referrals: code and share link on the member pass; code field on the join form (pre-filled from `?ref=`). Approved automatically on the friend's first staff check-in or a paid till order of at least £10 (configurable), paying 50 reward points to the referrer (configurable; optional points for the friend). Own code refused; one referral per person; shared phone or address, inactive referrer or over the yearly cap (10) go to review. Payouts keyed to the referral, so nothing pays twice.
+- Retention without email: the Member outreach page lists who to contact for welcome, after an event, inactive (60 days), close to the next tier, Founding renewal due (30 days) and Founding lapsed. Marketing lists only include members with email or text consent; the renewal reminder is a service message. Editable templates with placeholders; copy, or open in your own email or SMS app; mark sent or skipped. One-off messages are never listed twice; the others have a cooldown. History of every contact.
+- Member pass shows a renewal reminder in the last 30 days. Dashboard alerts for Founding renewals due and referrals to review.
+- Draft terms section 10 (referrals) and privacy notice lines added.
+- When an email provider and domain are set up, the same lists and templates can be sent automatically.
+
 ## 4. Decisions needed from the business
 
 1. **Programme terms and privacy notice** for the sign-up form: who writes them? I can draft plain-English versions for review.

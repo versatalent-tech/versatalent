@@ -1,3 +1,4 @@
+import type { NextRequest } from 'next/server';
 import { requireTeamPermission } from '@/lib/middleware/auth';
 import { can } from '@/lib/auth/permissions';
 import {
@@ -18,6 +19,8 @@ import { formatCurrency } from '@/lib/utils/formatting';
 import { sql } from '@/lib/db/client';
 import { countCardRequests } from '@/lib/db/repositories/membership';
 import { getFoundingSettings, getFoundingStats } from '@/lib/db/repositories/founding';
+import { getCampaignSettings, listCandidates } from '@/lib/db/repositories/outreach';
+import { countReferralsToReview } from '@/lib/db/repositories/referrals';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
 
@@ -26,7 +29,7 @@ export const dynamic = 'force-dynamic';
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 // GET /api/admin/dashboard - figures for the admin home page, shaped by role
-export async function GET() {
+export async function GET(request: NextRequest) {
   const auth = await requireTeamPermission('dashboard.view');
   if ('response' in auth) return auth.response;
 
@@ -36,7 +39,7 @@ export async function GET() {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -50,6 +53,12 @@ export async function GET() {
       can(session.role, 'venue.manage')
         ? getFoundingSettings().then(getFoundingStats).catch(() => null)
         : Promise.resolve(null),
+      can(session.role, 'venue.manage')
+        ? getCampaignSettings()
+            .then((c) => (c.founding_renewal.enabled ? listCandidates('founding_renewal', request.nextUrl.origin).then((l) => l.length) : 0))
+            .catch(() => 0)
+        : Promise.resolve(0),
+      can(session.role, 'venue.manage') ? countReferralsToReview().catch(() => 0) : Promise.resolve(0),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -97,6 +106,24 @@ export async function GET() {
         label: `${plural(founding.needs_refund, 'Founding Membership payment')} to refund`,
         detail: 'Money arrived that didn’t start a membership year (e.g. paid twice). Refund it in SumUp.',
         href: '/admin/founding-members',
+      });
+    }
+    if (renewalsDue > 0) {
+      bookingItems.push({
+        key: 'founding-renewals',
+        severity: 'medium',
+        label: `${plural(renewalsDue, 'Founding Membership')} ending within 30 days`,
+        detail: 'Send the renewal reminder from Member outreach, then mark it sent.',
+        href: '/admin/outreach',
+      });
+    }
+    if (referralsToReview > 0) {
+      bookingItems.push({
+        key: 'referrals-review',
+        severity: 'low',
+        label: `${plural(referralsToReview, 'referral')} to review`,
+        detail: 'Flagged (shared phone or address, or over the yearly limit) before points are paid.',
+        href: '/admin/referrals',
       });
     }
     if (profileRequests > 0) {

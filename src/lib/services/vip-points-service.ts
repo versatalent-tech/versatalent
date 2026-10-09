@@ -8,6 +8,7 @@ import {
 } from '../db/repositories/vip-memberships';
 import { getLoyaltySettings, postPoints, startMembershipYear } from '../db/repositories/loyalty';
 import type { Ledger } from '../loyalty/types';
+import { qualifyReferral } from '../db/repositories/referrals';
 import { updateUserNFCCardsMetadata } from '../db/repositories/nfc-cards';
 import { getUserById } from '../db/repositories/users';
 import { sql } from '../db/client';
@@ -194,6 +195,9 @@ export async function processEventCheckin(
       checkinId,
       { applyTierMultiplier: true, sourceKey: `checkin:${userId}:${awardKey}` }
     );
+
+    // A staff-verified visit can complete the member's referral
+    await qualifyReferral(userId, 'checkin').catch((error) => console.error('Referral qualification failed:', error));
 
     return {
       success: result.success,
