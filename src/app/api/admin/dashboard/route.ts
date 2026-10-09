@@ -16,6 +16,7 @@ import {
 } from '@/lib/db/repositories/bookings';
 import { formatCurrency } from '@/lib/utils/formatting';
 import { sql } from '@/lib/db/client';
+import { countCardRequests } from '@/lib/db/repositories/membership';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
 
@@ -34,7 +35,7 @@ export async function GET() {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -44,6 +45,7 @@ export async function GET() {
         ? sql`SELECT COUNT(*) AS n FROM talent_profile_changes WHERE status = 'pending'`.then((r: any) => Number(r[0].n))
         : Promise.resolve(0),
       can(session.role, 'payouts.manage') ? summariseOwedPayouts(bookingScope) : Promise.resolve({ count: 0, totals: [] }),
+      can(session.role, 'venue.manage') ? countCardRequests() : Promise.resolve(null),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -72,6 +74,16 @@ export async function GET() {
         label: `${plural(owed.count, 'finished job')} not paid to the talent yet`,
         detail: `${owed.totals.map((t) => formatCurrency(t.cents, t.currency)).join(' + ')} owed in total.`,
         href: '/admin/bookings/payouts',
+      });
+    }
+    const cardsToSend = cards ? cards.to_post + cards.card_assigned : 0;
+    if (cardsToSend > 0) {
+      bookingItems.unshift({
+        key: 'cards-to-post',
+        severity: 'high',
+        label: `${plural(cardsToSend, 'membership card')} to post`,
+        detail: 'Paid online applications: link a card, write it and post it.',
+        href: '/admin/membership-cards',
       });
     }
     if (profileRequests > 0) {

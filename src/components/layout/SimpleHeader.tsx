@@ -11,6 +11,7 @@ const navigation = [
   { name: "About Us", href: "/about" },
   { name: "Talent Directory", href: "/talents" },
   { name: "Events", href: "/events" },
+  { name: "Membership", href: "/membership" },
   { name: "Join Us", href: "/join" },
   { name: "For Brands", href: "/for-brands" },
   { name: "Blog", href: "/blog" },

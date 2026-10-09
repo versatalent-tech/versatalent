@@ -17,7 +17,10 @@
  *   SUMUP_AFFILIATE_APP_ID  App ID the affiliate key was created for
  */
 
-const SUMUP_API = 'https://api.sumup.com';
+// SUMUP_API_BASE points at a local mock for tests; it is ignored in production so
+// the API key can never be sent anywhere but SumUp
+const SUMUP_API =
+  process.env.NODE_ENV !== 'production' && process.env.SUMUP_API_BASE ? process.env.SUMUP_API_BASE : 'https://api.sumup.com';
 
 interface SumUpConfig {
   apiKey: string;
@@ -107,7 +110,7 @@ export function getSumUpConfigHints(): string[] {
 }
 
 async function sumupRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const { apiKey } = getConfig();
+  const { apiKey } = getOnlineConfig();
   const response = await fetch(`${SUMUP_API}${path}`, {
     ...init,
     headers: {
@@ -127,6 +130,18 @@ async function sumupRequest<T>(path: string, init: RequestInit = {}): Promise<T>
     throw new SumUpApiError(response.status, message);
   }
   return body as T;
+}
+
+/**
+ * Online checkouts only need the API key and merchant code (the affiliate
+ * key is for card readers), so they work even if reader setup is incomplete.
+ */
+function getOnlineConfig(): { apiKey: string; merchantCode: string } {
+  const apiKey = readSetting('SUMUP_API_KEY');
+  const merchantCode = readSetting('SUMUP_MERCHANT_CODE');
+  const missing = [!apiKey && 'SUMUP_API_KEY', !merchantCode && 'SUMUP_MERCHANT_CODE'].filter(Boolean) as string[];
+  if (missing.length > 0) throw new SumUpNotConfiguredError(missing);
+  return { apiKey: apiKey!, merchantCode: merchantCode! };
 }
 
 const merchantPath = () => `/v0.1/merchants/${encodeURIComponent(getConfig().merchantCode)}`;
@@ -312,3 +327,98 @@ export function checkAppPaymentTiming(
   return { ok: true };
 }
 
+
+// ---------------------------------------------------------------------------
+// Online payments - Hosted Checkout
+// ---------------------------------------------------------------------------
+
+export interface HostedCheckout {
+  id: string;
+  url: string;
+}
+
+/**
+ * Create a SumUp-hosted payment page. The customer is sent to `url`; the
+ * session lasts 30 minutes. `reference` must be unique per attempt.
+ * SumUp posts { event_type, id } to `returnUrl` when the status changes, and
+ * sends the customer back to `redirectUrl` afterwards. Neither proves
+ * payment: always confirm with getCheckout.
+ */
+export async function createHostedCheckout(params: {
+  reference: string;
+  amountCents: number;
+  currency: string;
+  description: string;
+  redirectUrl: string;
+  returnUrl: string;
+}): Promise<HostedCheckout> {
+  const { merchantCode } = getOnlineConfig();
+  const body = await sumupRequest<{ id: string; hosted_checkout_url?: string }>('/v0.1/checkouts', {
+    method: 'POST',
+    body: JSON.stringify({
+      merchant_code: merchantCode,
+      amount: params.amountCents / 100,
+      currency: params.currency,
+      checkout_reference: params.reference,
+      description: params.description,
+      redirect_url: params.redirectUrl,
+      return_url: params.returnUrl,
+      hosted_checkout: { enabled: true },
+    }),
+  });
+  if (!body.hosted_checkout_url) {
+    throw new SumUpApiError(502, 'SumUp did not return a payment page link');
+  }
+  return { id: body.id, url: body.hosted_checkout_url };
+}
+
+export interface OnlineCheckout {
+  id: string;
+  status: string; // PENDING, PAID, FAILED, EXPIRED
+  amount: number;
+  currency: string;
+  checkout_reference: string;
+  merchant_code: string;
+  transactions?: { transaction_code?: string; status?: string; amount?: number; currency?: string }[];
+}
+
+export async function getCheckout(checkoutId: string): Promise<OnlineCheckout | null> {
+  try {
+    return await sumupRequest<OnlineCheckout>(`/v0.1/checkouts/${encodeURIComponent(checkoutId)}`);
+  } catch (error) {
+    if (error instanceof SumUpApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export type OnlinePaymentOutcome =
+  | { state: 'paid'; transactionCode: string | null }
+  | { state: 'pending' }
+  | { state: 'failed' | 'expired'; reason: string };
+
+/**
+ * Decide what a checkout means for something we sold: paid only when SumUp
+ * says PAID for our merchant, with the exact amount, currency and reference.
+ */
+export function judgeOnlineCheckout(
+  checkout: OnlineCheckout,
+  expected: { amountCents: number; currency: string; reference: string }
+): OnlinePaymentOutcome {
+  const status = (checkout.status || '').toUpperCase();
+  if (status === 'PENDING') return { state: 'pending' };
+  if (status === 'EXPIRED') return { state: 'expired', reason: 'The payment page expired' };
+  if (status !== 'PAID') return { state: 'failed', reason: `Payment ${status.toLowerCase() || 'not completed'}` };
+
+  const { merchantCode } = getOnlineConfig();
+  if (checkout.merchant_code && checkout.merchant_code !== merchantCode) {
+    return { state: 'failed', reason: 'Payment was made to a different merchant' };
+  }
+  if (checkout.checkout_reference !== expected.reference) {
+    return { state: 'failed', reason: 'Payment reference does not match' };
+  }
+  if (Math.round(Number(checkout.amount) * 100) !== expected.amountCents || checkout.currency !== expected.currency) {
+    return { state: 'failed', reason: 'Payment amount does not match' };
+  }
+  const paidTransaction = checkout.transactions?.find((t) => (t.status || '').toUpperCase() === 'SUCCESSFUL');
+  return { state: 'paid', transactionCode: paidTransaction?.transaction_code ?? null };
+}

@@ -71,6 +71,7 @@ const SECTIONS = [
     links: [
       { title: "NFC cards & check-ins", description: "Users, cards, events and scans", icon: Nfc, href: "/admin/nfc" },
       { title: "VIP programme", description: "Tiers, points and benefits", icon: Trophy, href: "/admin/vip" },
+      { title: "Membership cards", description: "Online applications and cards to post", icon: CreditCard, href: "/admin/membership-cards" },
     ],
   },
   {
