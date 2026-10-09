@@ -83,14 +83,16 @@ export async function createVIPConsumption(
       event_id,
       amount,
       currency,
-      description
+      description,
+      order_id
     )
     VALUES (
       ${data.user_id},
       ${data.event_id || null},
       ${data.amount},
       ${data.currency || POS_CURRENCY},
-      ${data.description || null}
+      ${data.description || null},
+      ${data.order_id || null}
     )
     RETURNING *
   `;
@@ -105,7 +107,7 @@ export async function getTotalConsumptionByUserId(userId: string): Promise<numbe
   const result = await sql<{ total: string }[]>`
     SELECT COALESCE(SUM(amount), 0) as total
     FROM vip_consumptions
-    WHERE user_id = ${userId}
+    WHERE user_id = ${userId} AND refunded_at IS NULL
   `;
   return parseFloat(result[0].total);
 }
@@ -119,6 +121,7 @@ export async function getConsumptionStats() {
       COALESCE(AVG(amount), 0) as avg_amount,
       currency
     FROM vip_consumptions
+    WHERE refunded_at IS NULL
     GROUP BY currency
   `;
 

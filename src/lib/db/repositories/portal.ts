@@ -210,6 +210,10 @@ const SOURCE_LABELS: Record<string, string> = {
   consumption: 'Purchase at an event',
   manual_adjust: 'Adjustment by VersaTalent',
   tier_bonus: 'Tier bonus',
+  opening_balance: 'Opening balance',
+  reward_claim: 'Reward claimed',
+  reward_release: 'Reward points returned',
+  order_refund: 'Purchase refunded',
 };
 
 async function listPointsHistory(userId: string, limit = 30): Promise<PointsEntry[]> {
@@ -218,7 +222,7 @@ async function listPointsHistory(userId: string, limit = 30): Promise<PointsEntr
     FROM vip_points_log l
     LEFT JOIN checkins c ON l.source = 'event_checkin' AND c.id::text = l.metadata->>'checkin_id'
     LEFT JOIN nfc_events ne ON ne.id = c.event_id
-    WHERE l.user_id = ${userId}
+    WHERE l.user_id = ${userId} AND l.ledger = 'reward'
     ORDER BY l.created_at DESC
     LIMIT ${limit}
   `;

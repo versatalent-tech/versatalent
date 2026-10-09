@@ -80,7 +80,16 @@ export interface CheckInWithDetails extends CheckIn {
 // VIP System Types
 export type VIPTier = 'silver' | 'gold' | 'black';
 export type VIPStatus = 'active' | 'suspended' | 'cancelled';
-export type PointsSource = 'event_checkin' | 'consumption' | 'manual_adjust' | 'tier_bonus';
+export type PointsSource =
+  | 'event_checkin'
+  | 'consumption'
+  | 'manual_adjust'
+  | 'tier_bonus'
+  | 'opening_balance'
+  | 'reward_claim'
+  | 'reward_release'
+  | 'order_refund'
+  | 'year_end';
 
 export interface VIPMembership {
   id: string;
@@ -225,6 +234,8 @@ export interface CreateVIPConsumptionRequest {
   amount: number;
   currency?: string;
   description?: string;
+  /** Set for till orders, so a refund can find it */
+  order_id?: string;
 }
 
 export interface ManualPointsAdjustmentRequest {
@@ -517,7 +528,7 @@ export interface UpdateTalentRequest {
 // POS (Point of Sale) System Types
 // ============================================
 
-export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'failed';
+export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'failed' | 'refunded';
 
 export interface Product {
   id: string;

@@ -90,7 +90,7 @@ export async function getEventDayCheckins(nfcEventId: string, limit = 50): Promi
       COALESCE((
         SELECT SUM(l.delta_points)
         FROM vip_points_log l
-        WHERE l.ref_id = c.id AND l.source = 'event_checkin'
+        WHERE l.ref_id = c.id AND l.source = 'event_checkin' AND l.ledger IN ('legacy', 'status')
       ), 0)::int AS points_awarded
     FROM checkins c
     LEFT JOIN users u ON u.id = c.user_id

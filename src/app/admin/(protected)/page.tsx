@@ -74,6 +74,7 @@ const SECTIONS = [
       { title: "VIP programme", description: "Tiers, points and benefits", icon: Trophy, href: "/admin/vip" },
       { title: "Membership cards", description: "Online applications and cards to post", icon: CreditCard, href: "/admin/membership-cards" },
       { title: "V•PRIVILEGE Founding", description: "Paid memberships, benefits and payments", icon: Crown, href: "/admin/founding-members" },
+      { title: "Rewards & points", description: "Rewards, claims, costs and balance checks", icon: Gift, href: "/admin/rewards" },
     ],
   },
   {

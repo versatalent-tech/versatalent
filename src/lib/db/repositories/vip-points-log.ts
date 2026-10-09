@@ -29,9 +29,10 @@ export async function getPointsLogsByUserId(
   userId: string,
   limit = 100
 ): Promise<VIPPointsLog[]> {
+  // The member's spendable (reward) points history; status points show as tier progress
   const logs = await sql<VIPPointsLog[]>`
     SELECT * FROM vip_points_log
-    WHERE user_id = ${userId}
+    WHERE user_id = ${userId} AND ledger = 'reward'
     ORDER BY created_at DESC
     LIMIT ${limit}
   `;
@@ -47,35 +48,7 @@ export async function getPointsLogsBySource(source: PointsSource): Promise<VIPPo
   return logs;
 }
 
-export async function createPointsLogEntry(
-  userId: string,
-  source: PointsSource,
-  deltaPoints: number,
-  balanceAfter: number,
-  metadata?: Record<string, any>,
-  refId?: string
-): Promise<VIPPointsLog> {
-  const logs = await sql<VIPPointsLog[]>`
-    INSERT INTO vip_points_log (
-      user_id,
-      source,
-      ref_id,
-      delta_points,
-      balance_after,
-      metadata
-    )
-    VALUES (
-      ${userId},
-      ${source},
-      ${refId || null},
-      ${deltaPoints},
-      ${balanceAfter},
-      ${JSON.stringify(metadata || {})}
-    )
-    RETURNING *
-  `;
-  return logs[0];
-}
+// Entries are written only by loyalty_post (repositories/loyalty.ts)
 
 export async function getPointsActivity(
   userId: string,
