@@ -5,17 +5,20 @@ import { getProgrammeSettings } from '@/lib/db/repositories/membership';
 import { getTierSettings } from '@/lib/services/vip-tiers';
 import { getActivePointRules } from '@/lib/db/repositories/vip-point-rules';
 import { getFoundingSettings } from '@/lib/db/repositories/founding';
+import { getReferralConfig } from '@/lib/db/repositories/referrals';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'VIP Membership Terms | VersaTalent' };
 
 export default async function MembershipTermsPage() {
-  const [settings, tiers, rules, founding] = await Promise.all([
+  const [settings, tiers, rules, founding, referrals] = await Promise.all([
     getProgrammeSettings(),
     getTierSettings(),
     getActivePointRules(),
     getFoundingSettings(),
+    getReferralConfig(),
   ]);
+  const minOrder = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(referrals.settings.min_order_cents / 100);
   const foundingPrice = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(founding.founding_price_cents / 100);
   const fee = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(settings.card_delivery_fee_cents / 100);
   const checkin = rules.find((r) => r.action_type === 'event_checkin')?.points_per_unit ?? 10;
@@ -156,12 +159,30 @@ export default async function MembershipTermsPage() {
         </li>
       </ul>
 
-      <h2>10. Your data</h2>
+      <h2 id="referrals" className="scroll-mt-24">10. Referring friends</h2>
+      <ul>
+        <li>
+          When referrals are open, your member pass shows a personal code. If a friend joins with it and their first visit is
+          confirmed (checked in by our staff at an event, or a purchase of at least {minOrder} at our till), you receive{' '}
+          {referrals.settings.referrer_points} reward points
+          {referrals.settings.referee_points > 0 ? ` and your friend receives ${referrals.settings.referee_points}` : ''}.
+        </li>
+        <li>
+          Referral points are reward points only: they never count towards your tier. You can be rewarded for up to{' '}
+          {referrals.settings.yearly_cap} referrals in 12 months.
+        </li>
+        <li>
+          You can&apos;t refer yourself, and each person can only be referred once. We may check, delay or refuse a referral that
+          looks like the same person or household signing up twice, or other misuse.
+        </li>
+      </ul>
+
+      <h2>11. Your data</h2>
       <p>
         How we use your information is explained in our <Link href="/privacy" className="text-gold underline">privacy notice</Link>.
       </p>
 
-      <h2>11. General</h2>
+      <h2>12. General</h2>
       <p>
         Nothing in these terms limits liability that can&apos;t legally be limited, or affects your statutory rights. These terms are
         governed by the law of England and Wales.

@@ -75,6 +75,8 @@ const SECTIONS = [
       { title: "Membership cards", description: "Online applications and cards to post", icon: CreditCard, href: "/admin/membership-cards" },
       { title: "V•PRIVILEGE Founding", description: "Paid memberships, benefits and payments", icon: Crown, href: "/admin/founding-members" },
       { title: "Rewards & points", description: "Rewards, claims, costs and balance checks", icon: Gift, href: "/admin/rewards" },
+      { title: "Member outreach", description: "Who to contact: welcome, renewals, inactive", icon: Mail, href: "/admin/outreach" },
+      { title: "Referrals", description: "Member invites and points for referrers", icon: Users, href: "/admin/referrals" },
     ],
   },
   {

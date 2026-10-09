@@ -83,6 +83,13 @@ export function FoundingPassCard({ memberId }: { memberId: string }) {
         {number && <p className="font-mono text-sm text-gray-300">{number}</p>}
       </div>
 
+      {current && !upcoming && status.can_buy && (
+        <p className="mb-4 rounded-lg border border-gold bg-gold/15 px-4 py-3 text-sm text-gold">
+          Your membership ends in {Math.max(1, Math.ceil((new Date(current.ends_at).getTime() - Date.now()) / 86400000))} day
+          {Math.ceil((new Date(current.ends_at).getTime() - Date.now()) / 86400000) === 1 ? "" : "s"}. It won&apos;t renew
+          automatically: renew below to keep your benefits and your number.
+        </p>
+      )}
       {current ? (
         <>
           <p className="text-2xl font-bold">Member until {longDate(current.ends_at)}</p>

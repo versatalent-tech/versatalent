@@ -1,6 +1,7 @@
 import { createVIPConsumption } from '../db/repositories/vip-consumptions';
 import { getUserById } from '../db/repositories/users';
 import { MEMBER_ROLES, processConsumption } from './vip-points-service';
+import { qualifyReferral } from '../db/repositories/referrals';
 import type { POSOrder } from '../db/types';
 
 /**
@@ -48,6 +49,11 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
       order.currency,
       consumption.id,
       order.id
+    );
+
+    // A paid order (above the minimum) can complete the member's referral
+    await qualifyReferral(order.customer_user_id, 'order', order.total_cents).catch((error) =>
+      console.error('Referral qualification failed:', error)
     );
 
     return {

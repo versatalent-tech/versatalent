@@ -18,6 +18,7 @@ export default function PrivacyPage() {
         <li><strong>Card and activity:</strong> your NFC card&apos;s identifier, event check-ins, purchases made with your card at our tills, points, tier and discounts applied.</li>
         <li><strong>Payments:</strong> when you pay online, SumUp processes your card. We receive a payment reference and outcome, never your card details.</li>
         <li><strong>Messages:</strong> anything you send through our website forms or by email.</li>
+        <li><strong>Referrals:</strong> if you join with a friend&apos;s code, we record that they referred you. They see how many friends joined and came to an event, not who.</li>
       </ul>
 
       <h2>Why we use it, and our lawful basis</h2>
@@ -26,6 +27,7 @@ export default function PrivacyPage() {
         <li><strong>To check you&apos;re 18 or over</strong>, and to keep records we&apos;re required to keep (for example payment records for tax): legal obligation.</li>
         <li><strong>To prevent fraud and misuse, keep our systems secure and improve the programme</strong>: our legitimate interests.</li>
         <li><strong>To send you news and offers</strong> by email, text or post: only with your consent for each channel, which you can withdraw at any time.</li>
+        <li><strong>To tell you about something you&apos;ve paid for</strong>, such as your Founding Membership ending: to perform our contract with you.</li>
       </ul>
 
       <h2>Who we share it with</h2>

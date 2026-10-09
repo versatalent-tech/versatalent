@@ -37,11 +37,16 @@ export function MembershipForm({
   feeCents,
   founding,
   initialPlan = "free",
+  initialReferralCode = "",
+  referralsOpen = false,
 }: {
   feeCents: number;
   /** Set when the Founding Membership is on sale */
   founding?: FoundingOffer | null;
   initialPlan?: "free" | "founding";
+  /** From a friend's share link (?ref=CODE) */
+  initialReferralCode?: string;
+  referralsOpen?: boolean;
 }) {
   const foundingAvailable = Boolean(founding && !founding.soldOut);
   const [plan, setPlan] = useState<"free" | "founding">(foundingAvailable ? initialPlan : "free");
@@ -56,6 +61,7 @@ export function MembershipForm({
     city: "",
     postcode: "",
     referral_source: "",
+    referral_code: initialReferralCode,
   });
   const [interests, setInterests] = useState<string[]>([]);
   const [consents, setConsents] = useState({ consent_email: false, consent_sms: false, consent_post: false });
@@ -244,6 +250,19 @@ export function MembershipForm({
             })}
           </div>
         </div>
+        {referralsOpen && (
+          <div className="max-w-xs">
+            <Label htmlFor="referral_code">Friend&apos;s referral code (optional)</Label>
+            <Input
+              id="referral_code"
+              value={form.referral_code}
+              onChange={set("referral_code")}
+              className="uppercase tracking-widest"
+              autoComplete="off"
+              maxLength={20}
+            />
+          </div>
+        )}
         <div className="max-w-xs">
           <Label htmlFor="referral">How did you hear about us?</Label>
           <select id="referral" className={selectClass} value={form.referral_source} onChange={set("referral_source")}>

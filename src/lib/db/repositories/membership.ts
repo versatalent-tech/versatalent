@@ -66,7 +66,7 @@ export async function updateProgrammeSettings(changes: Partial<ProgrammeSettings
 // ---------------------------------------------------------------------------
 
 export type ApplicationResult =
-  | { ok: true; requestId: string; feeCents: number; resumed: boolean; membershipId: string | null }
+  | { ok: true; requestId: string; userId: string; feeCents: number; resumed: boolean; membershipId: string | null }
   | { ok: false; reason: 'email_in_use' }
   | { ok: false; reason: 'founding_unavailable'; error: string };
 
@@ -141,7 +141,7 @@ export async function submitApplication(
         WHERE id = ${user.unpaid_membership} AND id IS DISTINCT FROM ${membershipId}::uuid AND status IN ('pending', 'payment_failed')
       `,
     ]);
-    return { ok: true, requestId: user.unpaid_request, feeCents, resumed: true, membershipId };
+    return { ok: true, requestId: user.unpaid_request, userId: user.id, feeCents, resumed: true, membershipId };
   }
   if (user) return { ok: false, reason: 'email_in_use' };
 
@@ -168,7 +168,7 @@ export async function submitApplication(
     membershipId = prepared.purchase.id;
     await sql`UPDATE card_requests SET paid_membership_id = ${membershipId} WHERE id = ${requestId}`;
   }
-  return { ok: true, requestId, feeCents, resumed: false, membershipId };
+  return { ok: true, requestId, userId, feeCents, resumed: false, membershipId };
 }
 
 export interface PaymentTarget {

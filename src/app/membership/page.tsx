@@ -5,6 +5,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { MembershipForm } from '@/components/membership/MembershipForm';
 import { getProgrammeSettings } from '@/lib/db/repositories/membership';
 import { getFoundingOffer } from '@/lib/db/repositories/founding';
+import { getReferralConfig } from '@/lib/db/repositories/referrals';
+import { normaliseReferralCode } from '@/lib/referrals/types';
 import { getActiveTierBenefits } from '@/lib/db/repositories/vip-tier-benefits';
 import { getTierSettings } from '@/lib/services/vip-tiers';
 
@@ -22,13 +24,14 @@ const TIERS = [
   { key: 'black', name: 'Black', style: 'from-gray-800 to-black text-white' },
 ] as const;
 
-export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
-  const [settings, tiers, benefits, offer, query] = await Promise.all([
+export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ plan?: string; ref?: string }> }) {
+  const [settings, tiers, benefits, offer, query, referrals] = await Promise.all([
     getProgrammeSettings(),
     getTierSettings(),
     getActiveTierBenefits(),
     getFoundingOffer(),
     searchParams,
+    getReferralConfig(),
   ]);
   const onSale = offer.settings.founding_on_sale;
   const foundingPrice = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(offer.settings.founding_price_cents / 100);
@@ -191,6 +194,8 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
                 feeCents={settings.card_delivery_fee_cents}
                 founding={onSale ? { priceCents: offer.settings.founding_price_cents, soldOut: offer.places_left <= 0 } : null}
                 initialPlan={query.plan === 'founding' ? 'founding' : 'free'}
+                referralsOpen={referrals.open}
+                initialReferralCode={referrals.open ? normaliseReferralCode(query.ref).slice(0, 20) : ''}
               />
             </>
           ) : (

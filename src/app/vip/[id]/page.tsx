@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { FoundingPassCard } from "@/components/membership/FoundingPassCard";
 import { RewardsPassCard } from "@/components/loyalty/RewardsPassCard";
+import { ReferralPassCard } from "@/components/loyalty/ReferralPassCard";
 import { POINT_SOURCE_LABELS } from "@/lib/loyalty/types";
 import type { TierProgress } from "@/lib/vip-tier-rules";
 import { Badge } from "@/components/ui/badge";
@@ -324,6 +325,7 @@ export default function VIPPassPage() {
 
             <FoundingPassCard memberId={vipUser.id} />
             <RewardsPassCard memberId={vipUser.id} />
+            <ReferralPassCard memberId={vipUser.id} />
 
             {/* Activity Tabs */}
             <div className="bg-white rounded-2xl shadow-2xl p-8">
