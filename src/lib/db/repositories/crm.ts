@@ -60,13 +60,13 @@ export async function getCrmScope(session: { userId?: string; name?: string; rol
 // Visibility conditions (aliases are fixed: deals d, organisations o, contacts c)
 // ---------------------------------------------------------------------------
 
-function dealVisible(scope: CrmScope, alias: 'd' | 'd2' = 'd') {
+export function dealVisible(scope: CrmScope, alias: 'd' | 'd2' = 'd') {
   if (scope.all) return sql`TRUE`;
   const a = sql.unsafe(alias);
   return sql`(${a}.owner_user_id = ${scope.userId} OR ${a}.created_by = ${scope.userId} OR ${a}.talent_ids && ${scope.talentIds}::uuid[])`;
 }
 
-function orgVisible(scope: CrmScope) {
+export function orgVisible(scope: CrmScope) {
   if (scope.all) return sql`TRUE`;
   return sql`(
     o.owner_user_id = ${scope.userId} OR o.created_by = ${scope.userId}

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@auth/core": "^0.40.0",
     "@hookform/resolvers": "^5.0.1",
     "@neondatabase/serverless": "^1.0.2",

@@ -12,6 +12,7 @@ import { CrmShell, StageBadge, api, errorMessage, formatMoney, useCrmOptions } f
 import { DealDialog } from "@/components/crm/DealDialog";
 import { ActivityComposer, Timeline } from "@/components/crm/Timeline";
 import { DealBookings } from "@/components/bookings/DealBookings";
+import { MeetingsCard } from "@/components/crm/Meetings";
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -171,6 +172,8 @@ export default function DealPage() {
           </Card>
 
           <DealBookings deal={deal} />
+
+          <MeetingsCard dealId={deal.id} talentIds={deal.talents.map((t) => t.id)} options={options} />
 
           {deal.contact && (
             <Card>

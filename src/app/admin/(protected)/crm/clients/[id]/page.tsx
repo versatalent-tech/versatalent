@@ -10,6 +10,7 @@ import { ORG_TYPES, type Activity, type Contact, type Deal, type Organisation } 
 import { CrmShell, StageBadge, api, errorMessage, formatMoney, useCrmOptions } from "@/components/crm/shared";
 import { ClientDialog, ContactDialog } from "@/components/crm/ClientDialogs";
 import { DealDialog } from "@/components/crm/DealDialog";
+import { MeetingsCard } from "@/components/crm/Meetings";
 import { ActivityComposer, Timeline } from "@/components/crm/Timeline";
 
 interface ClientData {
@@ -176,6 +177,8 @@ export default function ClientPage() {
               )}
             </CardContent>
           </Card>
+
+          <MeetingsCard organisationId={org.id} options={options} />
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
