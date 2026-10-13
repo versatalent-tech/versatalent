@@ -158,6 +158,9 @@ const EMPTY_CONTACT = {
   organisation_id: "",
   lawful_basis: "legitimate_interest" as "legitimate_interest" | "consent",
   do_not_contact: false,
+  is_sole_trader: false,
+  linkedin_url: "",
+  instagram: "",
   notes: "",
 };
 
@@ -192,6 +195,9 @@ export function ContactDialog({
             organisation_id: contact.organisation?.id ?? "",
             lawful_basis: contact.lawful_basis,
             do_not_contact: contact.do_not_contact,
+            is_sole_trader: contact.is_sole_trader,
+            linkedin_url: contact.linkedin_url ?? "",
+            instagram: contact.instagram ?? "",
             notes: contact.notes ?? "",
           }
         : { ...EMPTY_CONTACT, organisation_id: defaultOrganisationId ?? "" }
@@ -228,6 +234,12 @@ export function ContactDialog({
             <Field label="Phone">
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </Field>
+            <Field label="LinkedIn">
+              <Input value={form.linkedin_url} placeholder="https://www.linkedin.com/in/…" onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} />
+            </Field>
+            <Field label="Instagram">
+              <Input value={form.instagram} placeholder="@handle" onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
+            </Field>
           </div>
           <Field label="Client">
             <select
@@ -258,8 +270,15 @@ export function ContactDialog({
           </Field>
           <div className="flex items-center justify-between rounded border p-3">
             <div>
+              <p className="text-sm font-medium">Sole trader or private individual</p>
+              <p className="text-xs text-gray-500">Prospecting emails need their consent (PECR). LinkedIn, calls and DMs are still listed.</p>
+            </div>
+            <Switch checked={form.is_sole_trader} onCheckedChange={(checked) => setForm({ ...form, is_sole_trader: checked })} />
+          </div>
+          <div className="flex items-center justify-between rounded border p-3">
+            <div>
               <p className="text-sm font-medium">Do not contact</p>
-              <p className="text-xs text-gray-500">They asked not to be contacted. Outreach will skip them.</p>
+              <p className="text-xs text-gray-500">They asked not to be contacted. Prospecting skips them and stops any sequence they&apos;re in.</p>
             </div>
             <Switch checked={form.do_not_contact} onCheckedChange={(checked) => setForm({ ...form, do_not_contact: checked })} />
           </div>

@@ -101,6 +101,10 @@ export interface Contact {
   job_title: string | null;
   lawful_basis: 'legitimate_interest' | 'consent';
   do_not_contact: boolean;
+  /** Sole traders count as individuals: marketing emails need their consent */
+  is_sole_trader: boolean;
+  linkedin_url: string | null;
+  instagram: string | null;
   notes: string | null;
   organisation: PersonRef | null;
   created_at: string;

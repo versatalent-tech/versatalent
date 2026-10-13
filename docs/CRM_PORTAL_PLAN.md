@@ -193,8 +193,8 @@ Each phase ships on its own and is usable without the next one.
 | **2. Bookings & calendar** ✅ built (documents built in 2b, see §15) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
 | **3b. Meetings & AI notes** ✅ built (see §14) | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
-| **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
-| **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
+| **4. Outreach v1** ✅ built as Prospecting (see §17) | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
+| **5. KPIs** ✅ built (see §18) | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
 | **6. Finance (optional)** | Invoices and talent payouts; sync with the accounting package | M | 2 |
 | **Later** | Outreach v2 (sending + tracking), e-signature for contracts, real profile-view analytics | – | – |
 
@@ -466,4 +466,41 @@ What a prospect sees when a talent taps their VersaTalent card on the prospect's
 **Go-live:** migration 035 (run on production 13 Oct 2026). Nothing else to configure.
 
 **Later:** per-talent choice of which sections the card shows (e.g. measurements), tap and enquiry counts per talent in the portal, "recently performed at / next appearance" on the profile.
+
+## 17. Phase 4: Prospecting (outreach v1, what was built)
+
+Migration `036_prospecting_kpis.sql`. Called **Prospecting** (CRM → Prospecting, `/admin/crm/prospecting`) to keep it apart from the loyalty programme's **Member outreach**.
+
+**Campaigns:** name, goal, owner, and the talents being put forward. A new campaign starts as a draft with a three-step sequence (email, LinkedIn a few days later, follow-up email) that can be edited: up to 20 steps, each with a channel (email, LinkedIn, call, Instagram DM), a delay in days and a message. Placeholders: `{first_name}` `{name}` `{company}` `{talents}` `{talent_links}` `{sender}`. Start, pause, resume or finish; nothing is due while a campaign is a draft or paused.
+
+**Adding contacts (the segment):** search, client type, client tag and city, from the contacts the person can see in the CRM. Contacts marked do not contact can't be added; anyone already in the campaign is skipped.
+
+**Due today:** each person's steps due by the end of the day (or everyone's), with the message filled in. Copy it, or open email / LinkedIn / Instagram / phone with it, send it yourself, then press **Done** (or **Skip step**). The next step is scheduled after its delay. Record what happened at any point: replied, meeting booked, not interested, bounced, or asked to stop; each ends the sequence for that contact. Replies and meetings can become a deal in one click (source "Outreach", the campaign's talents, stage "Qualified" for a meeting). Sent messages and results are logged on the contact's timeline.
+
+**Compliance (UK GDPR / PECR):**
+- Do-not-contact contacts never appear; marking a contact do not contact (or recording "asked to stop") ends all their sequences and sets the flag.
+- Contacts can be marked **sole trader or private individual**; email steps to them are blocked unless their lawful basis is consent (LinkedIn, calls and DMs still listed).
+- Every email ends with an opt-out line.
+
+**Safety:** a step can only be completed once (double clicks are refused); creating a deal twice returns the same deal; campaign changes and deletions are audit-logged.
+
+**Also:** contacts gain LinkedIn and Instagram fields; the dashboard shows "N prospecting steps due today".
+
+**Later (v2):** sending from the platform through an email provider with open/reply tracking and one-click unsubscribe.
+
+## 18. Phase 5: KPIs (what was built)
+
+CRM → **KPIs** (`/admin/crm/kpis`). Month (with a month picker), last 3 months or year to date; each figure shows the change against the period of the same length just before, and a six-month trend (latest month in gold; hover for values).
+
+**Figures:** new leads (with a by-source breakdown), lead → won rate, weighted pipeline, average deal value, sales cycle, repeat clients, first response time to website enquiries; prospects contacted, prospecting reply rate, meetings booked, meetings held; bookings, bookings value, commission revenue, talent utilisation (with a per-talent table), cancellation rate; and for admins, membership: new VIP members, check-ins, member spend at the till, Founding Memberships sold. Each tile says how it's worked out. Money counts GBP only.
+
+**Who sees what:** admins see the whole agency. Managers see their own figures: deals they own or created or that involve their talents, their talents' bookings and utilisation, and prospects they own; commission and membership are admin-only. Road managers don't use the CRM.
+
+**Targets:** admins set a monthly target per figure (target icon on each tile, single-month view); tiles show progress against it.
+
+**Snapshots:** the scheduled function `netlify/functions/kpi-snapshots.mts` runs daily and saves the month so far; on the first three days of a month it also finalises the month just ended. The trend uses saved months, so editing old records doesn't rewrite history.
+
+**Not included:** outstanding invoices (there's no invoicing yet); per-person or per-talent targets.
+
+**Go-live:** migration 036 run on production 13 Oct 2026. The scheduled function deploys with the site; nothing to configure.
 

@@ -7,6 +7,7 @@ import {
   type DashboardAttentionItem,
 } from '@/lib/db/repositories/dashboard';
 import { getCrmAttention, getCrmScope } from '@/lib/db/repositories/crm';
+import { countDue } from '@/lib/db/repositories/prospecting';
 import { getTalentScope } from '@/lib/db/repositories/team';
 import {
   countDeclinedUpcoming,
@@ -166,7 +167,11 @@ export async function GET(request: NextRequest) {
 }
 
 async function crmAttentionItems(session: Parameters<typeof getCrmScope>[0]): Promise<DashboardAttentionItem[]> {
-  const crm = await getCrmAttention(await getCrmScope(session), can(session.role, 'enquiries.view'));
+  const scope = await getCrmScope(session);
+  const [crm, prospectingDue] = await Promise.all([
+    getCrmAttention(scope, can(session.role, 'enquiries.view')),
+    scope.userId ? countDue(scope, scope.userId).catch(() => 0) : Promise.resolve(0),
+  ]);
   const items: DashboardAttentionItem[] = [];
 
   if (crm.new_enquiries) {
@@ -185,6 +190,15 @@ async function crmAttentionItems(session: Parameters<typeof getCrmScope>[0]): Pr
       label: `${plural(crm.overdue_tasks, 'overdue task')} of yours`,
       detail: 'Follow-ups that are past their due date.',
       href: '/admin/crm/tasks',
+    });
+  }
+  if (prospectingDue > 0) {
+    items.push({
+      key: 'prospecting-due',
+      severity: 'medium',
+      label: `${plural(prospectingDue, 'prospecting step')} due today`,
+      detail: 'Send them from your own email, LinkedIn or phone, then record what happened.',
+      href: '/admin/crm/prospecting',
     });
   }
   if (crm.stale_deals) {

@@ -74,7 +74,7 @@ export function orgVisible(scope: CrmScope) {
   )`;
 }
 
-function contactVisible(scope: CrmScope) {
+export function contactVisible(scope: CrmScope) {
   if (scope.all) return sql`TRUE`;
   return sql`(
     c.owner_user_id = ${scope.userId} OR c.created_by = ${scope.userId}
@@ -434,6 +434,9 @@ function mapContact(row: any): Contact {
     job_title: row.job_title,
     lawful_basis: row.lawful_basis,
     do_not_contact: row.do_not_contact,
+    is_sole_trader: Boolean(row.is_sole_trader),
+    linkedin_url: row.linkedin_url ?? null,
+    instagram: row.instagram ?? null,
     notes: row.notes,
     organisation: ref(row.organisation_id, row.organisation_name),
     created_at: iso(row.created_at)!,
@@ -475,10 +478,12 @@ type ContactInput = z.infer<typeof contactSchema>;
 
 export async function createContact(actor: CrmActor, data: ContactInput): Promise<string> {
   const rows = await sql`
-    INSERT INTO contacts (organisation_id, name, email, phone, job_title, lawful_basis, do_not_contact, notes, owner_user_id, created_by)
+    INSERT INTO contacts (organisation_id, name, email, phone, job_title, lawful_basis, do_not_contact, is_sole_trader,
+                          linkedin_url, instagram, notes, owner_user_id, created_by)
     VALUES (
       ${data.organisation_id ?? null}, ${data.name}, ${data.email ?? null}, ${data.phone ?? null}, ${data.job_title ?? null},
-      ${data.lawful_basis}, ${data.do_not_contact}, ${data.notes ?? null}, ${actor.userId}, ${actor.userId}
+      ${data.lawful_basis}, ${data.do_not_contact}, ${data.is_sole_trader ?? false}, ${data.linkedin_url ?? null},
+      ${data.instagram ?? null}, ${data.notes ?? null}, ${actor.userId}, ${actor.userId}
     )
     RETURNING id
   `;
@@ -500,10 +505,20 @@ export async function updateContact(scope: CrmScope, id: string, changes: Partia
       job_title = ${pick('job_title', current.job_title)},
       lawful_basis = ${changes.lawful_basis ?? current.lawful_basis},
       do_not_contact = ${changes.do_not_contact ?? current.do_not_contact},
+      is_sole_trader = ${changes.is_sole_trader ?? current.is_sole_trader},
+      linkedin_url = ${pick('linkedin_url', current.linkedin_url)},
+      instagram = ${pick('instagram', current.instagram)},
       notes = ${pick('notes', current.notes)},
       updated_at = NOW()
     WHERE id = ${id}
   `;
+  // Asked not to be contacted: stop any prospecting sequence they're in
+  if (changes.do_not_contact) {
+    await sql`
+      UPDATE prospect_enrolments SET status = 'stopped', status_changed_at = NOW(), next_due_at = NULL, updated_at = NOW()
+      WHERE contact_id = ${id} AND status = 'active'
+    `;
+  }
   return true;
 }
 
