@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNFCCardByUID } from '@/lib/db/repositories/nfc-cards';
+import { getTalentById } from '@/lib/db/repositories/talents';
 
 /**
  * GET /api/nfc/[card_uid] - public: what a phone tapping this card should open.
@@ -27,10 +28,16 @@ export async function GET(
 
     switch (card.type) {
       case 'artist':
+      {
         if (!card.user.talent_id) {
           return NextResponse.json({ error: "This card isn't linked to a talent profile yet" }, { status: 404 });
         }
-        return NextResponse.json({ type: 'artist', talent_id: card.user.talent_id });
+        const talent = await getTalentById(card.user.talent_id);
+        if (!talent?.is_active) {
+          return NextResponse.json({ error: 'This talent is no longer represented by VersaTalent.' }, { status: 404 });
+        }
+        return NextResponse.json({ type: 'artist', talent_id: talent.id });
+      }
       case 'vip':
         return NextResponse.json({ type: 'vip', member_id: card.user.id, name: card.user.name });
       default:

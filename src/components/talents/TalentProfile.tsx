@@ -2,20 +2,21 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { Talent } from "@/lib/data/talents";
 import { PortfolioSection } from "./PortfolioSection";
 import { HeroSection } from "./HeroSection";
 import { IndustryDetailsDisplay } from "./IndustryDetailsDisplay";
+import { BookTalent, type EnquirySource } from "./BookTalent";
 import type { Industry, IndustryDetails } from "@/lib/db/types";
 
 interface TalentProfileProps {
-  talent: Talent;
+  talent: Talent & { has_press_kit?: boolean };
+  /** How the visitor got here: card_tap when a talent tapped their card on the visitor's phone */
+  source?: EnquirySource;
 }
 
-export function TalentProfile({ talent }: TalentProfileProps) {
+export function TalentProfile({ talent, source = "website" }: TalentProfileProps) {
   // Support both camelCase and snake_case field names for compatibility
   const socialLinks = (talent as any).socialLinks || talent.social_links;
   const imageSrc = (talent as any).imageSrc || talent.image_src;
@@ -216,21 +217,7 @@ export function TalentProfile({ talent }: TalentProfileProps) {
               <PortfolioSection portfolioItems={talent.portfolio} />
             )}
 
-            <div
-              className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm"
-            >
-              <h2 className="text-xl font-semibold text-foreground mb-4">Book This Talent</h2>
-              <p className="text-gray-600 mb-6">
-                Interested in working with {talent.name}? Contact our team to discuss availability and booking details.
-              </p>
-              <div>
-                <Button asChild className="bg-gold hover:bg-gold-80 text-white w-full">
-                  <Link href="/contact">
-                    Get in Touch
-                  </Link>
-                </Button>
-              </div>
-            </div>
+            <BookTalent talent={talent} source={source} />
           </div>
         </div>
       </div>

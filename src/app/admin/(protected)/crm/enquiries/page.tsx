@@ -24,6 +24,7 @@ const FORM_STYLES = {
   contact: "bg-sky-100 text-sky-800",
   brand: "bg-amber-100 text-amber-800",
   talent: "bg-purple-100 text-purple-800",
+  booking: "bg-green-100 text-green-800",
 };
 
 function ConvertDialog({
@@ -46,10 +47,14 @@ function ConvertDialog({
 
   useEffect(() => {
     if (!enquiry) return;
-    setTitle(enquiry.subject || (enquiry.company ? `${enquiry.company} enquiry` : `Enquiry from ${enquiry.name ?? "website"}`));
+    setTitle(
+      enquiry.talent
+        ? `${enquiry.talent.name} for ${enquiry.company || enquiry.name || "new client"}`
+        : enquiry.subject || (enquiry.company ? `${enquiry.company} enquiry` : `Enquiry from ${enquiry.name ?? "website"}`)
+    );
     setOrganisationName(enquiry.company ?? "");
     setOrganisationType(enquiry.company ? "brand" : "private");
-    setTalentIds([]);
+    setTalentIds(enquiry.talent ? [enquiry.talent.id] : []);
     setValue("");
     setOwner(options.me ?? "");
     setError(null);
@@ -186,7 +191,7 @@ export default function EnquiriesPage() {
           Enquiries <span className="text-gold">Inbox</span>
         </>
       }
-      subtitle="Messages from the website's contact, brand and talent forms."
+      subtitle="Messages from the website's contact, brand, talent and booking forms, including card taps."
     >
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => (
@@ -225,6 +230,10 @@ export default function EnquiriesPage() {
                       <span className={`rounded px-2 py-0.5 text-xs font-medium ${FORM_STYLES[enquiry.form]}`}>{ENQUIRY_FORMS[enquiry.form]}</span>
                       <span className="font-medium">{enquiry.name ?? enquiry.email ?? "Unknown"}</span>
                       {enquiry.company && <span className="text-sm text-gray-500">· {enquiry.company}</span>}
+                      {enquiry.talent && <span className="text-sm text-gray-500">· for {enquiry.talent.name}</span>}
+                      {enquiry.source === "card_tap" && (
+                        <span className="rounded bg-black px-2 py-0.5 text-xs font-medium text-gold">Card tap</span>
+                      )}
                     </div>
                     <p className="truncate text-sm text-gray-600">{enquiry.subject || enquiry.message || "(no message)"}</p>
                   </div>
@@ -248,6 +257,14 @@ export default function EnquiriesPage() {
                       )}
                     </div>
                     {enquiry.subject && <p className="text-sm font-medium">{enquiry.subject}</p>}
+                    {enquiry.form === "booking" && (
+                      <p className="text-xs text-gray-500">
+                        {enquiry.source === "card_tap"
+                          ? `Came from ${enquiry.talent?.name ?? "a talent"} tapping their card on this person's phone.`
+                          : "Sent from the talent's page on the website."}{" "}
+                        {enquiry.marketing_consent ? "Agreed to marketing emails." : "No marketing consent: reply about this enquiry only."}
+                      </p>
+                    )}
                     {enquiry.message && <p className="whitespace-pre-wrap text-sm text-gray-700">{enquiry.message}</p>}
 
                     {enquiry.status === "converted" && enquiry.deal && (

@@ -4,9 +4,6 @@ _Last updated 13 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM
 
 ## 1. Loyalty: open items (stages 1–4 are built; see docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md)
 - [ ] Set up a test harness (Vitest + Neon branch): tier boundaries, discounts, ledger (`loyalty_post`), claims, refunds, referrals
-- [ ] Staff card tapped on a phone: show a staff card page with a link to `/staff/login` (today it redirects to `/admin`, which bounces to `/admin/login`)
-- [ ] Guest card tapped on a phone: show a proper page (today it stays on "Redirecting you now…")
-- [ ] Member endpoints readable by anyone with a member ID: `/api/vip/memberships/[user_id]` (GET), `/api/vip/points-log?user_id=`, `/api/nfc/checkins?user_id=`; trim the public card lookup
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 - [x] Commit `docs/vprivilege-benefit-sheet.html` (costed benefit sheet)
 
@@ -28,6 +25,11 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 ## 3. CRM plan: remaining phases
 - [ ] 4 Outreach v1 (prospecting; separate from the member outreach queue)
 - [ ] 5 KPIs (combine with loyalty reporting)
+
+## 3b. Artist card: later
+- [ ] Per-talent choice of which profile sections a card shows (e.g. measurements)
+- [ ] Tap and enquiry counts per talent, shown in their portal
+- [ ] "Recently performed at / next appearance" on the profile
 
 ## 4. Meetings go-live
 - [x] Run migration 033 on production (13 Oct 2026)
@@ -62,6 +64,7 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [x] Phone card taps are logged, not counted as check-ins
 - [x] Loyalty stage 2: Founding Membership, one-off £29.99 (migration 030, off sale)
 - [x] Loyalty stage 3: status and reward ledgers, rewards and claims, till refunds (migration 031, rewards closed)
+- [x] Artist card taps: booking enquiry form, save contact, public press kit, link previews, privacy fixes (migration 035)
 - [x] CRM phase 2b: private documents on bookings, deals and talent profiles (migration 034)
 - [x] CRM phase 3b: meetings with Claude-drafted notes and action items → tasks (migration 033)
 - [x] Loyalty stage 4: referrals and member outreach queue without email (migration 032, referrals closed)
