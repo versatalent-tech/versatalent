@@ -5,6 +5,7 @@ import { getUserById } from '@/lib/db/repositories/users';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
 import { requireAdmin, getCurrentSession } from '@/lib/middleware/auth';
 import { getNFCCardByUID } from '@/lib/db/repositories/nfc-cards';
+import { canReadMemberData } from '@/lib/auth/member-access';
 import type { CheckInSource, CreateCheckInRequest } from '@/lib/db/types';
 
 export async function GET(request: NextRequest) {
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
 
     let checkins;
     if (userId) {
+      if (!(await canReadMemberData(userId))) return NextResponse.json([]);
       checkins = await getCheckInsByUserId(userId);
     } else if (eventId) {
       checkins = await getCheckInsByEventId(eventId);

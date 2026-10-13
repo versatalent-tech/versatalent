@@ -26,7 +26,6 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [x] One-off £29.99 payment for 12 months, no auto-renewal
 
 ## 3. CRM plan: remaining phases
-- [ ] 2b Private document store (current uploads are readable by anyone with the link; bring forward if contracts or riders are being uploaded)
 - [ ] 4 Outreach v1 (prospecting; separate from the member outreach queue)
 - [ ] 5 KPIs (combine with loyalty reporting)
 
@@ -63,5 +62,6 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [x] Phone card taps are logged, not counted as check-ins
 - [x] Loyalty stage 2: Founding Membership, one-off £29.99 (migration 030, off sale)
 - [x] Loyalty stage 3: status and reward ledgers, rewards and claims, till refunds (migration 031, rewards closed)
+- [x] CRM phase 2b: private documents on bookings, deals and talent profiles (migration 034)
 - [x] CRM phase 3b: meetings with Claude-drafted notes and action items → tasks (migration 033)
 - [x] Loyalty stage 4: referrals and member outreach queue without email (migration 032, referrals closed)

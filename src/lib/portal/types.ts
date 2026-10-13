@@ -3,6 +3,7 @@
  * Nothing here may carry a gross fee, commission or hidden client name.
  */
 import type { BookingStatus, PayoutState, TalentResponse } from '@/lib/bookings/types';
+import type { SharedDocument } from '@/lib/documents/types';
 
 export type Tier = 'silver' | 'gold' | 'black';
 export const TIER_LABELS: Record<Tier, string> = { silver: 'Silver', gold: 'Gold', black: 'Black' };
@@ -30,6 +31,8 @@ export interface TalentBooking {
   /** When paid: the date and the amount actually paid */
   paid_at: string | null;
   paid_cents: number | null;
+  /** Documents the agency shared with the talent for this booking */
+  documents: SharedDocument[];
 }
 
 export interface TalentAvailability {

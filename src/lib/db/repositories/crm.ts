@@ -648,6 +648,9 @@ function mapEnquiry(row: any): Enquiry {
     payload: row.payload ?? {},
     status: row.status,
     deal: ref(row.deal_id, row.deal_title),
+    talent: ref(row.talent_id, row.talent_name),
+    source: row.source ?? 'website',
+    marketing_consent: Boolean(row.marketing_consent),
     handled_by_name: row.handled_by_name,
     handled_at: iso(row.handled_at),
     created_at: iso(row.created_at)!,
@@ -656,10 +659,11 @@ function mapEnquiry(row: any): Enquiry {
 
 export async function listEnquiries(status: EnquiryStatus | 'all'): Promise<Enquiry[]> {
   const rows = await sql`
-    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name
+    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name, t.name AS talent_name
     FROM enquiries e
     LEFT JOIN deals d ON d.id = e.deal_id
     LEFT JOIN users u ON u.id = e.handled_by
+    LEFT JOIN talents t ON t.id = e.talent_id
     WHERE (${status} = 'all' OR e.status = ${status})
     ORDER BY e.created_at DESC
     LIMIT 300
@@ -676,8 +680,9 @@ export async function countEnquiries(): Promise<Record<EnquiryStatus, number>> {
 
 export async function getEnquiry(id: string): Promise<Enquiry | null> {
   const rows = await sql`
-    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name
+    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name, t.name AS talent_name
     FROM enquiries e LEFT JOIN deals d ON d.id = e.deal_id LEFT JOIN users u ON u.id = e.handled_by
+    LEFT JOIN talents t ON t.id = e.talent_id
     WHERE e.id = ${id} LIMIT 1
   `;
   return rows[0] ? mapEnquiry(rows[0]) : null;
@@ -696,7 +701,7 @@ export async function setEnquiryStatus(actor: CrmActor, id: string, status: 'new
 }
 
 export interface NewEnquiry {
-  form: 'contact' | 'brand' | 'talent';
+  form: 'contact' | 'brand' | 'talent' | 'booking';
   name: string | null;
   email: string | null;
   phone: string | null;
@@ -705,13 +710,17 @@ export interface NewEnquiry {
   message: string | null;
   payload: Record<string, string>;
   ip: string;
+  talent_id?: string | null;
+  source?: 'website' | 'card_tap';
+  marketing_consent?: boolean;
 }
 
 export async function createEnquiry(data: NewEnquiry): Promise<void> {
   await sql`
-    INSERT INTO enquiries (form, name, email, phone, company, subject, message, payload, ip)
+    INSERT INTO enquiries (form, name, email, phone, company, subject, message, payload, ip, talent_id, source, marketing_consent)
     VALUES (${data.form}, ${data.name}, ${data.email}, ${data.phone}, ${data.company}, ${data.subject}, ${data.message},
-            ${JSON.stringify(data.payload)}, ${data.ip})
+            ${JSON.stringify(data.payload)}, ${data.ip}, ${data.talent_id ?? null}, ${data.source ?? 'website'},
+            ${data.marketing_consent ?? false})
   `;
 }
 
@@ -764,7 +773,8 @@ export async function convertEnquiry(
         email: enquiry.email,
         phone: enquiry.phone,
         organisation_id: organisationId,
-        lawful_basis: 'legitimate_interest',
+        // The prospect's own choice on the booking form; otherwise we're answering their enquiry
+        lawful_basis: enquiry.marketing_consent ? 'consent' : 'legitimate_interest',
         do_not_contact: false,
         job_title: null,
         notes: null,
@@ -779,7 +789,7 @@ export async function convertEnquiry(
       value_cents: input.value_cents ?? null,
       currency: 'GBP',
       expected_close: null,
-      source: 'website_form',
+      source: enquiry.source === 'card_tap' ? 'event' : 'website_form',
       talent_ids: input.talent_ids,
       lost_reason: null,
       notes: null,
@@ -791,7 +801,7 @@ export async function convertEnquiry(
       actor,
       { deal_id: dealId, organisation_id: organisationId, contact_id: contactId },
       'note',
-      'Website enquiry',
+      enquiry.source === 'card_tap' ? 'Enquiry from a card tap' : 'Website enquiry',
       original || null
     );
 

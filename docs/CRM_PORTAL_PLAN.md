@@ -190,7 +190,7 @@ Each phase ships on its own and is usable without the next one.
 |---|---|---|---|
 | **0. Foundation** ✅ built | Team roles + permission map; Team page with invite/reset links; talent assignments; login throttling; audit log; role-aware dashboard (see §9) | M | – |
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
-| **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
+| **2. Bookings & calendar** ✅ built (documents built in 2b, see §15) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
 | **3b. Meetings & AI notes** ✅ built (see §14) | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
@@ -412,4 +412,35 @@ Migration `033_meetings.sql` adds `meetings`.
 1. Run migration 033 on production before deploying (done 13 Oct 2026).
 2. Meetings and notes work straight away. AI notes come later (decided 13 Oct 2026): add `ANTHROPIC_API_KEY` to the Netlify site's environment variables (Functions scope) and redeploy.
 3. Before switching AI notes on, add a line to the privacy notice that meeting transcripts are sent to Anthropic to draft notes.
+
+## 15. Phase 2b: documents (what was built)
+
+Migration `034_documents.sql` adds `documents`. Each document belongs to exactly one booking, deal or talent profile.
+
+**Where:**
+- **Bookings:** a Documents section in the booking window (contract, rider, brief, invoice, other).
+- **Deals:** a Documents card on the deal page (contract, brief, invoice, other). Never shown to talents.
+- **Talent profiles:** Admin → Bookings → **Talent documents** (`/admin/bookings/talent-documents`), also linked from each talent in Admin → Talents. Kinds: agency agreement, rider, comp card / press kit, insurance, ID / right to work, other. A rider on a talent's profile also shows (read-only) on each of their bookings, so the current version is always there.
+- **Talent portal:** documents shared on a booking appear on that booking's card; documents shared from the profile appear under **Profile → My documents**. Talents can't upload (team uploads only, decided 13 Oct 2026).
+
+**Storage and downloads:** files go to a private Netlify Blobs store (`documents`), never the public uploads store. They're only served by `/api/documents/[id]`, which checks access on every download and always sends them as attachments with `no-store`, `nosniff` and a sandboxing CSP. Locally they go to `.private-uploads/` (git-ignored). Up to 5 MB (Netlify's request limit is 6 MB); PDF, Word, Excel, CSV, text and images only.
+
+**Who sees what:**
+
+| | Bookings | Deals | Talent profiles |
+|---|---|---|---|
+| Admin | all | all | all, including admin-only |
+| Manager | assigned talents | deals they can see | assigned talents, not admin-only |
+| Road manager | riders and briefs, assigned talents | – | riders, assigned talents |
+| Talent | own, if shared | – | own, if shared |
+
+Admins and managers upload, edit and delete within the same scope. Anyone without access gets "not found", the same as a missing document.
+
+**ID / right to work (UK GDPR):** always admin-only, only admins can add or change them, and each needs a **delete by** date. Any document can also be marked admin-only by an admin.
+
+**Expiry:** insurance and ID documents can carry an expiry date. Anything expired, expiring within 30 days, or past its delete-by date appears on the Talent documents page and as a dashboard alert (admins; managers for their talents, without admin-only documents).
+
+**Clean-up:** deleting a booking, deal or talent removes its documents and their files. Every upload, change and deletion is in the audit log.
+
+**Go-live:** run migration 034 on production before deploying. No new environment variables: the Blobs store is created on first upload.
 

@@ -4,6 +4,8 @@ import { checkBookingLinks, clashResponse } from '@/lib/bookings/checks';
 import { LOGISTICS_FIELDS, bookingUpdateSchema } from '@/lib/bookings/schemas';
 import { parseBody } from '@/lib/crm/route-helpers';
 import { deleteBooking, getBooking, updateBooking } from '@/lib/db/repositories/bookings';
+import { documentFileKeys } from '@/lib/db/repositories/documents';
+import { deleteDocumentFiles } from '@/lib/services/document-storage';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can } from '@/lib/auth/permissions';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
@@ -101,7 +103,9 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
     const booking = await getBooking(ctx.scope, false, id);
     if (!booking) return ApiErrors.NotFound('Booking');
+    const files = await documentFileKeys({ bookingId: id });
     await deleteBooking(id);
+    await deleteDocumentFiles(files);
     await logAudit(ctx.actor, 'delete', 'booking', id, { before: { title: booking.title, talent: booking.talent.name } });
     return successResponse(null, 'Booking deleted');
   } catch (error) {
