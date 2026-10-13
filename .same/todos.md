@@ -22,9 +22,9 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [x] Paid benefits are managed in the admin; changes apply to new purchases only
 - [x] One-off £29.99 payment for 12 months, no auto-renewal
 
-## 3. CRM plan: remaining phases
-- [ ] 4 Outreach v1 (prospecting; separate from the member outreach queue)
-- [ ] 5 KPIs (combine with loyalty reporting)
+## 3. CRM: later
+- [ ] Later: prospecting v2 (send through an email provider, tracking, one-click unsubscribe)
+- [ ] Later: per-person / per-talent KPI targets; outstanding invoices once invoicing exists
 
 ## 3b. Artist card: later
 - [ ] Per-talent choice of which profile sections a card shows (e.g. measurements)
@@ -64,6 +64,8 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [x] Phone card taps are logged, not counted as check-ins
 - [x] Loyalty stage 2: Founding Membership, one-off £29.99 (migration 030, off sale)
 - [x] Loyalty stage 3: status and reward ledgers, rewards and claims, till refunds (migration 031, rewards closed)
+- [x] CRM phase 4: Prospecting campaigns, due-today queue, outcomes, deals (migration 036)
+- [x] CRM phase 5: KPIs with targets, trends and nightly snapshots (migration 036)
 - [x] Artist card taps: booking enquiry form, save contact, public press kit, link previews, privacy fixes (migration 035)
 - [x] CRM phase 2b: private documents on bookings, deals and talent profiles (migration 034)
 - [x] CRM phase 3b: meetings with Claude-drafted notes and action items → tasks (migration 033)

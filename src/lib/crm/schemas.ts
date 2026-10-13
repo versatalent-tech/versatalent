@@ -36,6 +36,16 @@ export const contactSchema = z.object({
   job_title: optionalText(100),
   lawful_basis: z.enum(['legitimate_interest', 'consent']).default('legitimate_interest'),
   do_not_contact: z.boolean().default(false),
+  is_sole_trader: z.boolean().default(false),
+  linkedin_url: z
+    .string()
+    .trim()
+    .max(300)
+    .refine((v) => v === '' || /^https?:\/\//i.test(v), 'Paste the full LinkedIn link, starting https://')
+    .transform((v) => (v === '' ? null : v))
+    .nullable()
+    .optional(),
+  instagram: optionalText(100),
   notes: optionalText(5000),
 });
 

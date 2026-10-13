@@ -11,7 +11,7 @@ export async function GET() {
   const ctx = await crmContext('crm.view');
   if ('response' in ctx) return ctx.response;
   try {
-    return successResponse({ ...(await getCrmOptions(ctx.scope)), me: ctx.scope.userId, canDelete: ctx.session.role === 'admin', aiNotes: aiNotesEnabled() });
+    return successResponse({ ...(await getCrmOptions(ctx.scope)), me: ctx.scope.userId, meName: ctx.scope.name, canDelete: ctx.session.role === 'admin', aiNotes: aiNotesEnabled() });
   } catch (error) {
     console.error('Error loading CRM options:', error);
     return ApiErrors.ServerError('Failed to load options');
