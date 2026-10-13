@@ -442,5 +442,28 @@ Admins and managers upload, edit and delete within the same scope. Anyone withou
 
 **Clean-up:** deleting a booking, deal or talent removes its documents and their files. Every upload, change and deletion is in the audit log.
 
-**Go-live:** run migration 034 on production before deploying. No new environment variables: the Blobs store is created on first upload.
+**Go-live:** migration 034 run on production 13 Oct 2026 (with 035 for booking enquiries). No new environment variables: the Blobs store is created on first upload.
+
+## 16. Artist card taps (13 Oct 2026)
+
+What a prospect sees when a talent taps their VersaTalent card on the prospect's phone.
+
+**Where the tap goes:** `/nfc/<card>` logs the tap (never a check-in) and opens the talent's public profile `/talents/<id>?from=card`. The old `/artist/<id>` address redirects there. Cards of talents who've left say "This talent is no longer represented by VersaTalent". Staff cards show a staff page with a link to the staff sign-in; guest cards explain themselves and link to VIP sign-up. VIP cards open the member's pass, as before.
+
+**Card mode:** a bar fixed to the bottom of the profile: "You've connected with <name>, represented by VersaTalent", and three buttons. The same buttons replace the old "Book this talent" box for every visitor.
+- **Book <name>:** a short enquiry form (name, company, email, optional phone, when, event and venue, message), with an unticked box for marketing emails and a link to the privacy notice. It goes to Netlify Forms (email alert, form `versatalent-booking`) and to the CRM inbox as a **Booking enquiry** for that talent, marked **Card tap** when it came from one. Converting it to a deal fills in the talent; a card-tap deal's source is "At an event"; the contact's lawful basis is "consent" when the box was ticked.
+- **Save contact:** a contact card (`/api/talents/<id>/vcard`) for **VersaTalent Bookings** (agency phone and email, link to the talent's page). Never the talent's own details.
+- **Press kit:** shown only when the team has switched a comp card on the talent's profile to **Public press kit** (Talent documents). Served by `/api/talents/<id>/press-kit`; nothing else in the private documents store is reachable.
+
+**Link previews:** talent pages have a title, description and photo for WhatsApp, iMessage and social previews.
+
+**Privacy fixes:**
+- The card lookup returns only what the landing page needs: for artist cards the talent profile id, never the user account id.
+- Anonymous reads of membership, points and check-ins only answer for VIP members' own passes, so an artist's or staff member's id can't open their loyalty data.
+- Inactive talents are hidden from the public talent API.
+- The public talent API never included date of birth or commission; it's unchanged there.
+
+**Go-live:** migration 035 (run on production 13 Oct 2026). Nothing else to configure.
+
+**Later:** per-talent choice of which sections the card shows (e.g. measurements), tap and enquiry counts per talent in the portal, "recently performed at / next appearance" on the profile.
 

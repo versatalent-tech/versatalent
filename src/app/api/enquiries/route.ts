@@ -4,6 +4,8 @@ import { countRecentEnquiriesFromIp, createEnquiry } from '@/lib/db/repositories
 import { getClientIp } from '@/lib/auth/login-throttle';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { HONEYPOT_FIELD } from '@/lib/crm/types';
+import { getTalentById } from '@/lib/db/repositories/talents';
+import { isValidUUID } from '@/lib/utils/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +16,7 @@ const FORMS = {
   'versatalent-contact': 'contact',
   'versatalent-brand': 'brand',
   'versatalent-talent': 'talent',
+  'versatalent-booking': 'booking',
 } as const;
 
 function clean(value: string | undefined, max = 500): string | null {
@@ -49,13 +52,23 @@ export async function POST(request: NextRequest) {
     const email = clean(fields.email, 200)?.toLowerCase() ?? null;
     if (!email && !clean(fields.phone)) return ApiErrors.BadRequest('Please include an email or phone number');
 
+    // Booking enquiries name an active talent (from their public page)
+    let talent: { id: string; name: string } | null = null;
+    if (form === 'booking') {
+      const found = isValidUUID(fields.talentId ?? '') ? await getTalentById(fields.talentId) : null;
+      if (!found || !found.is_active) return ApiErrors.BadRequest('This talent is no longer available to book');
+      talent = { id: found.id, name: found.name };
+    }
+
     const extra = form === 'talent'
       ? [
           fields.industry && `Industry: ${fields.industry}`,
           fields.portfolioLink && `Portfolio: ${fields.portfolioLink}`,
           fields.experience && `Experience:\n${fields.experience}`,
         ].filter(Boolean)
-      : [];
+      : form === 'booking'
+        ? [fields.eventDate && `When: ${fields.eventDate}`, fields.eventDetails && `Event and venue: ${fields.eventDetails}`].filter(Boolean)
+        : [];
 
     const payload: Record<string, string> = {};
     for (const [key, value] of Object.entries(fields)) {
@@ -68,10 +81,15 @@ export async function POST(request: NextRequest) {
       email,
       phone: clean(fields.phone, 50),
       company: clean(fields.company, 200),
-      subject: clean(fields.subject, 300) ?? (form === 'talent' ? clean(fields.industry, 100) : null),
+      subject: talent
+        ? `Booking enquiry: ${talent.name}`
+        : clean(fields.subject, 300) ?? (form === 'talent' ? clean(fields.industry, 100) : null),
       message: clean([...extra, fields.message].filter(Boolean).join('\n\n'), 10000),
       payload,
       ip,
+      talent_id: talent?.id ?? null,
+      source: form === 'booking' && fields.source === 'card_tap' ? 'card_tap' : 'website',
+      marketing_consent: form === 'booking' && fields.marketingConsent === 'yes',
     });
 
     return successResponse(null, 'Thanks, we got your message', 201);
