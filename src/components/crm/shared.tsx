@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckSquare, Inbox, KanbanSquare, Building2 } from "lucide-react";
+import { CheckSquare, Inbox, KanbanSquare, Building2, Users } from "lucide-react";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 import { STAGE_LABELS, type CrmOptions, type DealStage } from "@/lib/crm/types";
@@ -28,10 +28,10 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
 }
 
-export type CrmOptionsWithMe = CrmOptions & { me: string | null; canDelete: boolean };
+export type CrmOptionsWithMe = CrmOptions & { me: string | null; canDelete: boolean; aiNotes: boolean };
 
 export function useCrmOptions() {
-  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], me: null, canDelete: false });
+  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], me: null, canDelete: false, aiNotes: false });
   useEffect(() => {
     api<CrmOptionsWithMe>("/api/crm/options").then(setOptions).catch(() => undefined);
   }, []);
@@ -113,6 +113,7 @@ const TABS = [
   { href: "/admin/crm", label: "Pipeline", icon: KanbanSquare },
   { href: "/admin/crm/enquiries", label: "Enquiries", icon: Inbox },
   { href: "/admin/crm/clients", label: "Clients", icon: Building2 },
+  { href: "/admin/crm/meetings", label: "Meetings", icon: Users },
   { href: "/admin/crm/tasks", label: "My tasks", icon: CheckSquare },
 ];
 

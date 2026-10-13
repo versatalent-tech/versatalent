@@ -163,3 +163,56 @@ export interface CrmOptions {
 export function weightedValue(deal: Pick<Deal, 'stage' | 'value_cents'>): number {
   return Math.round((deal.value_cents ?? 0) * STAGE_PROBABILITY[deal.stage]);
 }
+
+// ---------------------------------------------------------------------------
+// Meetings (phase 3b)
+// ---------------------------------------------------------------------------
+
+export type MeetingAiStatus = 'none' | 'pending' | 'ready' | 'failed';
+
+/** About 100k tokens: a long meeting. Longer transcripts are refused rather than cut short. */
+export const MAX_TRANSCRIPT_CHARS = 400_000;
+
+/** A drafting job still pending after this long has probably failed silently */
+export const MEETING_AI_STALE_MINUTES = 10;
+
+export interface MeetingActionItem {
+  id: string;
+  title: string;
+  owner_name: string | null;
+  owner_user_id: string | null;
+  due_date: string | null; // YYYY-MM-DD
+  task_activity_id: string | null; // set once it's been turned into a CRM task
+}
+
+export interface MeetingSummary {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string | null;
+  location: string | null;
+  deal: PersonRef | null; // name = deal title
+  organisation: PersonRef | null;
+  talents: PersonRef[];
+  has_transcript: boolean;
+  has_notes: boolean;
+  ai_status: MeetingAiStatus;
+  open_action_items: number;
+  created_by_name: string | null;
+}
+
+export interface Meeting extends MeetingSummary {
+  attendees: string | null;
+  transcript: string | null;
+  transcript_consent_at: string | null;
+  summary: string | null;
+  decisions: string[];
+  action_items: MeetingActionItem[];
+  notes_reviewed_at: string | null;
+  notes_reviewed_by_name: string | null;
+  ai_requested_at: string | null;
+  ai_generated_at: string | null;
+  ai_error: string | null;
+  created_by: string | null;
+  created_at: string;
+}

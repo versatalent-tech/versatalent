@@ -192,7 +192,7 @@ Each phase ships on its own and is usable without the next one.
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
 | **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
-| **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
+| **3b. Meetings & AI notes** ✅ built (see §14) | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
 | **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
 | **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
 | **6. Finance (optional)** | Invoices and talent payouts; sync with the accounting package | M | 2 |
@@ -373,3 +373,43 @@ Migration `028_talent_payouts.sql` adds `talent_paid_at`, `talent_paid_cents`, `
 **Also:** a dashboard alert for finished jobs not paid yet (with the total owed), a Payouts button on the calendar, and the payment status in the booking form.
 
 **Go-live:** run migration 028 on production before deploying.
+
+## 14. Phase 3b: what was built
+
+Migration `033_meetings.sql` adds `meetings`.
+
+**Meetings (`/admin/crm/meetings`, plus a Meetings card on every deal and client page):**
+- Schedule a meeting or log one afterwards: title, start and end, where, client, deal, talents and who's attending. Choosing a deal fills in its client.
+- Visibility follows the CRM rules: admins see everything; managers see meetings they added, or that are on a deal or client they can see, or that involve a talent assigned to them. Road managers don't use the CRM.
+- Past and upcoming lists with search. Each meeting shows where its notes are up to (upcoming, transcript, drafting, open action items, notes).
+
+**Transcript:**
+- Paste it, or upload a `.txt`, `.vtt` or `.srt` file (caption files are turned into plain "Speaker: words" lines).
+- Saving a transcript needs a tick to confirm everyone was told the meeting was recorded. The confirmation is stored with the date.
+- Up to 400,000 characters (about 100k tokens). Longer transcripts are refused, not cut short.
+
+**AI notes (switched off until `ANTHROPIC_API_KEY` is set):**
+- Without the key, meetings, transcripts, notes and action items → tasks all work, and the Claude option and its wording are hidden. The drafting endpoint refuses with "AI notes aren't switched on yet". Adding the key in Netlify and redeploying switches it on; no code change.
+- "Draft with Claude" sends the transcript, with the meeting's details and the names of the admins and managers, to Claude (`claude-opus-5-5`, medium effort, structured output, server-side fallback if a request is declined).
+- Claude returns a summary, decisions, and action items with an owner and a due date where the transcript gives one. Owners are matched to team members by name. Dates that aren't real dates are dropped.
+- The draft is just a draft: the page says so until someone edits and saves it ("Saved by … on …").
+- Redrafting replaces the notes, but action items already turned into tasks are kept.
+- **How it runs:** the request returns at once and the page checks back every few seconds. On Netlify the work runs in the background function `netlify/functions/meeting-notes-background.mts` (up to 15 minutes; normal requests time out much sooner). The function only acts when given the meeting's current one-off job token, so calling its URL directly does nothing. Locally the work runs in the dev server.
+- Errors are shown in plain words: the key isn't set up, Claude is busy, the transcript couldn't be read, and so on. A job still running after 10 minutes can be restarted.
+
+**Action items → tasks:**
+- Tick action items and "Add selected as tasks". Each becomes a CRM task on the meeting's deal (or client), for the chosen owner, due at 10:00 UK time on its date, or a week after the meeting when it has none.
+- Each item becomes a task only once, even if the button is pressed twice at the same moment (a single SQL statement that locks the meeting).
+
+**Audit log:** adding, editing and deleting meetings, and each drafting request. Deleting a meeting (whoever added it, or an admin) leaves its tasks in place.
+
+**Not included yet:**
+- Uploading audio recordings to be transcribed. Claude reads text, not audio, so this needs a speech-to-text service. For now, use the transcript from Meet, Zoom, Teams or Otter.
+- Linking a meeting to a booking.
+- Sharing meeting notes with a talent in the portal.
+
+**Go-live:**
+1. Run migration 033 on production before deploying (done 13 Oct 2026).
+2. Meetings and notes work straight away. AI notes come later (decided 13 Oct 2026): add `ANTHROPIC_API_KEY` to the Netlify site's environment variables (Functions scope) and redeploy.
+3. Before switching AI notes on, add a line to the privacy notice that meeting transcripts are sent to Anthropic to draft notes.
+
