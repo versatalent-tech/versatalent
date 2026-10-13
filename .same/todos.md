@@ -8,7 +8,7 @@ _Last updated 13 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM
 - [ ] Guest card tapped on a phone: show a proper page (today it stays on "Redirecting you now…")
 - [ ] Member endpoints readable by anyone with a member ID: `/api/vip/memberships/[user_id]` (GET), `/api/vip/points-log?user_id=`, `/api/nfc/checkins?user_id=`; trim the public card lookup
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
-- [ ] Remove the superseded `docs/LOYALTY_AUDIT.md` (replaced by `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`) and commit `docs/vprivilege-benefit-sheet.html`
+- [x] Commit `docs/vprivilege-benefit-sheet.html` (costed benefit sheet)
 
 ## 2. Loyalty: decisions before switching things on
 Built but off: Founding Membership sales, rewards, referrals. Automatic emails need a provider and domain.
