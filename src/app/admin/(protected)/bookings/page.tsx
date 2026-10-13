@@ -18,7 +18,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { Banknote, CalendarPlus, ChevronLeft, ChevronRight, Loader2, Percent, Plus, Rss, X } from "lucide-react";
+import { Banknote, CalendarPlus, ChevronLeft, ChevronRight, FileText, Loader2, Percent, Plus, Rss, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
@@ -279,6 +279,12 @@ export default function BookingsCalendarPage() {
                   </Link>
                 </Button>
               )}
+              <Button asChild variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white hover:text-black">
+                <Link href="/admin/bookings/talent-documents">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Talent documents
+                </Link>
+              </Button>
               <Button variant="outline" onClick={() => setFeedOpen(true)} className="border-white/40 bg-transparent text-white hover:bg-white hover:text-black">
                 <Rss className="mr-2 h-4 w-4" />
                 Add to my calendar

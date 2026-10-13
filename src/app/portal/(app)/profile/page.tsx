@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EDITABLE_SOCIALS, type PortalProfile, type ProfileFields } from "@/lib/portal/types";
 import { api, errorMessage } from "@/components/crm/shared";
+import { MyDocuments } from "@/components/portal/MyDocuments";
 
 const SOCIAL_LABELS: Record<(typeof EDITABLE_SOCIALS)[number], string> = {
   instagram: "Instagram",
@@ -193,6 +194,8 @@ export default function PortalProfilePage() {
         </Button>
         <p className="text-xs text-gray-500">Photos and portfolio are managed by the team for now. Send new images to your manager.</p>
       </form>
+
+      <MyDocuments />
 
       <PasswordForm />
     </div>

@@ -21,6 +21,8 @@ import { countCardRequests } from '@/lib/db/repositories/membership';
 import { getFoundingSettings, getFoundingStats } from '@/lib/db/repositories/founding';
 import { getCampaignSettings, listCandidates } from '@/lib/db/repositories/outreach';
 import { countReferralsToReview } from '@/lib/db/repositories/referrals';
+import { listExpiringDocuments } from '@/lib/db/repositories/documents';
+import { EXPIRY_WARNING_DAYS } from '@/lib/documents/types';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
 import { errorResponse, successResponse } from '@/lib/utils/api-response';
 
@@ -39,7 +41,7 @@ export async function GET(request: NextRequest) {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview, expiringDocs] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -59,6 +61,9 @@ export async function GET(request: NextRequest) {
             .catch(() => 0)
         : Promise.resolve(0),
       can(session.role, 'venue.manage') ? countReferralsToReview().catch(() => 0) : Promise.resolve(0),
+      can(session.role, 'bookings.edit')
+        ? listExpiringDocuments(bookingScope, EXPIRY_WARNING_DAYS, session.role === 'admin').catch(() => [])
+        : Promise.resolve([]),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -124,6 +129,15 @@ export async function GET(request: NextRequest) {
         label: `${plural(referralsToReview, 'referral')} to review`,
         detail: 'Flagged (shared phone or address, or over the yearly limit) before points are paid.',
         href: '/admin/referrals',
+      });
+    }
+    if (expiringDocs.length > 0) {
+      bookingItems.push({
+        key: 'documents-expiring',
+        severity: 'medium',
+        label: `${plural(expiringDocs.length, 'talent document')} expired, expiring soon or due for deletion`,
+        detail: 'Insurance and ID documents: ask the talent for a new copy, or delete ID documents past their date.',
+        href: '/admin/bookings/talent-documents',
       });
     }
     if (profileRequests > 0) {

@@ -139,7 +139,7 @@ export const meetingTasksSchema = z.object({
 
 /** Public website form submission */
 export const publicEnquirySchema = z.object({
-  form: z.enum(['contact', 'brand', 'talent']),
+  form: z.enum(['contact', 'brand', 'talent', 'booking']),
   fields: z.record(z.string().max(100), z.string().max(5000)),
 });
 

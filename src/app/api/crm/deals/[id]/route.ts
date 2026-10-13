@@ -3,6 +3,8 @@ import { crmContext, parseBody } from '@/lib/crm/route-helpers';
 import { dealSchema } from '@/lib/crm/schemas';
 import { checkDealLinks } from '@/lib/crm/deal-links';
 import { deleteDeal, getDeal, listTimeline, updateDeal } from '@/lib/db/repositories/crm';
+import { documentFileKeys } from '@/lib/db/repositories/documents';
+import { deleteDocumentFiles } from '@/lib/services/document-storage';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can } from '@/lib/auth/permissions';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
@@ -69,7 +71,9 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
     const deal = await getDeal(ctx.scope, id);
     if (!deal) return ApiErrors.NotFound('Deal');
+    const files = await documentFileKeys({ dealId: id });
     await deleteDeal(id);
+    await deleteDocumentFiles(files);
     await logAudit(ctx.actor, 'delete', 'deal', id, { before: { title: deal.title, stage: deal.stage } });
     return successResponse(null, 'Deal deleted');
   } catch (error) {

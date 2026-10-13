@@ -13,6 +13,7 @@ import { DealDialog } from "@/components/crm/DealDialog";
 import { ActivityComposer, Timeline } from "@/components/crm/Timeline";
 import { DealBookings } from "@/components/bookings/DealBookings";
 import { MeetingsCard } from "@/components/crm/Meetings";
+import { DocumentsPanel } from "@/components/documents/DocumentsPanel";
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -174,6 +175,15 @@ export default function DealPage() {
           <DealBookings deal={deal} />
 
           <MeetingsCard dealId={deal.id} talentIds={deal.talents.map((t) => t.id)} options={options} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DocumentsPanel owner={{ dealId: deal.id }} />
+            </CardContent>
+          </Card>
 
           {deal.contact && (
             <Card>

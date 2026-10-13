@@ -6,6 +6,7 @@ import { updateUserNFCCardsMetadata } from '@/lib/db/repositories/nfc-cards';
 import type { UpdateVIPMembershipRequest } from '@/lib/db/types';
 import { getCurrentSession, requireAdmin } from '@/lib/middleware/auth';
 import { logAudit } from '@/lib/db/repositories/audit-log';
+import { canReadMemberData } from '@/lib/auth/member-access';
 
 // GET VIP membership by user_id
 export async function GET(
@@ -14,7 +15,7 @@ export async function GET(
 ) {
   try {
     const { user_id } = await params;
-    const membership = await getCurrentMembership(user_id);
+    const membership = (await canReadMemberData(user_id)) ? await getCurrentMembership(user_id) : null;
 
     if (!membership) {
       return NextResponse.json(

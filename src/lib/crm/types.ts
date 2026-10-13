@@ -55,7 +55,12 @@ export type ActivityType = keyof typeof LOGGABLE_ACTIVITY_TYPES | 'stage_change'
 
 export const CRM_CURRENCIES = ['GBP', 'EUR', 'USD'] as const;
 
-export const ENQUIRY_FORMS = { contact: 'Contact form', brand: 'Brand partnership', talent: 'Talent application' } as const;
+export const ENQUIRY_FORMS = {
+  contact: 'Contact form',
+  brand: 'Brand partnership',
+  talent: 'Talent application',
+  booking: 'Booking enquiry',
+} as const;
 export type EnquiryForm = keyof typeof ENQUIRY_FORMS;
 export type EnquiryStatus = 'new' | 'converted' | 'archived' | 'spam';
 
@@ -150,6 +155,11 @@ export interface Enquiry {
   payload: Record<string, string>;
   status: EnquiryStatus;
   deal: PersonRef | null;
+  /** Booking enquiries: the talent asked about */
+  talent: PersonRef | null;
+  /** card_tap: the prospect came from a talent tapping their card on their phone */
+  source: 'website' | 'card_tap';
+  marketing_consent: boolean;
   handled_by_name: string | null;
   handled_at: string | null;
   created_at: string;

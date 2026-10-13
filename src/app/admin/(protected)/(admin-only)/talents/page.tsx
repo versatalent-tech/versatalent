@@ -37,6 +37,7 @@ import {
   EyeOff,
   Link as LinkIcon,
   KeyRound,
+  FileText,
   Ruler,
   Palette,
   Trophy,
@@ -1244,6 +1245,11 @@ export default function AdminTalentsPage() {
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
+                        </Button>
+                        <Button asChild variant="outline" size="sm" title="Documents">
+                          <a href={`/admin/bookings/talent-documents?talent=${talent.id}`} aria-label={`Documents for ${talent.name}`}>
+                            <FileText className="h-4 w-4" />
+                          </a>
                         </Button>
                         <Button
                           variant="outline"
