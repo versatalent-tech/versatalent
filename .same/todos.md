@@ -1,14 +1,9 @@
 # VersaTalent Todos
 
-_Last updated 13 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM: `docs/CRM_PORTAL_PLAN.md`._
+_Last updated 13 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. All migrations up to 036 are on production._
 
-## 1. Loyalty: open items (stages 1–4 are built; see docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md)
-- [ ] Set up a test harness (Vitest + Neon branch): tier boundaries, discounts, ledger (`loyalty_post`), claims, refunds, referrals
-- [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
-- [x] Commit `docs/vprivilege-benefit-sheet.html` (costed benefit sheet)
-
-## 2. Loyalty: decisions before switching things on
-Built but off: Founding Membership sales, rewards, referrals. Automatic emails need a provider and domain.
+## 1. Decisions waiting (business owner)
+Built but switched off until these are made: Founding Membership sales, rewards, referrals.
 - [ ] Programme terms and privacy notice approved (drafts at `/membership/terms`)
 - [ ] Minimum age: 18+ for everyone, or only for drink rewards
 - [ ] Card fulfilment: who posts cards and how quickly
@@ -17,56 +12,63 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [ ] Opening reward balances: 0 or carry over (10 points in total)
 - [ ] Black discount to 10% (VIP → Point Rules, a settings change)
 - [ ] Confirm the open figures in the benefit sheet (VAT, card fee, drink cost, card price, guest-pass cost, members' night cost, presale support)
-- [ ] Email provider and owned domain, so outreach lists can send automatically
+- [ ] Email provider and owned domain: unlocks automatic member emails and prospecting v2
 - [ ] Backups: longer Neon restore window or scheduled snapshots
-- [x] Paid benefits are managed in the admin; changes apply to new purchases only
-- [x] One-off £29.99 payment for 12 months, no auto-renewal
 
-## 3. CRM: later
-- [ ] Later: prospecting v2 (send through an email provider, tracking, one-click unsubscribe)
-- [ ] Later: per-person / per-talent KPI targets; outstanding invoices once invoicing exists
+## 2. Check after the latest deploys
+- [ ] Netlify has deployed `main` (latest merge `50485ea`); merges didn't always trigger builds in the past
+- [ ] Tap an artist card on a phone: talent page with the Book / Save contact (/ Press kit) bar; send a test enquiry and find it in CRM → Enquiries marked "Card tap"
+- [ ] Upload a comp card in Bookings → Talent documents and switch on "Public press kit"
+- [ ] Talent calendars: team calendar filtered by a talent shows their events; portal Bookings page shows "Events you're in"
+- [ ] Create the first prospecting campaign, add contacts, start it, work "Due today"
+- [ ] Set this month's KPI targets (CRM → KPIs, target icon); check the `kpi-snapshots` scheduled function appears under Netlify → Functions
 
-## 3b. Artist card: later
-- [ ] Per-talent choice of which profile sections a card shows (e.g. measurements)
-- [ ] Tap and enquiry counts per talent, shown in their portal
-- [ ] "Recently performed at / next appearance" on the profile
+## 3. To build
+- [ ] Test harness (Vitest + Neon branch): loyalty (tier boundaries, discounts, ledger `loyalty_post`, claims, refunds, referrals) and CRM (document access rules, prospecting steps and outcomes, KPI figures)
+- [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 
-## 4. Meetings go-live
-- [x] Run migration 033 on production (13 Oct 2026)
-- [ ] Later stage, AI notes (built, off): privacy notice line about Anthropic, then add `ANTHROPIC_API_KEY` in Netlify (Functions scope) and redeploy; test one draft
-- [ ] Later: audio recordings (needs a speech-to-text service), link meetings to bookings, share notes with talents
+## 4. Later
+- [ ] AI meeting notes (built, off): privacy notice line about Anthropic, add `ANTHROPIC_API_KEY` in Netlify (Functions scope), redeploy, test one draft
+- [ ] Meetings: audio recordings (needs a speech-to-text service), link meetings to bookings, share notes with talents
+- [ ] Prospecting v2: send through an email provider, open/reply tracking, one-click unsubscribe
+- [ ] KPIs: targets per person or per talent; outstanding invoices once invoicing exists
+- [ ] Artist card: choose which profile sections each card shows (e.g. measurements)
+- [ ] Artist card: tap and enquiry counts per talent, shown in their portal
+- [ ] Artist card: "Recently performed at / next appearance" on the profile
 
 ## 5. Housekeeping
-- [ ] Clean up unused variables and imports (101 lint warnings)
-- [ ] Replace `<img>` with Next.js `Image` (15 warnings in 13 files)
+- [ ] Clean up unused variables and imports (100 lint warnings)
+- [ ] Replace `<img>` with Next.js `Image` (15 warnings)
 
 ## Completed
+### October 2026
+- [x] CRM phase 4: Prospecting campaigns, due-today queue, outcomes, deals (migration 036, PR #44)
+- [x] CRM phase 5: KPIs with targets, trends and nightly snapshots (migration 036, PR #44)
+- [x] Artist card buttons: booking enquiry form, save contact, public press kit, link previews (PR #43)
+- [x] Card-tap privacy fixes: no user ids from card lookups, member data VIP-only, inactive talents hidden, staff and guest card pages (migration 035, PR #42)
+- [x] CRM phase 2b: private documents on bookings, deals and talent profiles, with expiry reminders (migration 034, PR #42)
+- [x] V•PRIVILEGE costed benefit sheet committed (PR #41)
+- [x] Events shown in talents' calendars, phone feeds and portal (PR #40)
+- [x] CRM phase 3b: meetings with notes and action items → tasks; AI drafting built but off (migration 033, PR #39)
+- [x] Decided: paid benefits managed in the admin, changes apply to new purchases only
+- [x] Decided: one-off £29.99 payment for 12 months, no auto-renewal
+- [x] Decided: AI meeting notes later; talent documents uploaded by the team only
+- [x] Loyalty stage 4: referrals and member outreach queue without email (migration 032, referrals closed)
+- [x] Loyalty stage 3: status and reward ledgers, rewards and claims, till refunds (migration 031, rewards closed)
+- [x] Loyalty stage 2: Founding Membership, one-off £29.99 (migration 030, off sale)
+- [x] Loyalty stage 1: online sign-up, card delivery and fulfilment queue (migration 029)
+- [x] Phone card taps are logged, not counted as check-ins
+- [x] Loyalty audit and launch plan
+- [x] CRM phases 0–3 and talent payouts
+- [x] VIP tiers: yearly requalification, multipliers, member discounts (migration 023)
+
+### Earlier
 - [x] Upload NFC Bridge release assets to GitHub (v1.1.0, all 5 platforms)
-- [x] Escape apostrophes in JSX strings (lint reports 0 errors)
+- [x] Escape apostrophes in JSX strings
 - [x] Fix SQL parameter placeholder bug in talents.ts updateTalent function
 - [x] Add multi-select talent picker for event creation form
 - [x] Auto-complete events as "completed" after their date passes
-- [x] Fix admin/nfc page client-side error - NFCCardRegistration.tsx was empty
-- [x] Deploy fix to production (v249)
-- [x] Fix NFC reader CCID protected class browser limitation (v251)
-  - Added WebSocket bridge support for physical NFC readers
-  - Added Simulation Mode for testing without hardware
-  - Improved error messaging and UI guidance
-- [x] Create NFC Bridge server documentation (for users who want to use physical NFC readers)
-- [x] Build NFC Bridge executables for all platforms (Windows, macOS Intel/ARM, Linux x64/ARM)
-- [x] Create GitHub repository for NFC Bridge Server (https://github.com/versatalent-tech/nfc-bridge-server)
-- [x] Remove "VersaTalent in Action" section from homepage
-- [x] Remove "Follow Our Artists" / DynamicInstagramFeed section from homepage
-- [x] CRM phases 0–3 and talent payouts (see docs/CRM_PORTAL_PLAN.md)
-- [x] VIP tiers: yearly requalification, multipliers, member discounts (migration 023)
-- [x] Loyalty audit and V•PRIVILEGE costed benefit sheet (9 Oct 2026)
-- [x] Loyalty stage 1: online sign-up, card delivery and fulfilment queue (migration 029)
-- [x] Phone card taps are logged, not counted as check-ins
-- [x] Loyalty stage 2: Founding Membership, one-off £29.99 (migration 030, off sale)
-- [x] Loyalty stage 3: status and reward ledgers, rewards and claims, till refunds (migration 031, rewards closed)
-- [x] CRM phase 4: Prospecting campaigns, due-today queue, outcomes, deals (migration 036)
-- [x] CRM phase 5: KPIs with targets, trends and nightly snapshots (migration 036)
-- [x] Artist card taps: booking enquiry form, save contact, public press kit, link previews, privacy fixes (migration 035)
-- [x] CRM phase 2b: private documents on bookings, deals and talent profiles (migration 034)
-- [x] CRM phase 3b: meetings with Claude-drafted notes and action items → tasks (migration 033)
-- [x] Loyalty stage 4: referrals and member outreach queue without email (migration 032, referrals closed)
+- [x] Fix admin/nfc page client-side error (NFCCardRegistration.tsx was empty)
+- [x] Fix NFC reader CCID protected class browser limitation (v251): WebSocket bridge, simulation mode, clearer errors
+- [x] NFC Bridge server documentation, executables for all platforms, GitHub repository
+- [x] Remove "VersaTalent in Action" and "Follow Our Artists" sections from homepage
