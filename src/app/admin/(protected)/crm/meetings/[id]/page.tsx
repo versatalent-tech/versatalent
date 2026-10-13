@@ -75,7 +75,15 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
-function TranscriptCard({ meeting, onSaved }: { meeting: Meeting; onSaved: (meeting: Meeting) => void }) {
+function TranscriptCard({
+  meeting,
+  aiNotes,
+  onSaved,
+}: {
+  meeting: Meeting;
+  aiNotes: boolean;
+  onSaved: (meeting: Meeting) => void;
+}) {
   const [text, setText] = useState(meeting.transcript ?? "");
   const [consent, setConsent] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -186,7 +194,7 @@ function TranscriptCard({ meeting, onSaved }: { meeting: Meeting; onSaved: (meet
             </Button>
           </div>
         )}
-        <p className="text-xs text-gray-500">To draft notes, the transcript is sent to Anthropic&apos;s Claude API.</p>
+        {aiNotes && <p className="text-xs text-gray-500">To draft notes, the transcript is sent to Anthropic&apos;s Claude API.</p>}
       </CardContent>
     </Card>
   );
@@ -345,7 +353,7 @@ function NotesCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-base">Notes</CardTitle>
-        {meeting.transcript && !pending && (
+        {options.aiNotes && meeting.transcript && !pending && (
           <Button size="sm" variant="outline" onClick={draft} disabled={busy !== null}>
             {busy === "draft" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
             {meeting.ai_generated_at || hasNotes ? "Redraft with Claude" : "Draft with Claude"}
@@ -370,8 +378,12 @@ function NotesCard({
           </p>
         )}
 
-        {!meeting.transcript && !hasNotes && (
-          <p className="text-sm text-gray-500">Add the transcript and Claude will draft a summary, decisions and action items. Or write the notes yourself below.</p>
+        {!hasNotes && (
+          <p className="text-sm text-gray-500">
+            {options.aiNotes && !meeting.transcript
+              ? "Add the transcript and Claude will draft a summary, decisions and action items. Or write the notes yourself below."
+              : "Write a summary, the decisions made and the action items. Action items can become tasks."}
+          </p>
         )}
 
         <fieldset disabled={pending || busy !== null} className="space-y-4">
@@ -614,7 +626,7 @@ export default function MeetingPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-4 lg:col-span-2">
           <NotesCard meeting={meeting} options={options} onChanged={setMeeting} />
-          <TranscriptCard meeting={meeting} onSaved={setMeeting} />
+          <TranscriptCard meeting={meeting} aiNotes={options.aiNotes} onSaved={setMeeting} />
         </div>
 
         <div className="space-y-4">

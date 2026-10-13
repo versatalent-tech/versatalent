@@ -30,10 +30,9 @@ Built but off: Founding Membership sales, rewards, referrals. Automatic emails n
 - [ ] 4 Outreach v1 (prospecting; separate from the member outreach queue)
 - [ ] 5 KPIs (combine with loyalty reporting)
 
-## 4. Meetings & AI notes go-live
-- [ ] Run migration 033 on production
-- [ ] Add `ANTHROPIC_API_KEY` to Netlify environment variables (Functions scope)
-- [ ] Privacy notice: transcripts are sent to Anthropic to draft notes
+## 4. Meetings go-live
+- [x] Run migration 033 on production (13 Oct 2026)
+- [ ] Later stage, AI notes (built, off): privacy notice line about Anthropic, then add `ANTHROPIC_API_KEY` in Netlify (Functions scope) and redeploy; test one draft
 - [ ] Later: audio recordings (needs a speech-to-text service), link meetings to bookings, share notes with talents
 
 ## 5. Housekeeping

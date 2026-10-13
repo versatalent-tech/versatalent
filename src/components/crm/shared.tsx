@@ -28,10 +28,10 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
 }
 
-export type CrmOptionsWithMe = CrmOptions & { me: string | null; canDelete: boolean };
+export type CrmOptionsWithMe = CrmOptions & { me: string | null; canDelete: boolean; aiNotes: boolean };
 
 export function useCrmOptions() {
-  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], me: null, canDelete: false });
+  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], me: null, canDelete: false, aiNotes: false });
   useEffect(() => {
     api<CrmOptionsWithMe>("/api/crm/options").then(setOptions).catch(() => undefined);
   }, []);

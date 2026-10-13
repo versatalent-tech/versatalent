@@ -3,6 +3,7 @@ import { crmContext } from '@/lib/crm/route-helpers';
 import { MEETING_AI_STALE_MINUTES } from '@/lib/crm/types';
 import { failMeetingNotesStart, getMeeting, requestMeetingNotes } from '@/lib/db/repositories/meetings';
 import { runMeetingNotesJob } from '@/lib/meetings/ai-notes';
+import { aiNotesEnabled } from '@/lib/meetings/ai-config';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { ApiErrors, errorResponse, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
@@ -23,6 +24,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(request: NextRequest, { params }: Params) {
   const ctx = await crmContext('crm.edit');
   if ('response' in ctx) return ctx.response;
+  if (!aiNotesEnabled()) return errorResponse("AI notes aren't switched on yet", 503, undefined, 'AI_NOTES_OFF');
   const { id } = await params;
   if (!isValidUUID(id)) return ApiErrors.NotFound('Meeting');
 

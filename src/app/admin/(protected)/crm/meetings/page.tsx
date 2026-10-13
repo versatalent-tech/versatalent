@@ -82,7 +82,11 @@ export default function MeetingsPage() {
           <span className="text-gold">Meetings</span>
         </>
       }
-      subtitle="Meetings with clients and talents. Paste a transcript and Claude drafts the notes and action items for you to check."
+      subtitle={
+        options.aiNotes
+          ? "Meetings with clients and talents. Paste a transcript and Claude drafts the notes and action items for you to check."
+          : "Meetings with clients and talents: notes, decisions and action items that become tasks."
+      }
       actions={
         <Button onClick={() => setAdding(true)} className="bg-gold text-black hover:bg-gold/90">
           <Plus className="mr-2 h-4 w-4" />
@@ -122,7 +126,9 @@ export default function MeetingsPage() {
             ? "No meetings match your search."
             : view === "upcoming"
               ? "No upcoming meetings. Add one here or from a deal or client."
-              : "No meetings logged yet. Add one, paste its transcript, and Claude will draft the notes."}
+              : options.aiNotes
+                ? "No meetings logged yet. Add one, paste its transcript, and Claude will draft the notes."
+                : "No meetings logged yet. Add one to keep its notes and action items."}
         </div>
       ) : (
         <ul className="space-y-2">

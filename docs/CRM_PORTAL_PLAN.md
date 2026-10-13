@@ -388,7 +388,8 @@ Migration `033_meetings.sql` adds `meetings`.
 - Saving a transcript needs a tick to confirm everyone was told the meeting was recorded. The confirmation is stored with the date.
 - Up to 400,000 characters (about 100k tokens). Longer transcripts are refused, not cut short.
 
-**AI notes:**
+**AI notes (switched off until `ANTHROPIC_API_KEY` is set):**
+- Without the key, meetings, transcripts, notes and action items → tasks all work, and the Claude option and its wording are hidden. The drafting endpoint refuses with "AI notes aren't switched on yet". Adding the key in Netlify and redeploying switches it on; no code change.
 - "Draft with Claude" sends the transcript, with the meeting's details and the names of the admins and managers, to Claude (`claude-opus-5-5`, medium effort, structured output, server-side fallback if a request is declined).
 - Claude returns a summary, decisions, and action items with an owner and a due date where the transcript gives one. Owners are matched to team members by name. Dates that aren't real dates are dropped.
 - The draft is just a draft: the page says so until someone edits and saves it ("Saved by … on …").
@@ -408,7 +409,7 @@ Migration `033_meetings.sql` adds `meetings`.
 - Sharing meeting notes with a talent in the portal.
 
 **Go-live:**
-1. Run migration 033 on production before deploying.
-2. Add `ANTHROPIC_API_KEY` to the Netlify site's environment variables, with Functions in its scopes. Without it, drafting fails with "AI notes aren't set up yet", and everything else works.
-3. Add a line to the privacy notice that meeting transcripts are sent to Anthropic to draft notes.
+1. Run migration 033 on production before deploying (done 13 Oct 2026).
+2. Meetings and notes work straight away. AI notes come later (decided 13 Oct 2026): add `ANTHROPIC_API_KEY` to the Netlify site's environment variables (Functions scope) and redeploy.
+3. Before switching AI notes on, add a line to the privacy notice that meeting transcripts are sent to Anthropic to draft notes.
 
