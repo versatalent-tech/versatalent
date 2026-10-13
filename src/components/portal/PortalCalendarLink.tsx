@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, errorMessage } from "@/components/crm/shared";
 
-/** Lets a talent subscribe to their bookings from their phone's calendar */
+/** Lets a talent subscribe to their bookings and events from their phone's calendar */
 export function PortalCalendarLink() {
   const [active, setActive] = useState<boolean | null>(null);
   const [link, setLink] = useState<{ url: string; webcal: string } | null>(null);
@@ -43,7 +43,7 @@ export function PortalCalendarLink() {
       <div className="flex items-start gap-3">
         <CalendarPlus className="mt-0.5 h-5 w-5 flex-shrink-0 text-gold" />
         <div>
-          <h2 className="font-semibold">See bookings in your phone&apos;s calendar</h2>
+          <h2 className="font-semibold">See bookings and events in your phone&apos;s calendar</h2>
           <p className="text-sm text-gray-500">A private link that keeps your calendar up to date automatically.</p>
         </div>
       </div>
