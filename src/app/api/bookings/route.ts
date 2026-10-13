@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const [bookings, availability, events] = await Promise.all([
       listBookings(ctx.scope, ctx.withMoney, { ...range, talentId }),
       listAvailability(ctx.scope, { ...range, talentId }),
-      talentId ? Promise.resolve([]) : listPublicEvents(ctx.scope, range.from, range.to),
+      listPublicEvents(ctx.scope, range.from, range.to, { talentId }),
     ]);
     return successResponse({ bookings, availability, events });
   } catch (error) {

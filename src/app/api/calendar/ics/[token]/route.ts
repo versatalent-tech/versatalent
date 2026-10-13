@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildCalendar } from '@/lib/bookings/ical';
-import { getBookingScope, listAvailability, listBookings, resolveCalendarFeed } from '@/lib/db/repositories/bookings';
+import { getBookingScope, listAvailability, listBookings, listPublicEvents, resolveCalendarFeed } from '@/lib/db/repositories/bookings';
 import { listTalentBookings } from '@/lib/db/repositories/portal';
-import type { Availability, Booking } from '@/lib/bookings/types';
+import type { Availability, Booking, PublicEventBlock } from '@/lib/bookings/types';
 import type { TalentBooking } from '@/lib/portal/types';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +35,7 @@ function talentBookingForFeed(b: TalentBooking, talentId: string, label: string)
 }
 
 /**
- * GET /api/calendar/ics/<token>.ics - a person's bookings as a calendar
+ * GET /api/calendar/ics/<token>.ics - a person's bookings and events as a calendar
  * subscription. The secret token in the URL is the only credential, so the
  * response is never cached and contains no money.
  */
@@ -55,26 +55,36 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     let bookings: Booking[];
     let availability: Availability[];
+    let events: PublicEventBlock[];
     if (owner.kind === 'talent') {
-      // A talent's own feed: only bookings shared with them, client name only if allowed
+      // A talent's own feed: only bookings shared with them, client name only if allowed,
+      // and the published events they appear at
       const scope = { all: false, talentIds: [owner.talentId] };
-      const [upcoming, past, days] = await Promise.all([
+      const [upcoming, past, days, talentEvents] = await Promise.all([
         listTalentBookings(owner.talentId, 'upcoming', 500),
         listTalentBookings(owner.talentId, 'past', 100),
         listAvailability(scope, range),
+        listPublicEvents(scope, range.from, range.to, { talentId: owner.talentId, publishedOnly: true }),
       ]);
       // In their own calendar, label events as VersaTalent jobs rather than with their name
       bookings = [...past, ...upcoming].map((b) => talentBookingForFeed(b, owner.talentId, 'VersaTalent'));
       availability = days;
+      events = talentEvents;
     } else {
       const scope = await getBookingScope(owner);
-      [bookings, availability] = await Promise.all([listBookings(scope, false, range), listAvailability(scope, range)]);
+      [bookings, availability, events] = await Promise.all([
+        listBookings(scope, false, range),
+        listAvailability(scope, range),
+        listPublicEvents(scope, range.from, range.to),
+      ]);
     }
 
     const body = buildCalendar(
       owner.kind === 'talent' ? 'My VersaTalent bookings' : `VersaTalent bookings (${owner.name})`,
       bookings.filter((b) => b.status !== 'cancelled'),
-      availability
+      availability,
+      events,
+      { eventTalentNames: owner.kind !== 'talent' }
     );
     return new NextResponse(body, {
       headers: {

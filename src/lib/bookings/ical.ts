@@ -1,4 +1,4 @@
-import { BOOKING_STATUSES, type Availability, type Booking } from './types';
+import { BOOKING_STATUSES, type Availability, type Booking, type PublicEventBlock } from './types';
 
 /**
  * Minimal iCalendar (RFC 5545) writer for the personal calendar feed.
@@ -6,7 +6,7 @@ import { BOOKING_STATUSES, type Availability, type Booking } from './types';
  */
 
 function escapeText(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  return value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 }
 
 function utcStamp(iso: string): string {
@@ -39,7 +39,17 @@ function fold(line: string): string {
   return parts.join('\r\n ');
 }
 
-export function buildCalendar(name: string, bookings: Booking[], availability: Availability[]): string {
+/**
+ * events: VersaTalent events (Admin → Events) the talents appear at.
+ * eventTalentNames: put the talents' names in each event's title (team feeds).
+ */
+export function buildCalendar(
+  name: string,
+  bookings: Booking[],
+  availability: Availability[],
+  events: PublicEventBlock[] = [],
+  options: { eventTalentNames?: boolean } = {}
+): string {
   const now = utcStamp(new Date().toISOString());
   const lines = [
     'BEGIN:VCALENDAR',
@@ -87,6 +97,24 @@ export function buildCalendar(name: string, bookings: Booking[], availability: A
       `SUMMARY:${escapeText(`${a.talent.name} ${a.kind === 'tentative' ? 'maybe unavailable' : 'unavailable'}`)}`,
       'TRANSP:TRANSPARENT',
       ...(a.note ? [`DESCRIPTION:${escapeText(a.note)}`] : []),
+      'END:VEVENT'
+    );
+  }
+
+  for (const e of events) {
+    const title = options.eventTalentNames && e.talent_names.length ? `${e.title} (${e.talent_names.join(', ')})` : e.title;
+    // Events without an end time are shown as lasting two hours
+    const ends = e.ends_at ?? new Date(new Date(e.starts_at).getTime() + 2 * 60 * 60 * 1000).toISOString();
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:event-${e.id}@versatalent`,
+      `DTSTAMP:${now}`,
+      `DTSTART:${utcStamp(e.starts_at)}`,
+      `DTEND:${utcStamp(ends)}`,
+      `SUMMARY:${escapeText(`★ ${title}`)}`,
+      'STATUS:CONFIRMED',
+      ...(e.location ? [`LOCATION:${escapeText(e.location)}`] : []),
+      `DESCRIPTION:${escapeText('VersaTalent event')}`,
       'END:VEVENT'
     );
   }
