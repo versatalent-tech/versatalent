@@ -1,0 +1,182 @@
+#!/usr/bin/env node
+/**
+ * Runs the Playwright tests against a temporary copy of the database.
+ *
+ *   npm run test:e2e                   all tests
+ *   npm run test:e2e -- tickets        only files matching "tickets"
+ *   npm run test:e2e -- --ui           Playwright's interactive mode
+ *   KEEP_TEST_DB=1 npm run test:e2e    keep the copy afterwards (to inspect it)
+ *   E2E_SKIP_BUILD=1 npm run test:e2e  reuse the last build (when only tests changed)
+ *   E2E_DEV=1 npm run test:e2e         run the site with `next dev` instead of a build
+ *
+ * Settings come from the environment or a git-ignored .env.test file:
+ *   NEON_API_KEY      Neon API key (Neon console → Account settings → API keys)
+ *   NEON_PROJECT_ID   the VersaTalent Neon project (snowy-tooth-29200550)
+ *   TEST_DATABASE_URL optional: use this database instead of making a copy
+ *                     (never the live database: that's refused)
+ *
+ * The copy is a Neon branch of the live database made for this run and
+ * deleted at the end, so tests can never change live data. Payments go to a
+ * pretend SumUp (e2e/mocks/sumup.mjs); no email or card is ever charged.
+ */
+import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
+const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const NEON_API = 'https://console.neon.tech/api/v2';
+const BRANCH_PREFIX = 'e2e-';
+// The live database's compute endpoint: tests refuse to run against it
+const LIVE_ENDPOINT = 'ep-royal-leaf-a4rl6jau';
+
+function loadEnvFile(file) {
+  if (!existsSync(file)) return;
+  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (!match || process.env[match[1]] !== undefined) continue;
+    process.env[match[1]] = match[2].replace(/^["']|["']$/g, '');
+  }
+}
+
+async function neon(method, urlPath, body) {
+  const response = await fetch(`${NEON_API}${urlPath}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+      Accept: 'application/json',
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await response.text();
+  if (!response.ok) throw new Error(`Neon API ${method} ${urlPath}: ${response.status} ${text.slice(0, 300)}`);
+  return text ? JSON.parse(text) : null;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function waitForOperations(projectId, operations) {
+  for (const op of operations ?? []) {
+    for (let i = 0; i < 120; i++) {
+      const { operation } = await neon('GET', `/projects/${projectId}/operations/${op.id}`);
+      if (operation.status === 'finished') break;
+      if (['failed', 'error', 'cancelled'].includes(operation.status)) throw new Error(`Neon operation ${op.action} ${operation.status}`);
+      await sleep(1000);
+    }
+  }
+}
+
+/** Delete copies left behind by runs that crashed (older than 2 hours) */
+async function removeStaleBranches(projectId) {
+  const { branches } = await neon('GET', `/projects/${projectId}/branches`);
+  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+  for (const b of branches) {
+    if (b.name.startsWith(BRANCH_PREFIX) && !b.default && !b.protected && new Date(b.created_at).getTime() < cutoff) {
+      console.log(`Removing an old test copy: ${b.name}`);
+      await neon('DELETE', `/projects/${projectId}/branches/${b.id}`).catch((e) => console.warn(e.message));
+    }
+  }
+}
+
+async function createTestBranch(projectId) {
+  const name = `${BRANCH_PREFIX}${new Date().toISOString().replace(/[:.]/g, '-')}`;
+  console.log(`Making a temporary copy of the database (${name})…`);
+  const created = await neon('POST', `/projects/${projectId}/branches`, {
+    branch: { name },
+    endpoints: [{ type: 'read_write' }],
+  });
+  if (created.branch.default) throw new Error('Neon returned the default branch; refusing to continue');
+  await waitForOperations(projectId, created.operations);
+  const uri = created.connection_uris?.[0]?.connection_uri;
+  if (!uri) throw new Error('Neon did not return a connection string for the test copy');
+  return { id: created.branch.id, name, url: uri };
+}
+
+function assertNotLive(url) {
+  if (url.includes(LIVE_ENDPOINT)) {
+    throw new Error('This is the live database. The tests only run against a copy.');
+  }
+}
+
+function run(command, args, env) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { cwd: ROOT, env, stdio: 'inherit', shell: process.platform === 'win32' });
+    child.on('exit', (code, signal) => resolve(code ?? (signal ? 1 : 0)));
+  });
+}
+
+async function main() {
+  loadEnvFile(path.join(ROOT, '.env.test'));
+  const projectId = process.env.NEON_PROJECT_ID;
+  let branch = null;
+  let databaseUrl = process.env.TEST_DATABASE_URL;
+
+  if (!databaseUrl) {
+    if (!process.env.NEON_API_KEY || !projectId) {
+      console.error('Set NEON_API_KEY and NEON_PROJECT_ID (in .env.test or the environment), or TEST_DATABASE_URL.');
+      process.exit(2);
+    }
+    await removeStaleBranches(projectId).catch((e) => console.warn(`Couldn't tidy old test copies: ${e.message}`));
+    branch = await createTestBranch(projectId);
+    databaseUrl = branch.url;
+  }
+  assertNotLive(databaseUrl);
+
+  let deleting = false;
+  const cleanUp = async () => {
+    if (!branch || deleting) return;
+    deleting = true;
+    if (process.env.KEEP_TEST_DB === '1') {
+      console.log(`Kept the test copy ${branch.name} (${branch.id}). Delete it in Neon when you're done.`);
+      return;
+    }
+    console.log('Deleting the temporary database copy…');
+    await neon('DELETE', `/projects/${projectId}/branches/${branch.id}`).catch((e) => console.warn(`Couldn't delete ${branch.name}: ${e.message}`));
+  };
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, async () => {
+      await cleanUp();
+      process.exit(130);
+    });
+  }
+
+  // Throwaway values for this run only
+  const env = {
+    ...process.env,
+    DATABASE_URL: databaseUrl,
+    SESSION_SECRET: randomBytes(32).toString('hex'),
+    ADMIN_USERNAME: 'e2e-admin',
+    ADMIN_PASSWORD: randomBytes(18).toString('base64url'),
+    SUMUP_API_BASE: 'http://127.0.0.1:4010',
+    SUMUP_API_KEY: 'sup_sk_e2e_not_a_real_key',
+    SUMUP_MERCHANT_CODE: 'ME2E0001',
+    NEXT_TELEMETRY_DISABLED: '1',
+  };
+  delete env.ANTHROPIC_API_KEY; // AI notes stay off in tests
+  delete env.NEON_API_KEY; // the app and tests don't need it
+
+  // A production build in its own folder, so it never clashes with `npm run dev`
+  env.NEXT_DIST_DIR = '.next-e2e';
+  if (!process.env.E2E_DEV && !(process.env.E2E_SKIP_BUILD === '1' && existsSync(path.join(ROOT, '.next-e2e', 'BUILD_ID')))) {
+    console.log('Building the site for the tests…');
+    const built = await run('npx', ['next', 'build'], { ...env, NODE_ENV: 'production' });
+    if (built !== 0) {
+      await cleanUp();
+      process.exit(built);
+    }
+  }
+
+  let code = 1;
+  try {
+    code = await run('npx', ['playwright', 'test', ...process.argv.slice(2)], env);
+  } finally {
+    await cleanUp();
+  }
+  process.exit(code);
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});
