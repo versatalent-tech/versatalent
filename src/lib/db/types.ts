@@ -1,3 +1,4 @@
+import type { PublicProfileStat } from '@/lib/talents/profile-stats';
 // Database model types
 
 export type UserRole = 'artist' | 'vip' | 'staff' | 'admin';
@@ -474,6 +475,8 @@ export interface Talent {
   social_links?: SocialLinks;
   portfolio?: PortfolioItem[];
   industry_details?: IndustryDetails; // Industry-specific fields
+  /** Profile hero figures; only on GET /api/talents/[id] */
+  stats?: PublicProfileStat[];
   created_at: Date;
   updated_at: Date;
   // camelCase aliases the repository still returns for older components

@@ -8,6 +8,8 @@ import type { UpdateTalentRequest } from '@/lib/db/types';
 import { getTeamSession, withAdminAuth } from '@/lib/middleware/auth';
 import { documentFileKeys, getPublicPressKit } from '@/lib/db/repositories/documents';
 import { deleteDocumentFiles } from '@/lib/services/document-storage';
+import { getTalentProfileStats } from '@/lib/db/repositories/talent-stats';
+import { publicStats } from '@/lib/talents/profile-stats';
 
 // GET single talent by ID
 export async function GET(
@@ -26,7 +28,8 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ ...talent, has_press_kit: Boolean(await getPublicPressKit(id)) });
+    const [pressKit, stats] = await Promise.all([getPublicPressKit(id), getTalentProfileStats(id)]);
+    return NextResponse.json({ ...talent, has_press_kit: Boolean(pressKit), stats: stats ? publicStats(stats) : [] });
   } catch (error) {
     console.error('Error fetching talent:', error);
     return NextResponse.json(

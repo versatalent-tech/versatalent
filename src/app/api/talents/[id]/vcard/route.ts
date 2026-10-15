@@ -6,7 +6,7 @@ import { isValidUUID } from '@/lib/utils/validation';
 
 export const dynamic = 'force-dynamic';
 
-const escape = (value: string) => value.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const escape = (value: string) => value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 
 /**
  * GET /api/talents/[id]/vcard - the agency's booking contact as a contact
