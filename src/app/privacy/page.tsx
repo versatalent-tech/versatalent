@@ -8,7 +8,7 @@ export default function PrivacyPage() {
     <LegalPage title="Privacy Notice" updated="October 2026">
       <p>
         This notice explains how VersaTalent (&quot;we&quot;, &quot;us&quot;) uses personal information when you join our VIP
-        programme, come to our events, buy from our bars and tills, or contact us. We are the controller of this information.
+        programme, buy tickets, come to our events, buy from our bars and tills, or contact us. We are the controller of this information.
         Questions or requests: <a href="mailto:versatalent.management@gmail.com" className="text-gold underline">versatalent.management@gmail.com</a>.
       </p>
 
@@ -16,6 +16,7 @@ export default function PrivacyPage() {
       <ul>
         <li><strong>Membership details:</strong> name, email, mobile number, date of birth, postal address, interests, how you heard about us, and your marketing choices.</li>
         <li><strong>Card and activity:</strong> your NFC card&apos;s identifier, event check-ins, purchases made with your card at our tills, points, tier and discounts applied.</li>
+        <li><strong>Ticket orders:</strong> your name, email, Instagram username, and if you choose to give them, your phone number, town or city, age range and how you heard about the event; what you bought; and where the order came from (for example the link or campaign you followed).</li>
         <li><strong>Payments:</strong> when you pay online, SumUp processes your card. We receive a payment reference and outcome, never your card details.</li>
         <li><strong>Messages:</strong> anything you send through our website forms or by email.</li>
         <li><strong>Referrals:</strong> if you join with a friend&apos;s code, we record that they referred you. They see how many friends joined and came to an event, not who.</li>
@@ -24,6 +25,8 @@ export default function PrivacyPage() {
       <h2>Why we use it, and our lawful basis</h2>
       <ul>
         <li><strong>To run your membership</strong> (posting your card, recognising you at events, points, tiers and discounts): to perform our contract with you.</li>
+        <li><strong>To sell you tickets and check you in at the door</strong>: to perform our contract with you.</li>
+        <li><strong>To understand who comes to our events and which promotion works</strong> (for example how many buyers heard about an event on Instagram, or come back for another), and to look up the Instagram username you gave us so we can tag or credit you: our legitimate interests.</li>
         <li><strong>To check you&apos;re 18 or over</strong>, and to keep records we&apos;re required to keep (for example payment records for tax): legal obligation.</li>
         <li><strong>To prevent fraud and misuse, keep our systems secure and improve the programme</strong>: our legitimate interests.</li>
         <li><strong>To send you news and offers</strong> by email, text or post: only with your consent for each channel, which you can withdraw at any time.</li>
@@ -49,6 +52,7 @@ export default function PrivacyPage() {
         <li>Membership and activity records: while you&apos;re a member, then up to 2 years after your membership ends.</li>
         <li>Payment and sales records: 6 years, for tax and accounting.</li>
         <li>Applications that are never paid for: up to 6 months.</li>
+        <li>Ticket orders: 2 years after the event for the buyer&apos;s details; unpaid orders up to 6 months; payment records 6 years.</li>
         <li>Marketing choices: until you change them.</li>
       </ul>
 

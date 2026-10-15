@@ -24,6 +24,8 @@ export default async function MembershipTermsPage() {
   const checkin = rules.find((r) => r.action_type === 'event_checkin')?.points_per_unit ?? 10;
   const perPound = rules.find((r) => r.action_type === 'consumption')?.points_per_unit ?? 1 / 3;
   const poundsPerPoint = Math.round(1 / perPound);
+  const ticketRule = rules.find((r) => r.action_type === 'ticket_purchase');
+  const ticketPoundsPerPoint = ticketRule && ticketRule.points_per_unit > 0 ? Math.round((1 / ticketRule.points_per_unit) * 100) / 100 : null;
 
   return (
     <LegalPage title="VersaTalent VIP Membership Terms" updated="October 2026">
@@ -65,6 +67,12 @@ export default async function MembershipTermsPage() {
           You earn {checkin} points when staff check you in at a VersaTalent event (once per event), and 1 point for every £
           {poundsPerPoint} you spend on eligible items at our bars and tills, based on what you actually pay after any discount.
         </li>
+        {ticketPoundsPerPoint && (
+          <li>
+            You also earn 1 point for every £{ticketPoundsPerPoint} you pay for tickets on our website, when you buy with the email on
+            your membership.
+          </li>
+        )}
         <li>Tapping your card on your own phone doesn&apos;t earn points: check-ins are done by our staff.</li>
         <li>Gold and Black members earn points faster: {tiers.multipliers.gold}× and {tiers.multipliers.black}× respectively.</li>
         <li>

@@ -551,9 +551,23 @@ export async function refundOrder(orderId: string, reason: string | null, actorI
 
 /** Take back what an order earned on each ledger (never below zero; shortfall noted) */
 export async function reverseOrderPoints(orderId: string, actorId: string | null): Promise<number> {
+  return reverseEarnedPoints(`order:${orderId}`, `order_refund:${orderId}`, orderId, { order_id: orderId }, actorId);
+}
+
+/**
+ * Take back the points a purchase earned (its source key), on each ledger,
+ * under a refund key so a retry does nothing. Returns reward points taken.
+ */
+export async function reverseEarnedPoints(
+  earnKey: string,
+  refundKey: string,
+  refId: string,
+  metadata: Record<string, unknown>,
+  actorId: string | null
+): Promise<number> {
   const earned = await sql`
     SELECT user_id, ledger, delta_points FROM vip_points_log
-    WHERE source_key = ${`order:${orderId}`} AND ledger IN ('status', 'reward') AND delta_points > 0
+    WHERE source_key = ${earnKey} AND ledger IN ('status', 'reward') AND delta_points > 0
   `;
   let reversed = 0;
   for (const e of earned as any[]) {
@@ -562,9 +576,9 @@ export async function reverseOrderPoints(orderId: string, actorId: string | null
       ledger: e.ledger,
       delta: -Number(e.delta_points),
       source: 'order_refund',
-      sourceKey: `order_refund:${orderId}`,
-      refId: orderId,
-      metadata: { order_id: orderId },
+      sourceKey: refundKey,
+      refId,
+      metadata,
       actorId,
       mode: 'clamp',
     });

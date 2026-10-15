@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { formatEventDate, type EventItem } from "@/lib/data/events";
 import type { Talent } from "@/lib/data/talents";
+import { formatPrice, type PublicTicketEvent } from "@/lib/tickets/types";
 import {
   Calendar,
   MapPin,
@@ -31,6 +32,8 @@ export default function EventDetailPage() {
   const [talents, setTalents] = useState<Map<string, Talent>>(new Map());
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // Tickets sold on this website (takes the place of an external tickets link)
+  const [tickets, setTickets] = useState<PublicTicketEvent | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,6 +65,10 @@ export default function EventDetailPage() {
 
         // Set event and talent
         setEvent(eventData);
+        fetch(`/api/events/${eventData.id}/tickets`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((body) => body?.success && setTickets(body.data))
+          .catch(() => undefined);
         setTalent(talentMap.get(eventData.talentIds[0]) || null);
 
         // Get related events (same type, different ID)
@@ -274,7 +281,22 @@ export default function EventDetailPage() {
                     </div>
                   )}
 
-                  {event.ticketsUrl && event.status === 'upcoming' && (
+                  {tickets && tickets.ticket_types.length > 0 ? (() => {
+                    const onSale = tickets.ticket_types.filter((t) => t.on_sale);
+                    const from = onSale.length ? Math.min(...onSale.map((t) => t.price_cents)) : null;
+                    return onSale.length > 0 ? (
+                      <Link href={`/events/${event.id}/tickets`}>
+                        <Button className="w-full bg-gold hover:bg-gold/90 text-white">
+                          <Ticket className="h-4 w-4 mr-2" />
+                          Buy tickets{from !== null && from > 0 ? ` from ${formatPrice(from, onSale[0].currency)}` : ""}
+                        </Button>
+                      </Link>
+                    ) : (
+                      <p className="text-center text-sm text-gray-500">
+                        {tickets.ticket_types.find((t) => t.note)?.note ?? "Tickets aren't on sale"}
+                      </p>
+                    );
+                  })() : event.ticketsUrl && event.status === 'upcoming' && (
                     <a href={event.ticketsUrl} target="_blank" rel="noopener noreferrer">
                       <Button className="w-full bg-gold hover:bg-gold/90 text-white">
                         <Ticket className="h-4 w-4 mr-2" />
