@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 15 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Migrations up to 037 are on production; 038 (ticket sales) is waiting._
+_Last updated 15 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. All migrations up to 038 are on production._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals.
@@ -20,7 +20,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 ## 2. Check after the latest deploys
 - [ ] Netlify has deployed `main` (latest merge `7f03205`); merges didn't always trigger builds in the past
 - [ ] Talent profiles show real figures (jobs, events, clients); add earlier work in Admin → Talents → Edit → Profile figures
-- [ ] Ticket sales (after migration 038): SumUp online keys set in Netlify (`SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`), add ticket types in Admin → Tickets, make one real £1 test purchase, refund it in SumUp, then press Refund in Admin → Tickets
+- [ ] Ticket sales: SumUp online keys set in Netlify (`SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`), add ticket types in Admin → Tickets, make one real £1 test purchase, refund it in SumUp, then press Refund in Admin → Tickets
 - [ ] Tap an artist card on a phone: talent page with the Book / Save contact (/ Press kit) bar; send a test enquiry and find it in CRM → Enquiries marked "Card tap"
 - [ ] Upload a comp card in Bookings → Talent documents and switch on "Public press kit"
 - [ ] Talent calendars: team calendar filtered by a talent shows their events; portal Bookings page shows "Events you're in"
