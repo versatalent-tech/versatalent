@@ -56,6 +56,7 @@ import type {
 } from "@/lib/db/types";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { PortfolioManager } from "@/components/admin/PortfolioManager";
+import { ProfileStatsEditor } from "@/components/admin/ProfileStatsEditor";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { CredentialsDialog } from "@/components/admin/CredentialsDialog";
@@ -1596,6 +1597,13 @@ export default function AdminTalentsPage() {
                   onChange={(portfolio) => handleFormChange("portfolio", portfolio)}
                 />
               </div>
+
+              {/* Profile hero figures (existing talents only; saved separately) */}
+              {isEditDialogOpen && selectedTalent && (
+                <div className="border-t pt-4">
+                  <ProfileStatsEditor talentId={selectedTalent.id} />
+                </div>
+              )}
 
               {/* Featured */}
               <div className="flex items-center gap-2">

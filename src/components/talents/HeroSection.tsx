@@ -5,6 +5,14 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Star, Award } from "lucide-react";
 import type { Talent } from "@/lib/data/talents";
+import type { ProfileStatKey } from "@/lib/talents/profile-stats";
+
+// Figures come from the talent's finished bookings and events (see lib/talents/profile-stats)
+const STAT_ICONS: Record<ProfileStatKey, typeof Star> = {
+  jobs: Award,
+  events: Calendar,
+  clients: Star,
+};
 
 interface HeroSectionProps {
   talent: Talent;
@@ -48,20 +56,6 @@ export function HeroSection({ talent }: HeroSectionProps) {
     const sortedByYear = imageItems.sort((a, b) => (b.year || 0) - (a.year || 0));
     return sortedByYear[0]?.url || talent.imageSrc;
   }, [talent.cover_image, talent.portfolio, talent.imageSrc]);
-
-  // Calculate enhanced stats
-  const stats = useMemo(() => {
-    const portfolioImages = talent.portfolio?.filter(item => item.type === 'image') || [];
-    const currentYear = new Date().getFullYear();
-
-    return {
-      totalShots: portfolioImages.length,
-      recentWork: portfolioImages.filter(item => item.year && item.year >= currentYear - 1).length,
-      professionalShots: portfolioImages.filter(item => item.professional).length,
-      featuredWork: portfolioImages.filter(item => item.featured).length,
-      collaborations: [...new Set(portfolioImages.map(item => item.client).filter(Boolean))].length,
-    };
-  }, [talent.portfolio]);
 
   return (
     <div className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
@@ -139,28 +133,17 @@ export function HeroSection({ talent }: HeroSectionProps) {
                   <span className="text-sm md:text-base">{talent.location}</span>
                 </div>
 
-                <div
-                  className="flex items-center gap-2"
-                >
-                  <Award className="w-4 h-4 text-gold" />
-                  <span className="text-sm md:text-base">{stats.professionalShots} Professional Shots</span>
-                </div>
-
-                <div
-                  className="flex items-center gap-2"
-                >
-                  <Calendar className="w-4 h-4 text-gold" />
-                  <span className="text-sm md:text-base">{stats.recentWork} Recent Projects</span>
-                </div>
-
-                {stats.collaborations > 0 && (
-                  <div
-                    className="flex items-center gap-2"
-                  >
-                    <Star className="w-4 h-4 text-gold" />
-                    <span className="text-sm md:text-base">{stats.collaborations} Brand Collaborations</span>
-                  </div>
-                )}
+                {(talent.stats ?? []).map((stat) => {
+                  const Icon = STAT_ICONS[stat.key];
+                  return (
+                    <div key={stat.key} className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-gold" />
+                      <span className="text-sm md:text-base">
+                        {stat.value.toLocaleString("en-GB")} {stat.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
