@@ -1,9 +1,9 @@
 # VersaTalent Todos
 
-_Last updated 15 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. All migrations up to 038 are on production._
+_Last updated 15 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 038 are on production._
 
 ## 1. Decisions waiting (business owner)
-Built but switched off until these are made: Founding Membership sales, rewards, referrals.
+Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
 - [ ] Programme terms and privacy notice approved (drafts at `/membership/terms`)
 - [ ] Minimum age: 18+ for everyone, or only for drink rewards
 - [ ] Card fulfilment: who posts cards and how quickly
@@ -18,9 +18,10 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
-- [ ] Netlify has deployed `main` (latest merge `7f03205`); merges didn't always trigger builds in the past
+- [ ] Netlify has deployed `main` (latest merge `15db012`); merges didn't always trigger builds in the past
 - [ ] Talent profiles show real figures (jobs, events, clients); add earlier work in Admin → Talents → Edit → Profile figures
-- [ ] Ticket sales: SumUp online keys set in Netlify (`SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`), add ticket types in Admin → Tickets, make one real £1 test purchase, refund it in SumUp, then press Refund in Admin → Tickets
+- [ ] Ticket sales: SumUp online keys set in Netlify (`SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`), add a £1 test ticket in Admin → Tickets, buy it on a phone with a membership email (check the points), refund it in SumUp, then press Refund in Admin → Tickets (points taken back)
+- [ ] Event page shows "Buy tickets" for events with ticket types; the external tickets link still shows for events without them
 - [ ] Tap an artist card on a phone: talent page with the Book / Save contact (/ Press kit) bar; send a test enquiry and find it in CRM → Enquiries marked "Card tap"
 - [ ] Upload a comp card in Bookings → Talent documents and switch on "Public press kit"
 - [ ] Talent calendars: team calendar filtered by a talent shows their events; portal Bookings page shows "Events you're in"
@@ -28,7 +29,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Set this month's KPI targets (CRM → KPIs, target icon); check the `kpi-snapshots` scheduled function appears under Netlify → Functions
 
 ## 3. To build
-- [ ] Test harness (Vitest + Neon branch): loyalty (tier boundaries, discounts, ledger `loyalty_post`, claims, refunds, referrals) and CRM (document access rules, prospecting steps and outcomes, KPI figures)
+- [ ] Test harness (Vitest + Neon branch): loyalty (tier boundaries, discounts, ledger `loyalty_post`, claims, refunds, referrals) CRM (document access rules, prospecting steps and outcomes, KPI figures), tickets (capacity under load, payment confirmation, points and refunds) and talent profile figures
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 
 ## 4. Later
@@ -50,7 +51,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### October 2026
-- [x] Ticket sales on the website: ticket types with limits and sale dates, buyer form (Instagram always asked), SumUp payment, points for members, refunds, door list, analysis and CSV export (migration 038)
+- [x] Ticket sales on the website: ticket types with limits and sale dates, buyer form (Instagram always asked), SumUp payment, points for members, refunds, door list, analysis and CSV export (migration 038, PR #47)
 - [x] Talent profile hero shows real jobs, events and clients, with admin additions (migration 037, PR #46)
 - [x] CRM phase 4: Prospecting campaigns, due-today queue, outcomes, deals (migration 036, PR #44)
 - [x] CRM phase 5: KPIs with targets, trends and nightly snapshots (migration 036, PR #44)
