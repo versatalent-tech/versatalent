@@ -29,7 +29,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Set this month's KPI targets (CRM → KPIs, target icon); check the `kpi-snapshots` scheduled function appears under Netlify → Functions
 
 ## 3. To build
-- [ ] Test harness (Vitest + Neon branch): loyalty (tier boundaries, discounts, ledger `loyalty_post`, claims, refunds, referrals) CRM (document access rules, prospecting steps and outcomes, KPI figures), tickets (capacity under load, payment confirmation, points and refunds) and talent profile figures
+- [ ] Turn on the tests on GitHub: create a Neon API key and add it as the `NEON_API_KEY` repository secret (see `e2e/README.md`); for your Mac, put it in `.env.test`
+- [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; staff and guest card taps
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 
 ## 4. Later
@@ -51,6 +52,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### October 2026
+- [x] Test harness: Playwright tests against a temporary database copy and a pretend SumUp, on a production build; 29 tests for tickets, talent profile figures, permissions, the points ledger and page loads; GitHub Actions workflow (`npm run test:e2e`, `e2e/README.md`)
+- [x] Fixed: Admin → Tickets could show an older event's orders after switching quickly (found by the tests)
 - [x] Ticket sales on the website: ticket types with limits and sale dates, buyer form (Instagram always asked), SumUp payment, points for members, refunds, door list, analysis and CSV export (migration 038, PR #47)
 - [x] Talent profile hero shows real jobs, events and clients, with admin additions (migration 037, PR #46)
 - [x] CRM phase 4: Prospecting campaigns, due-today queue, outcomes, deals (migration 036, PR #44)
