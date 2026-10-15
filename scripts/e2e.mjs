@@ -79,18 +79,35 @@ async function removeStaleBranches(projectId) {
   }
 }
 
-async function createTestBranch(projectId) {
+/**
+ * Make the copy. `onCreated` hears about it straight away, so it's deleted
+ * even if a later step (waiting, connection details) fails.
+ */
+async function createTestBranch(projectId, onCreated) {
   const name = `${BRANCH_PREFIX}${new Date().toISOString().replace(/[:.]/g, '-')}`;
   console.log(`Making a temporary copy of the database (${name})…`);
   const created = await neon('POST', `/projects/${projectId}/branches`, {
     branch: { name },
     endpoints: [{ type: 'read_write' }],
   });
+  const branch = { id: created.branch.id, name, url: null };
+  onCreated(branch);
   if (created.branch.default) throw new Error('Neon returned the default branch; refusing to continue');
   await waitForOperations(projectId, created.operations);
-  const uri = created.connection_uris?.[0]?.connection_uri;
-  if (!uri) throw new Error('Neon did not return a connection string for the test copy');
-  return { id: created.branch.id, name, url: uri };
+
+  // Neon doesn't always include the connection details; ask for them if not
+  branch.url = created.connection_uris?.[0]?.connection_uri ?? null;
+  if (!branch.url) {
+    const params = new URLSearchParams({
+      branch_id: branch.id,
+      database_name: created.databases?.[0]?.name ?? 'neondb',
+      role_name: created.roles?.[0]?.name ?? 'neondb_owner',
+      pooled: 'true',
+    });
+    branch.url = (await neon('GET', `/projects/${projectId}/connection_uri?${params}`)).uri ?? null;
+  }
+  if (!branch.url) throw new Error('Neon did not return a connection string for the test copy');
+  return branch;
 }
 
 function assertNotLive(url) {
@@ -112,17 +129,6 @@ async function main() {
   let branch = null;
   let databaseUrl = process.env.TEST_DATABASE_URL;
 
-  if (!databaseUrl) {
-    if (!process.env.NEON_API_KEY || !projectId) {
-      console.error('Set NEON_API_KEY and NEON_PROJECT_ID (in .env.test or the environment), or TEST_DATABASE_URL.');
-      process.exit(2);
-    }
-    await removeStaleBranches(projectId).catch((e) => console.warn(`Couldn't tidy old test copies: ${e.message}`));
-    branch = await createTestBranch(projectId);
-    databaseUrl = branch.url;
-  }
-  assertNotLive(databaseUrl);
-
   let deleting = false;
   const cleanUp = async () => {
     if (!branch || deleting) return;
@@ -139,6 +145,31 @@ async function main() {
       await cleanUp();
       process.exit(130);
     });
+  }
+  // Anything that goes wrong from here on still deletes the copy
+  const fail = async (message, exitCode = 1) => {
+    console.error(message);
+    await cleanUp();
+    process.exit(exitCode);
+  };
+
+  if (!databaseUrl) {
+    if (!process.env.NEON_API_KEY || !projectId) {
+      console.error('Set NEON_API_KEY and NEON_PROJECT_ID (in .env.test or the environment), or TEST_DATABASE_URL.');
+      process.exit(2);
+    }
+    await removeStaleBranches(projectId).catch((e) => console.warn(`Couldn't tidy old test copies: ${e.message}`));
+    try {
+      await createTestBranch(projectId, (b) => (branch = b));
+    } catch (error) {
+      await fail(error.message);
+    }
+    databaseUrl = branch.url;
+  }
+  try {
+    assertNotLive(databaseUrl);
+  } catch (error) {
+    await fail(error.message);
   }
 
   // Throwaway values for this run only
