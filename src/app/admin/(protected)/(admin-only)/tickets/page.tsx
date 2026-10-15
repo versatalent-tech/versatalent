@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Copy, Download, ExternalLink, Instagram, Loader2, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
@@ -389,7 +389,7 @@ function DoorList({ orders, event, onChanged }: { orders: AdminTicketOrder[]; ev
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-gray-600">
           <span className="hidden font-semibold print:inline">{event.title} · </span>
-          {tickets} tickets on {paid.length} orders · {arrived} arrived
+          {tickets} ticket{tickets === 1 ? "" : "s"} on {paid.length} order{paid.length === 1 ? "" : "s"} · {arrived} arrived
         </p>
         <Button size="sm" variant="outline" onClick={() => window.print()} className="print:hidden">
           <Printer className="mr-1 h-4 w-4" /> Print
@@ -459,11 +459,15 @@ export default function TicketsAdminPage() {
     return p;
   }, [eventId, status, query, tab]);
 
+  // Only the latest request counts: switching event or tab quickly mustn't show an older answer
+  const latest = useRef(0);
   const loadOrders = useCallback(async () => {
+    const request = ++latest.current;
     try {
-      setData(await api(`/api/admin/tickets/orders?${params}`));
+      const result = await api<{ orders: AdminTicketOrder[]; summary: TicketSummary }>(`/api/admin/tickets/orders?${params}`);
+      if (request === latest.current) setData(result);
     } catch (err) {
-      setError(errorMessage(err));
+      if (request === latest.current) setError(errorMessage(err));
     }
   }, [params]);
   useEffect(() => {

@@ -42,3 +42,9 @@ next-env.d.ts
 
 # private document uploads in local development
 /.private-uploads
+
+# Playwright
+/e2e/report/
+/e2e/results/
+/e2e/.auth/
+/.next-e2e/

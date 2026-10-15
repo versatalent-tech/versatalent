@@ -17,10 +17,11 @@
  *   SUMUP_AFFILIATE_APP_ID  App ID the affiliate key was created for
  */
 
-// SUMUP_API_BASE points at a local mock for tests; it is ignored in production so
-// the API key can never be sent anywhere but SumUp
+// SUMUP_API_BASE points at the tests' pretend SumUp. Only an address on this
+// machine is accepted, so the API key can never be sent anywhere but SumUp
+const MOCK_BASE = process.env.SUMUP_API_BASE;
 const SUMUP_API =
-  process.env.NODE_ENV !== 'production' && process.env.SUMUP_API_BASE ? process.env.SUMUP_API_BASE : 'https://api.sumup.com';
+  MOCK_BASE && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(MOCK_BASE) ? MOCK_BASE : 'https://api.sumup.com';
 
 interface SumUpConfig {
   apiKey: string;

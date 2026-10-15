@@ -7,6 +7,8 @@ const nextConfig = {
         distDir: 'out'
       }
     : {
+        // The end-to-end tests build into their own folder (scripts/e2e.mjs)
+        ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
         // The old till page was removed; send bookmarks to the staff till
         async redirects() {
           return [{ source: '/pos', destination: '/staff/pos', permanent: true }];
