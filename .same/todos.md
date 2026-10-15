@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 13 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. All migrations up to 036 are on production._
+_Last updated 15 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Migrations up to 037 are on production; 038 (ticket sales) is waiting._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals.
@@ -12,11 +12,15 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Opening reward balances: 0 or carry over (10 points in total)
 - [ ] Black discount to 10% (VIP → Point Rules, a settings change)
 - [ ] Confirm the open figures in the benefit sheet (VAT, card fee, drink cost, card price, guest-pass cost, members' night cost, presale support)
-- [ ] Email provider and owned domain: unlocks automatic member emails and prospecting v2
+- [ ] Ticket terms approved (draft at `/tickets/terms`), and the ticket lines added to the privacy notice
+- [ ] Ticket points rate (VIP → Point Rules → Ticket Points; starts at the till rate, 1 point per £3)
+- [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
 - [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
-- [ ] Netlify has deployed `main` (latest merge `50485ea`); merges didn't always trigger builds in the past
+- [ ] Netlify has deployed `main` (latest merge `7f03205`); merges didn't always trigger builds in the past
+- [ ] Talent profiles show real figures (jobs, events, clients); add earlier work in Admin → Talents → Edit → Profile figures
+- [ ] Ticket sales (after migration 038): SumUp online keys set in Netlify (`SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`), add ticket types in Admin → Tickets, make one real £1 test purchase, refund it in SumUp, then press Refund in Admin → Tickets
 - [ ] Tap an artist card on a phone: talent page with the Book / Save contact (/ Press kit) bar; send a test enquiry and find it in CRM → Enquiries marked "Card tap"
 - [ ] Upload a comp card in Bookings → Talent documents and switch on "Public press kit"
 - [ ] Talent calendars: team calendar filtered by a talent shows their events; portal Bookings page shows "Events you're in"
@@ -35,6 +39,10 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Artist card: choose which profile sections each card shows (e.g. measurements)
 - [ ] Artist card: tap and enquiry counts per talent, shown in their portal
 - [ ] Artist card: "Recently performed at / next appearance" on the profile
+- [ ] Tickets: confirmation email with the order link (needs the email provider)
+- [ ] Tickets: scan a QR code at the door instead of the name list; per-event age limit (18+) on the form
+- [ ] Tickets: discount codes, member presale (48-hour early access benefit) and member-only ticket types
+- [ ] Tickets: link ticket buyers to CRM contacts / newsletter when they agree to marketing
 
 ## 5. Housekeeping
 - [ ] Clean up unused variables and imports (100 lint warnings)
@@ -42,6 +50,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### October 2026
+- [x] Ticket sales on the website: ticket types with limits and sale dates, buyer form (Instagram always asked), SumUp payment, points for members, refunds, door list, analysis and CSV export (migration 038)
+- [x] Talent profile hero shows real jobs, events and clients, with admin additions (migration 037, PR #46)
 - [x] CRM phase 4: Prospecting campaigns, due-today queue, outcomes, deals (migration 036, PR #44)
 - [x] CRM phase 5: KPIs with targets, trends and nightly snapshots (migration 036, PR #44)
 - [x] Artist card buttons: booking enquiry form, save contact, public press kit, link previews (PR #43)

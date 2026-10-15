@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Any payment page we ever created (card fee or Founding Membership), not just the latest
+    // Any payment page we ever created (card fee, Founding Membership or tickets), not just the latest
     const result = await confirmAnyCheckout(body.id);
     if (result) console.log(`[sumup-online] Checkout ${body.id}: ${result}`);
     return new NextResponse(null, { status: 204 });

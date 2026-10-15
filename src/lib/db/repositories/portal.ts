@@ -220,6 +220,7 @@ const SOURCE_LABELS: Record<string, string> = {
   reward_claim: 'Reward claimed',
   reward_release: 'Reward points returned',
   order_refund: 'Purchase refunded',
+  ticket_purchase: 'Tickets bought online',
 };
 
 async function listPointsHistory(userId: string, limit = 30): Promise<PointsEntry[]> {

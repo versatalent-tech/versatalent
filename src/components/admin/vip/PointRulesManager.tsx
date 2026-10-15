@@ -18,6 +18,7 @@ import {
   Trophy,
   Edit3,
   Percent,
+  Ticket,
 } from "lucide-react";
 import type { VIPPointRule, VIPTier } from "@/lib/db/types";
 import { DEFAULT_TIER_SETTINGS } from "@/lib/vip-tier-rules";
@@ -65,6 +66,9 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
   const [blackMultiplier, setBlackMultiplier] = useState(DEFAULT_TIER_SETTINGS.multipliers.black);
   const [consumptionActive, setConsumptionActive] = useState(true);
   const [checkinActive, setCheckinActive] = useState(true);
+  // Tickets bought on the website
+  const [ticketPoundsPerPoint, setTicketPoundsPerPoint] = useState(3);
+  const [ticketActive, setTicketActive] = useState(true);
   // Tier threshold state
   const [goldThreshold, setGoldThreshold] = useState(500);
   const [blackThreshold, setBlackThreshold] = useState(1750);
@@ -87,6 +91,11 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
         if (consumptionRule) {
           setEurosPerPoint(pointsPerUnitToEurosPerPoint(consumptionRule.points_per_unit));
           setConsumptionActive(consumptionRule.is_active);
+        }
+        const ticketRule = data.find((r) => r.action_type === "ticket_purchase");
+        if (ticketRule) {
+          setTicketPoundsPerPoint(pointsPerUnitToEurosPerPoint(ticketRule.points_per_unit));
+          setTicketActive(ticketRule.is_active);
         }
         if (checkinRule) {
           setCheckinPoints(Math.round(checkinRule.points_per_unit));
@@ -164,6 +173,12 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
         POS_CURRENCY,
         consumptionActive
       );
+      if (!(ticketPoundsPerPoint > 0)) {
+        setError("Ticket points need a pounds-per-point above 0");
+        setSaving(false);
+        return;
+      }
+      await saveRule("ticket_purchase", eurosPerPointToPointsPerUnit(ticketPoundsPerPoint), POS_CURRENCY, ticketActive);
       // Save event check-in rule
       await saveRule("event_checkin", checkinPoints, "checkin", checkinActive);
       // Save member discounts and points multipliers
@@ -350,6 +365,54 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
                   <p>3 events/month = <strong>{checkinPoints * 3} points</strong></p>
                   <p>10 events/quarter = <strong>{checkinPoints * 10} points</strong></p>
                   <p>50 events/year = <strong>{checkinPoints * 50} points</strong></p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Ticket Purchase Points Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Ticket className="h-5 w-5 text-blue-700" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Ticket Points</CardTitle>
+                  <CardDescription>Tickets bought on the website</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Active</span>
+                <Switch checked={ticketActive} onCheckedChange={setTicketActive} />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Pounds per Point</label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={ticketPoundsPerPoint}
+                    onChange={(e) => setTicketPoundsPerPoint(parseFloat(e.target.value) || 0)}
+                    className="w-32"
+                  />
+                  <span className="text-gray-600">£ = 1 point</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Members earn on what they pay, times their tier rate, when they buy with their membership email. Refunds take the points back.
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm font-medium text-gray-700 mb-2">Example Calculations:</p>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p>£15 ticket = <strong>{ticketPoundsPerPoint > 0 ? Math.floor(15 / ticketPoundsPerPoint) : 0} points</strong></p>
+                  <p>2 × £25 tickets = <strong>{ticketPoundsPerPoint > 0 ? Math.floor(50 / ticketPoundsPerPoint) : 0} points</strong></p>
                 </div>
               </div>
             </div>

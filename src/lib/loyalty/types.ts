@@ -24,6 +24,7 @@ export const POINT_SOURCE_LABELS: Record<string, string> = {
   reward_claim: 'Reward claimed',
   reward_release: 'Reward points returned',
   order_refund: 'Purchase refunded',
+  ticket_purchase: 'Tickets bought online',
   year_end: 'New membership year',
 };
 

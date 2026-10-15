@@ -31,6 +31,7 @@ import {
 } from '@/lib/db/repositories/founding';
 import { createHostedCheckout, getCheckout, judgeOnlineCheckout } from '@/lib/services/sumup';
 import { FOUNDING_NAME } from '@/lib/membership/founding';
+import { confirmTicketWebhook } from '@/lib/services/ticket-payments';
 
 export type CardPaymentState = 'paid' | 'pending' | 'failed' | 'expired';
 
@@ -155,11 +156,11 @@ export async function confirmFoundingPayment(membershipId: string): Promise<void
   if (record && record.outcome === 'pending') await confirmFoundingCheckout(record);
 }
 
-/** Webhook: any payment page we created, for a card fee or a Founding purchase */
+/** Webhook: any payment page we created, for a card fee, a Founding purchase or tickets */
 export async function confirmAnyCheckout(checkoutId: string): Promise<string | null> {
   const card = await getCheckoutRecord(checkoutId);
   if (card) return `Card request ${card.request_id}: ${await confirmCheckout(card)}`;
   const founding = await getFoundingCheckout(checkoutId);
   if (founding) return `Founding purchase ${founding.membership_id}: ${await confirmFoundingCheckout(founding)}`;
-  return null;
+  return confirmTicketWebhook(checkoutId);
 }

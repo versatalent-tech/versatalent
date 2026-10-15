@@ -31,6 +31,7 @@ import {
   UserCog,
   Users,
   Crown,
+  Ticket,
 } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -82,6 +83,7 @@ const SECTIONS = [
   {
     title: "Sales",
     links: [
+      { title: "Tickets", description: "Online ticket sales, buyers and door lists", icon: Ticket, href: "/admin/tickets" },
       { title: "Products & stock", description: "Till catalogue and inventory", icon: Package, href: "/admin/pos/products" },
       { title: "Orders", description: "Payments, refunds and history", icon: Receipt, href: "/admin/pos/orders" },
       { title: "SumUp card payments", description: "Account and card readers", icon: CreditCard, href: "/admin/pos/sumup" },
