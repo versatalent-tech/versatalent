@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { crmContext, parseBody } from '@/lib/crm/route-helpers';
 import { activityUpdateSchema } from '@/lib/crm/schemas';
-import { deleteActivity, getActivity, isAssignableOwner, updateActivity } from '@/lib/db/repositories/crm';
+import { deleteActivity, getActivity, isTaskAssignee, updateActivity } from '@/lib/db/repositories/crm';
 import { can } from '@/lib/auth/permissions';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
@@ -18,8 +18,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if ('response' in body) return body.response;
 
   try {
-    if (body.data.owner_user_id && !(await isAssignableOwner(body.data.owner_user_id))) {
-      return ApiErrors.BadRequest('Tasks can be given to admins and managers');
+    if (body.data.owner_user_id && !(await isTaskAssignee(ctx.scope, body.data.owner_user_id))) {
+      return ApiErrors.BadRequest('Tasks can be given to the team, road managers and your talents with a portal login');
     }
     if (!(await updateActivity(ctx.scope, id, body.data))) return ApiErrors.NotFound('Activity');
     return successResponse(await getActivity(ctx.scope, id), 'Saved');

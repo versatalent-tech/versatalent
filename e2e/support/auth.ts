@@ -19,3 +19,11 @@ export async function teamApi(email: string, password: string): Promise<APIReque
 export async function anonymousApi(): Promise<APIRequestContext> {
   return playwrightRequest.newContext({ baseURL });
 }
+
+/** An API client signed in to the talent portal */
+export async function portalApi(email: string, password: string): Promise<APIRequestContext> {
+  const context = await playwrightRequest.newContext({ baseURL });
+  const response = await context.post('/api/portal/auth/login', { data: { email, password } });
+  if (!response.ok()) throw new Error(`Portal sign-in failed for ${email}: ${response.status()}`);
+  return context;
+}

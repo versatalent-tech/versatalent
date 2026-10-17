@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MAX_TRANSCRIPT_CHARS, MEETING_AI_STALE_MINUTES, type Meeting } from "@/lib/crm/types";
-import { CrmShell, api, errorMessage, selectClass, type CrmOptionsWithMe, useCrmOptions } from "@/components/crm/shared";
+import { AssigneeOptions, CrmShell, api, errorMessage, selectClass, type CrmOptionsWithMe, useCrmOptions } from "@/components/crm/shared";
 import { MeetingDialog } from "@/components/crm/MeetingDialog";
 import { meetingWhen } from "@/components/crm/Meetings";
 
@@ -347,7 +347,7 @@ function NotesCard({
   };
 
   const ownerLabel = (item: ItemForm) =>
-    item.owner_name && !item.owner_user_id ? `${item.owner_name} (not on the team)` : "No owner";
+    item.owner_name && !item.owner_user_id ? `${item.owner_name} (no login to give it to)` : "No owner";
 
   return (
     <Card>
@@ -454,17 +454,13 @@ function NotesCard({
                         className={selectClass}
                         value={item.owner_user_id}
                         onChange={(e) => {
-                          const owner = options.owners.find((o) => o.id === e.target.value);
+                          const owner = options.assignees.find((o) => o.id === e.target.value);
                           editItem(item.id, { owner_user_id: e.target.value, owner_name: owner?.name ?? item.owner_name });
                         }}
                         aria-label="Owner"
                       >
                         <option value="">{ownerLabel(item)}</option>
-                        {options.owners.map((owner) => (
-                          <option key={owner.id} value={owner.id}>
-                            {owner.name}
-                          </option>
-                        ))}
+                        <AssigneeOptions assignees={options.assignees} firstTalentIds={meeting.talents.map((t) => t.id)} />
                       </select>
                       <Input
                         id={`item-due-${item.id}`}

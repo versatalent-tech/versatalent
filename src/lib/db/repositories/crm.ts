@@ -13,6 +13,7 @@ import {
   type Enquiry,
   type EnquiryStatus,
   type Organisation,
+  type TaskAssignee,
 } from '@/lib/crm/types';
 import type { z } from 'zod';
 import type {
@@ -182,20 +183,56 @@ function mapActivity(row: any): Activity {
 // ---------------------------------------------------------------------------
 
 export async function getCrmOptions(scope: CrmScope): Promise<CrmOptions> {
-  const [owners, talents] = await Promise.all([
+  const [owners, talents, assignees] = await Promise.all([
     sql`SELECT id, name FROM users WHERE role IN ('admin', 'manager') AND is_active ORDER BY name`,
     scope.all
       ? sql`SELECT id, name FROM talents ORDER BY is_active DESC, name`
       : sql`SELECT id, name FROM talents WHERE id = ANY(${scope.talentIds}::uuid[]) ORDER BY name`,
+    listTaskAssignees(scope),
   ]);
   return {
     owners: owners.map((r: any) => ({ id: r.id, name: r.name })),
     talents: talents.map((r: any) => ({ id: r.id, name: r.name })),
+    assignees,
   };
 }
 
+/** Clients, deals and campaigns are owned by admins and managers */
 export async function isAssignableOwner(userId: string): Promise<boolean> {
   const rows = await sql`SELECT 1 FROM users WHERE id = ${userId} AND role IN ('admin', 'manager') AND is_active`;
+  return rows.length > 0;
+}
+
+/** Talents a manager can give tasks to are the ones assigned to them */
+function assigneeVisible(scope: CrmScope) {
+  return sql`(
+    u.role IN ('admin', 'manager', 'road_manager')
+    OR (u.role = 'artist' AND t.is_active AND ${scope.all ? sql`TRUE` : sql`u.talent_id = ANY(${scope.talentIds}::uuid[])`})
+  )`;
+}
+
+/** Everyone a task can be given to (see TaskAssignee) */
+export async function listTaskAssignees(scope: CrmScope): Promise<TaskAssignee[]> {
+  const rows = await sql`
+    SELECT u.id, u.name, u.role, u.talent_id, t.name AS talent_name
+    FROM users u LEFT JOIN talents t ON t.id = u.talent_id
+    WHERE u.is_active AND (u.role <> 'artist' OR u.talent_id IS NOT NULL) AND ${assigneeVisible(scope)}
+    ORDER BY CASE u.role WHEN 'artist' THEN 2 WHEN 'road_manager' THEN 1 ELSE 0 END, COALESCE(t.name, u.name)
+  `;
+  return rows.map((r: any) => ({
+    id: r.id,
+    // A talent's login can be in their own name (e.g. William Goncalves for Deejay WG)
+    name: r.role === 'artist' && r.talent_name && r.talent_name !== r.name ? `${r.talent_name} (${r.name})` : r.name,
+    group: r.role === 'artist' ? 'talent' : r.role === 'road_manager' ? 'road_manager' : 'team',
+    talent_id: r.talent_id ?? null,
+  }));
+}
+
+export async function isTaskAssignee(scope: CrmScope, userId: string): Promise<boolean> {
+  const rows = await sql`
+    SELECT 1 FROM users u LEFT JOIN talents t ON t.id = u.talent_id
+    WHERE u.id = ${userId} AND u.is_active AND (u.role <> 'artist' OR u.talent_id IS NOT NULL) AND ${assigneeVisible(scope)}
+  `;
   return rows.length > 0;
 }
 

@@ -169,9 +169,29 @@ export interface Enquiry {
   created_at: string;
 }
 
+/**
+ * Someone a task (or meeting action item) can be given to: admins and
+ * managers, road managers (they see their tasks on their dashboard) and
+ * talents with a portal login (they see them in the portal)
+ */
+export interface TaskAssignee {
+  id: string;
+  name: string;
+  group: 'team' | 'road_manager' | 'talent';
+  /** For talents: which talent the login belongs to */
+  talent_id: string | null;
+}
+
+export const ASSIGNEE_GROUPS: Record<TaskAssignee['group'], string> = {
+  team: 'Admins and managers',
+  road_manager: 'Road managers',
+  talent: 'Talents (in their portal)',
+};
+
 export interface CrmOptions {
   owners: PersonRef[];
   talents: PersonRef[];
+  assignees: TaskAssignee[];
 }
 
 export function weightedValue(deal: Pick<Deal, 'stage' | 'value_cents'>): number {
