@@ -64,6 +64,18 @@ export async function createTeamUser(role: 'manager' | 'road_manager', talentIds
   return { id, email, password };
 }
 
+/** A talent's portal login (an 'artist' user linked to the talent) with a known password */
+export async function createTalentLogin(talentId: string, name = uniq('E2E Artist')) {
+  const id = randomUUID();
+  const email = `${uniq('artist')}@example.com`;
+  const password = `E2e-${randomUUID()}`;
+  await sql`
+    INSERT INTO users (id, name, email, role, talent_id, password_hash, is_active)
+    VALUES (${id}, ${name}, ${email}, 'artist', ${talentId}, ${await bcrypt.hash(password, 10)}, true)
+  `;
+  return { id, name, email, password };
+}
+
 export async function createTalent(opts: { name?: string; active?: boolean } = {}) {
   const id = randomUUID();
   const name = opts.name ?? uniq('E2E Talent');

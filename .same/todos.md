@@ -52,6 +52,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### October 2026
+- [x] Tasks and meeting action items can go to road managers (dashboard "Your tasks") and talents with a portal login (portal "Your to-dos"); managers only to their own talents
 - [x] Test harness: Playwright tests against a temporary database copy and a pretend SumUp, on a production build; 29 tests for tickets, talent profile figures, permissions, the points ledger and page loads; GitHub Actions workflow (`npm run test:e2e`, `e2e/README.md`)
 - [x] Fixed: Admin → Tickets could show an older event's orders after switching quickly (found by the tests)
 - [x] Ticket sales on the website: ticket types with limits and sale dates, buyer form (Instagram always asked), SumUp payment, points for members, refunds, door list, analysis and CSV export (migration 038, PR #47)

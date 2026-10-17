@@ -3,7 +3,7 @@ import { crmContext, parseBody } from '@/lib/crm/route-helpers';
 import { meetingNotesSchema, meetingSchema } from '@/lib/crm/schemas';
 import { checkMeetingLinks } from '@/lib/meetings/links';
 import { deleteMeeting, getMeeting, saveMeetingNotes, updateMeeting } from '@/lib/db/repositories/meetings';
-import { isAssignableOwner } from '@/lib/db/repositories/crm';
+import { isTaskAssignee } from '@/lib/db/repositories/crm';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can } from '@/lib/auth/permissions';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
@@ -71,7 +71,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     const owners = new Set((body.data.action_items ?? []).map((item) => item.owner_user_id).filter(Boolean) as string[]);
     for (const ownerId of owners) {
-      if (!(await isAssignableOwner(ownerId))) return ApiErrors.BadRequest('Action items can be given to admins and managers');
+      if (!(await isTaskAssignee(ctx.scope, ownerId))) {
+        return ApiErrors.BadRequest('Action items can be given to the team, road managers and your talents with a portal login');
+      }
     }
 
     await saveMeetingNotes(ctx.actor, current, body.data);

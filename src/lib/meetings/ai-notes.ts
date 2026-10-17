@@ -52,6 +52,7 @@ interface JobMeeting {
   deal_title: string | null;
   organisation_name: string | null;
   talent_names: string[] | null;
+  talent_ids: string[] | null;
   action_items: Array<Record<string, unknown>>;
 }
 
@@ -85,12 +86,21 @@ function describeMeeting(meeting: JobMeeting, team: string[]): string {
 }
 
 /** Match a name from the notes to a team member (exact, then a unique first name) */
-function matchOwner(name: string | null, team: Array<{ id: string; name: string }>): string | null {
+interface Assignee {
+  id: string;
+  /** How the notes show them, e.g. "Deejay WG (William Goncalves)" */
+  name: string;
+  /** Names Claude might use for them: their own, and a talent's stage name */
+  aliases: string[];
+}
+
+function matchOwner(name: string | null, people: Assignee[]): string | null {
   if (!name) return null;
   const wanted = name.trim().toLowerCase();
-  const exact = team.find((member) => member.name.trim().toLowerCase() === wanted);
+  const exact = people.find((person) => [person.name, ...person.aliases].some((n) => n.trim().toLowerCase() === wanted));
   if (exact) return exact.id;
-  const byFirstName = team.filter((member) => member.name.trim().toLowerCase().split(/\s+/)[0] === wanted.split(/\s+/)[0]);
+  const first = wanted.split(/\s+/)[0];
+  const byFirstName = people.filter((person) => person.aliases.some((n) => n.trim().toLowerCase().split(/\s+/)[0] === first));
   return byFirstName.length === 1 ? byFirstName[0].id : null;
 }
 
@@ -142,7 +152,7 @@ async function draftNotes(meeting: JobMeeting, team: string[]): Promise<{ notes:
 
 export async function runMeetingNotesJob(meetingId: string, token: string): Promise<void> {
   const rows = (await sql`
-    SELECT m.id, m.title, m.starts_at, m.location, m.attendees, m.transcript, m.action_items,
+    SELECT m.id, m.title, m.starts_at, m.location, m.attendees, m.transcript, m.action_items, m.talent_ids,
            d.title AS deal_title, o.name AS organisation_name,
            (SELECT array_agg(t.name ORDER BY t.name) FROM talents t WHERE t.id = ANY(m.talent_ids)) AS talent_names
     FROM meetings m
@@ -159,10 +169,22 @@ export async function runMeetingNotesJob(meetingId: string, token: string): Prom
       throw new NotesError("AI notes aren't set up yet: add ANTHROPIC_API_KEY to the site's environment variables.");
     }
 
-    // People CRM tasks can be given to (see isAssignableOwner)
-    const team = (await sql`
-      SELECT id, name FROM users WHERE role IN ('admin', 'manager') AND is_active ORDER BY name
-    `) as Array<{ id: string; name: string }>;
+    // People action items can be given to: the team, road managers, and the
+    // portal logins of this meeting's talents (see listTaskAssignees)
+    const rows = (await sql`
+      SELECT u.id, u.name, t.name AS talent_name
+      FROM users u LEFT JOIN talents t ON t.id = u.talent_id
+      WHERE u.is_active AND (
+        u.role IN ('admin', 'manager', 'road_manager')
+        OR (u.role = 'artist' AND u.talent_id = ANY(${meeting.talent_ids ?? []}::uuid[]))
+      )
+      ORDER BY u.name
+    `) as Array<{ id: string; name: string; talent_name: string | null }>;
+    const team: Assignee[] = rows.map((r) => ({
+      id: r.id,
+      name: r.talent_name && r.talent_name !== r.name ? `${r.talent_name} (${r.name})` : r.name,
+      aliases: [r.name, ...(r.talent_name ? [r.talent_name] : [])],
+    }));
 
     const { notes, model } = await draftNotes(meeting, team.map((member) => member.name));
 

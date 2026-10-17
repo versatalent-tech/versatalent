@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { BarChart3, CheckSquare, Inbox, KanbanSquare, Building2, Megaphone, Users } from "lucide-react";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
-import { STAGE_LABELS, type CrmOptions, type DealStage } from "@/lib/crm/types";
+import { ASSIGNEE_GROUPS, STAGE_LABELS, type CrmOptions, type DealStage, type TaskAssignee } from "@/lib/crm/types";
 
 /** Fetch a CRM API route and unwrap `{ success, data }`, throwing the API's message on failure */
 export async function api<T>(url: string, init?: RequestInit & { json?: unknown }): Promise<T> {
@@ -31,7 +31,7 @@ export function errorMessage(error: unknown): string {
 export type CrmOptionsWithMe = CrmOptions & { me: string | null; meName: string | null; canDelete: boolean; aiNotes: boolean };
 
 export function useCrmOptions() {
-  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], me: null, meName: null, canDelete: false, aiNotes: false });
+  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], assignees: [], me: null, meName: null, canDelete: false, aiNotes: false });
   useEffect(() => {
     api<CrmOptionsWithMe>("/api/crm/options").then(setOptions).catch(() => undefined);
   }, []);
@@ -71,6 +71,43 @@ export function Field({ label, children, hint }: { label: string; children: Reac
       {children}
       {hint && <span className="block text-xs text-gray-500">{hint}</span>}
     </label>
+  );
+}
+
+/**
+ * The <option>s for "who does this task", grouped (team, road managers,
+ * talents). Talents in `firstTalentIds` (e.g. the meeting's) come first.
+ */
+export function AssigneeOptions({
+  assignees,
+  exclude,
+  firstTalentIds = [],
+}: {
+  assignees: TaskAssignee[];
+  exclude?: string | null;
+  firstTalentIds?: string[];
+}) {
+  const groups = (Object.keys(ASSIGNEE_GROUPS) as TaskAssignee["group"][])
+    .map((group) => {
+      let people = assignees.filter((a) => a.group === group && a.id !== exclude);
+      if (group === "talent") {
+        people = [...people].sort((a, b) => Number(firstTalentIds.includes(b.talent_id ?? "")) - Number(firstTalentIds.includes(a.talent_id ?? "")));
+      }
+      return { group, people };
+    })
+    .filter((g) => g.people.length > 0);
+  return (
+    <>
+      {groups.map(({ group, people }) => (
+        <optgroup key={group} label={ASSIGNEE_GROUPS[group]}>
+          {people.map((person) => (
+            <option key={person.id} value={person.id}>
+              {person.name}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </>
   );
 }
 
