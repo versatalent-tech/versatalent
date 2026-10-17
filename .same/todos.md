@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 15 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 038 are on production._
+_Last updated 17 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 038 are on production. Tests: `npm run test:e2e` (32 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -18,19 +18,20 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
-- [ ] Netlify has deployed `main` (latest merge `15db012`); merges didn't always trigger builds in the past
+- [ ] Netlify has deployed `main` (latest merge `1d28b75`); merges didn't always trigger builds in the past
+- [ ] Tasks for road managers and talents: in "Weekly Meeting DJs", give the actions to Milo Ramos and Deejay WG and add them as tasks; Milo sees them under "Your tasks" on his dashboard, William Goncalves under "Your to-dos" in the portal
+- [ ] Booking document: the photo uploaded on 16 Oct is on "Dj set + equipment" (24 Oct), not "Birthday Party"; confirm it's in the right place, or ask to move it
 - [ ] Talent profiles show real figures (jobs, events, clients); add earlier work in Admin → Talents → Edit → Profile figures
-- [ ] Ticket sales: SumUp online keys set in Netlify (`SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`), add a £1 test ticket in Admin → Tickets, buy it on a phone with a membership email (check the points), refund it in SumUp, then press Refund in Admin → Tickets (points taken back)
+- [ ] Ticket points: buy a £3+ test ticket with a membership email and check the points arrive, then refund it (the £1 test on 15 Oct paid through SumUp and refunded correctly, but wasn't a member purchase)
 - [ ] Event page shows "Buy tickets" for events with ticket types; the external tickets link still shows for events without them
 - [ ] Tap an artist card on a phone: talent page with the Book / Save contact (/ Press kit) bar; send a test enquiry and find it in CRM → Enquiries marked "Card tap"
 - [ ] Upload a comp card in Bookings → Talent documents and switch on "Public press kit"
 - [ ] Talent calendars: team calendar filtered by a talent shows their events; portal Bookings page shows "Events you're in"
 - [ ] Create the first prospecting campaign, add contacts, start it, work "Due today"
-- [ ] Set this month's KPI targets (CRM → KPIs, target icon); check the `kpi-snapshots` scheduled function appears under Netlify → Functions
+- [ ] Set this month's KPI targets (CRM → KPIs, target icon); the nightly snapshots are already running
 
 ## 3. To build
-- [ ] Turn on the tests on GitHub: create a Neon API key and add it as the `NEON_API_KEY` repository secret (see `e2e/README.md`); for your Mac, put it in `.env.test`
-- [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; staff and guest card taps
+- [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 
 ## 4. Later
@@ -45,6 +46,9 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Tickets: scan a QR code at the door instead of the name list; per-event age limit (18+) on the form
 - [ ] Tickets: discount codes, member presale (48-hour early access benefit) and member-only ticket types
 - [ ] Tickets: link ticket buyers to CRM contacts / newsletter when they agree to marketing
+- [ ] Tasks: email or text people when they're given a task (needs the email provider)
+- [ ] Talent portal logins switched off for Claudio Costa and Joao Rodolfo: switch them on if they should get tasks or see bookings
+- [ ] Card payments: Solo Lite works through the SumUp app (till → "SumUp app" + transaction code); a SumUp Solo would let the till send amounts straight to the reader
 
 ## 5. Housekeeping
 - [ ] Clean up unused variables and imports (100 lint warnings)
@@ -52,6 +56,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### October 2026
+- [x] Tests run on GitHub for every PR and on `main` (NEON_API_KEY Actions secret set; first run passed 29/29)
+- [x] Online ticket payments confirmed working with a real £1 test purchase and refund (15 Oct)
 - [x] Tasks and meeting action items can go to road managers (dashboard "Your tasks") and talents with a portal login (portal "Your to-dos"); managers only to their own talents
 - [x] Test harness: Playwright tests against a temporary database copy and a pretend SumUp, on a production build; 29 tests for tickets, talent profile figures, permissions, the points ledger and page loads; GitHub Actions workflow (`npm run test:e2e`, `e2e/README.md`)
 - [x] Fixed: Admin → Tickets could show an older event's orders after switching quickly (found by the tests)
