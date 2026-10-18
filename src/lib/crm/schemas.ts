@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CRM_CURRENCIES, DEAL_SOURCES, DEAL_STAGE_KEYS, LOGGABLE_ACTIVITY_TYPES, ORG_TYPES } from './types';
+import { CRM_CURRENCIES, DEAL_SOURCES, DEAL_STAGE_KEYS, LOGGABLE_ACTIVITY_TYPES, MAX_TRANSCRIPT_CHARS, ORG_TYPES } from './types';
 
 /** Request-body validation for the CRM API */
 
@@ -36,6 +36,16 @@ export const contactSchema = z.object({
   job_title: optionalText(100),
   lawful_basis: z.enum(['legitimate_interest', 'consent']).default('legitimate_interest'),
   do_not_contact: z.boolean().default(false),
+  is_sole_trader: z.boolean().default(false),
+  linkedin_url: z
+    .string()
+    .trim()
+    .max(300)
+    .refine((v) => v === '' || /^https?:\/\//i.test(v), 'Paste the full LinkedIn link, starting https://')
+    .transform((v) => (v === '' ? null : v))
+    .nullable()
+    .optional(),
+  instagram: optionalText(100),
   notes: optionalText(5000),
 });
 
@@ -92,9 +102,54 @@ export const enquiryConvertSchema = z.object({
   owner_user_id: uuid.nullable().optional(),
 });
 
+const isoDateTime = z.string().datetime({ offset: true });
+const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a valid date');
+
+export const meetingSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Enter a title').max(200),
+    starts_at: isoDateTime,
+    ends_at: isoDateTime.nullable().optional(),
+    location: optionalText(300),
+    deal_id: uuid.nullable().optional(),
+    organisation_id: uuid.nullable().optional(),
+    talent_ids: z.array(uuid).max(50).default([]),
+    attendees: optionalText(2000),
+  })
+  .refine((m) => !m.ends_at || new Date(m.ends_at) >= new Date(m.starts_at), {
+    message: 'The meeting must end after it starts',
+    path: ['ends_at'],
+  });
+
+export const meetingActionItemSchema = z.object({
+  id: z.string().min(1).max(40),
+  title: z.string().trim().min(1, 'Action items need a description').max(500),
+  owner_name: optionalText(200),
+  owner_user_id: uuid.nullable().optional(),
+  due_date: dateOnly.nullable().optional().or(z.literal('').transform(() => null)),
+});
+
+/** Transcript, or the reviewed notes; each part is optional */
+export const meetingNotesSchema = z
+  .object({
+    transcript: z.string().max(MAX_TRANSCRIPT_CHARS, 'This transcript is too long. Split the meeting into parts.').nullable().optional(),
+    recording_consent: z.boolean().optional(),
+    summary: optionalText(10000),
+    decisions: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
+    action_items: z.array(meetingActionItemSchema).max(50).optional(),
+  })
+  .refine((n) => !n.transcript || n.recording_consent === true, {
+    message: 'Confirm that everyone in the meeting was told it was recorded',
+    path: ['recording_consent'],
+  });
+
+export const meetingTasksSchema = z.object({
+  item_ids: z.array(z.string().min(1).max(40)).min(1, 'Choose at least one action item').max(50),
+});
+
 /** Public website form submission */
 export const publicEnquirySchema = z.object({
-  form: z.enum(['contact', 'brand', 'talent']),
+  form: z.enum(['contact', 'brand', 'talent', 'booking']),
   fields: z.record(z.string().max(100), z.string().max(5000)),
 });
 

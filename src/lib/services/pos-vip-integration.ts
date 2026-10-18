@@ -1,6 +1,7 @@
 import { createVIPConsumption } from '../db/repositories/vip-consumptions';
 import { getUserById } from '../db/repositories/users';
 import { MEMBER_ROLES, processConsumption } from './vip-points-service';
+import { qualifyReferral } from '../db/repositories/referrals';
 import type { POSOrder } from '../db/types';
 
 /**
@@ -37,7 +38,8 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
       user_id: order.customer_user_id,
       amount: amountPaid,
       currency: order.currency,
-      description: `POS Order #${order.id.slice(0, 8)}`
+      description: `POS Order #${order.id.slice(0, 8)}`,
+      order_id: order.id,
     });
 
     // Award loyalty points based on consumption
@@ -45,7 +47,13 @@ export async function processPOSOrderForVIP(order: POSOrder): Promise<{
       order.customer_user_id,
       amountPaid,
       order.currency,
-      consumption.id
+      consumption.id,
+      order.id
+    );
+
+    // A paid order (above the minimum) can complete the member's referral
+    await qualifyReferral(order.customer_user_id, 'order', order.total_cents).catch((error) =>
+      console.error('Referral qualification failed:', error)
     );
 
     return {

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { format, isSameDay } from "date-fns";
-import { Check, Clock, Loader2, MapPin, Phone, User, X } from "lucide-react";
+import { Check, Clock, FileText, Loader2, MapPin, Phone, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BOOKING_STATUSES } from "@/lib/bookings/types";
+import { DOCUMENT_KINDS } from "@/lib/documents/types";
 import type { TalentBooking } from "@/lib/portal/types";
 import { formatMoney } from "@/components/crm/shared";
 
@@ -104,6 +105,18 @@ export function TalentBookingCard({
           <p className="whitespace-pre-wrap rounded bg-gray-50 p-2 text-gray-600">
             <span className="font-medium">Logistics:</span> {booking.logistics_notes}
           </p>
+        )}
+        {detailed && booking.documents.length > 0 && (
+          <ul className="space-y-1">
+            {booking.documents.map((doc) => (
+              <li key={doc.id}>
+                <a href={`/api/documents/${doc.id}`} className="inline-flex items-center gap-2 text-gold underline">
+                  <FileText className="h-4 w-4 flex-shrink-0" />
+                  {DOCUMENT_KINDS[doc.kind]}: {doc.filename}
+                </a>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

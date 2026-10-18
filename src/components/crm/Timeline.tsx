@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LOGGABLE_ACTIVITY_TYPES, type Activity, type ActivityType } from "@/lib/crm/types";
-import { api, errorMessage, selectClass, type CrmOptionsWithMe } from "./shared";
+import { AssigneeOptions, api, errorMessage, selectClass, type CrmOptionsWithMe } from "./shared";
 
 const ICONS: Record<ActivityType, React.ElementType> = {
   note: MessageSquare,
@@ -118,13 +118,7 @@ export function ActivityComposer({
           <Input type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} aria-label="Due" />
           <select className={selectClass} value={owner} onChange={(e) => setOwner(e.target.value)} aria-label="Assign to">
             <option value="">Assign to me</option>
-            {options.owners
-              .filter((o) => o.id !== options.me)
-              .map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
+            <AssigneeOptions assignees={options.assignees} exclude={options.me} />
           </select>
         </div>
       )}

@@ -35,11 +35,15 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    "out/types/**/*.ts"
+    "out/types/**/*.ts",
+    ".next-e2e/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "versatalent",
-    "scripts"
+    "scripts",
+    "e2e",
+    "playwright.config.ts",
+    ".next-e2e"
   ]
 }

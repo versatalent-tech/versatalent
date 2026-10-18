@@ -5,6 +5,7 @@ import { createCheckIn } from '@/lib/db/repositories/checkins';
 import { createScanLog } from '@/lib/db/repositories/nfc-scan-logs';
 import { getEventDayEvent, findEventCheckin } from '@/lib/db/repositories/event-day';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
+import { getFoundingBadge } from '@/lib/db/repositories/founding';
 
 // Roles that earn loyalty points for checking in (same as /api/nfc/checkins)
 const POINTS_ROLES = ['vip', 'artist'];
@@ -74,6 +75,11 @@ export async function POST(
     const user = card.user;
     const customer = { id: user.id, name: user.name, role: user.role, avatar_url: user.avatar_url ?? null };
     const earnsPoints = POINTS_ROLES.includes(user.role);
+    // V•PRIVILEGE badge for the priority lane (or "expired" when their year has ended)
+    const founding = await getFoundingBadge(user.id).catch((err) => {
+      console.error('Error loading Founding badge:', err);
+      return null;
+    });
 
     // Award points (idempotent per member per event, so a repeat tap also
     // retries an award that failed the first time)
@@ -104,6 +110,7 @@ export async function POST(
       return NextResponse.json({
         status: 'already_checked_in',
         customer,
+        founding,
         checked_in_at: existing.timestamp,
         points,
         points_error: pointsError,
@@ -126,6 +133,7 @@ export async function POST(
     return NextResponse.json({
       status: 'checked_in',
       customer,
+      founding,
       checked_in_at: checkin.timestamp,
       points,
       points_error: pointsError,

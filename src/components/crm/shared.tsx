@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckSquare, Inbox, KanbanSquare, Building2 } from "lucide-react";
+import { BarChart3, CheckSquare, Inbox, KanbanSquare, Building2, Megaphone, Users } from "lucide-react";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
-import { STAGE_LABELS, type CrmOptions, type DealStage } from "@/lib/crm/types";
+import { ASSIGNEE_GROUPS, STAGE_LABELS, type CrmOptions, type DealStage, type TaskAssignee } from "@/lib/crm/types";
 
 /** Fetch a CRM API route and unwrap `{ success, data }`, throwing the API's message on failure */
 export async function api<T>(url: string, init?: RequestInit & { json?: unknown }): Promise<T> {
@@ -28,10 +28,10 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
 }
 
-export type CrmOptionsWithMe = CrmOptions & { me: string | null; canDelete: boolean };
+export type CrmOptionsWithMe = CrmOptions & { me: string | null; meName: string | null; canDelete: boolean; aiNotes: boolean };
 
 export function useCrmOptions() {
-  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], me: null, canDelete: false });
+  const [options, setOptions] = useState<CrmOptionsWithMe>({ owners: [], talents: [], assignees: [], me: null, meName: null, canDelete: false, aiNotes: false });
   useEffect(() => {
     api<CrmOptionsWithMe>("/api/crm/options").then(setOptions).catch(() => undefined);
   }, []);
@@ -74,6 +74,43 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
+/**
+ * The <option>s for "who does this task", grouped (team, road managers,
+ * talents). Talents in `firstTalentIds` (e.g. the meeting's) come first.
+ */
+export function AssigneeOptions({
+  assignees,
+  exclude,
+  firstTalentIds = [],
+}: {
+  assignees: TaskAssignee[];
+  exclude?: string | null;
+  firstTalentIds?: string[];
+}) {
+  const groups = (Object.keys(ASSIGNEE_GROUPS) as TaskAssignee["group"][])
+    .map((group) => {
+      let people = assignees.filter((a) => a.group === group && a.id !== exclude);
+      if (group === "talent") {
+        people = [...people].sort((a, b) => Number(firstTalentIds.includes(b.talent_id ?? "")) - Number(firstTalentIds.includes(a.talent_id ?? "")));
+      }
+      return { group, people };
+    })
+    .filter((g) => g.people.length > 0);
+  return (
+    <>
+      {groups.map(({ group, people }) => (
+        <optgroup key={group} label={ASSIGNEE_GROUPS[group]}>
+          {people.map((person) => (
+            <option key={person.id} value={person.id}>
+              {person.name}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </>
+  );
+}
+
 export const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
@@ -113,7 +150,10 @@ const TABS = [
   { href: "/admin/crm", label: "Pipeline", icon: KanbanSquare },
   { href: "/admin/crm/enquiries", label: "Enquiries", icon: Inbox },
   { href: "/admin/crm/clients", label: "Clients", icon: Building2 },
+  { href: "/admin/crm/meetings", label: "Meetings", icon: Users },
+  { href: "/admin/crm/prospecting", label: "Prospecting", icon: Megaphone },
   { href: "/admin/crm/tasks", label: "My tasks", icon: CheckSquare },
+  { href: "/admin/crm/kpis", label: "KPIs", icon: BarChart3 },
 ];
 
 /** Page frame for the CRM: dark header, title, actions and section tabs */

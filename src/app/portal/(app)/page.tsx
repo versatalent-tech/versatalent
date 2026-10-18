@@ -6,6 +6,7 @@ import { ArrowRight, Gift, Loader2 } from "lucide-react";
 import { TIER_LABELS, type PortalHome } from "@/lib/portal/types";
 import { api, errorMessage } from "@/components/crm/shared";
 import { TalentBookingCard } from "@/components/portal/TalentBookingCard";
+import { MyTasks } from "@/components/tasks/MyTasks";
 
 export default function PortalHomePage() {
   const [home, setHome] = useState<PortalHome | null>(null);
@@ -46,6 +47,8 @@ export default function PortalHomePage() {
           ))}
         </section>
       )}
+
+      <MyTasks endpoint="/api/portal/tasks" title="Your to-dos" />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

@@ -349,14 +349,34 @@ export async function deleteAvailability(scope: BookingScope, id: string): Promi
 // Public events involving the visible talents (shown as a separate layer)
 // ---------------------------------------------------------------------------
 
-export async function listPublicEvents(scope: BookingScope, from: string, to: string): Promise<PublicEventBlock[]> {
+/**
+ * Events (Admin → Events) that involve the visible talents. With a talentId,
+ * only that talent's events, leaving out any the talent already has a booking
+ * for (the booking shows instead). publishedOnly is for talent-facing views,
+ * which shouldn't show draft events.
+ */
+export async function listPublicEvents(
+  scope: BookingScope,
+  from: string,
+  to: string,
+  options: { talentId?: string; publishedOnly?: boolean } = {}
+): Promise<PublicEventBlock[]> {
+  const talentId = options.talentId ?? null;
   const rows = await sql`
     SELECT e.id, e.title, e.start_time, e.end_time,
+      NULLIF(concat_ws(', ', NULLIF(e.venue->>'name', ''), NULLIF(e.venue->>'city', '')), '') AS location,
       COALESCE((SELECT array_agg(t.name ORDER BY t.name) FROM talents t WHERE t.id::text = ANY(e.talent_ids)), '{}') AS talent_names
     FROM events e
     WHERE e.status <> 'cancelled'
       AND e.start_time < ${to} AND COALESCE(e.end_time, e.start_time) >= ${from}
       AND (${scope.all} OR e.talent_ids && ${scope.talentIds.map(String)}::text[])
+      AND (${talentId}::uuid IS NULL OR (
+        ${talentId}::text = ANY(e.talent_ids)
+        AND NOT EXISTS (
+          SELECT 1 FROM bookings b WHERE b.event_id = e.id AND b.talent_id = ${talentId}::uuid AND b.status <> 'cancelled'
+        )
+      ))
+      AND (NOT ${options.publishedOnly ?? false} OR e.is_published)
     ORDER BY e.start_time
   `;
   return rows.map((row: any) => ({
@@ -364,6 +384,7 @@ export async function listPublicEvents(scope: BookingScope, from: string, to: st
     title: row.title,
     starts_at: iso(row.start_time),
     ends_at: row.end_time ? iso(row.end_time) : null,
+    location: row.location ?? null,
     talent_names: row.talent_names ?? [],
   }));
 }

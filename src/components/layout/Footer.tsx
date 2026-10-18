@@ -13,7 +13,9 @@ const navigation = {
     { name: "For Brands", href: "/for-brands" },
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/contact" },
-    { name: "Dashboard", href: "/dashboard" },
+    { name: "VIP Membership", href: "/membership" },
+    { name: "Talent Portal", href: "/portal" },
+    { name: "Privacy", href: "/privacy" },
     { name: "Admin", href: "/admin" },
   ],
   industries: [

@@ -13,6 +13,7 @@ import {
   type Enquiry,
   type EnquiryStatus,
   type Organisation,
+  type TaskAssignee,
 } from '@/lib/crm/types';
 import type { z } from 'zod';
 import type {
@@ -60,13 +61,13 @@ export async function getCrmScope(session: { userId?: string; name?: string; rol
 // Visibility conditions (aliases are fixed: deals d, organisations o, contacts c)
 // ---------------------------------------------------------------------------
 
-function dealVisible(scope: CrmScope, alias: 'd' | 'd2' = 'd') {
+export function dealVisible(scope: CrmScope, alias: 'd' | 'd2' = 'd') {
   if (scope.all) return sql`TRUE`;
   const a = sql.unsafe(alias);
   return sql`(${a}.owner_user_id = ${scope.userId} OR ${a}.created_by = ${scope.userId} OR ${a}.talent_ids && ${scope.talentIds}::uuid[])`;
 }
 
-function orgVisible(scope: CrmScope) {
+export function orgVisible(scope: CrmScope) {
   if (scope.all) return sql`TRUE`;
   return sql`(
     o.owner_user_id = ${scope.userId} OR o.created_by = ${scope.userId}
@@ -74,7 +75,7 @@ function orgVisible(scope: CrmScope) {
   )`;
 }
 
-function contactVisible(scope: CrmScope) {
+export function contactVisible(scope: CrmScope) {
   if (scope.all) return sql`TRUE`;
   return sql`(
     c.owner_user_id = ${scope.userId} OR c.created_by = ${scope.userId}
@@ -182,20 +183,56 @@ function mapActivity(row: any): Activity {
 // ---------------------------------------------------------------------------
 
 export async function getCrmOptions(scope: CrmScope): Promise<CrmOptions> {
-  const [owners, talents] = await Promise.all([
+  const [owners, talents, assignees] = await Promise.all([
     sql`SELECT id, name FROM users WHERE role IN ('admin', 'manager') AND is_active ORDER BY name`,
     scope.all
       ? sql`SELECT id, name FROM talents ORDER BY is_active DESC, name`
       : sql`SELECT id, name FROM talents WHERE id = ANY(${scope.talentIds}::uuid[]) ORDER BY name`,
+    listTaskAssignees(scope),
   ]);
   return {
     owners: owners.map((r: any) => ({ id: r.id, name: r.name })),
     talents: talents.map((r: any) => ({ id: r.id, name: r.name })),
+    assignees,
   };
 }
 
+/** Clients, deals and campaigns are owned by admins and managers */
 export async function isAssignableOwner(userId: string): Promise<boolean> {
   const rows = await sql`SELECT 1 FROM users WHERE id = ${userId} AND role IN ('admin', 'manager') AND is_active`;
+  return rows.length > 0;
+}
+
+/** Talents a manager can give tasks to are the ones assigned to them */
+function assigneeVisible(scope: CrmScope) {
+  return sql`(
+    u.role IN ('admin', 'manager', 'road_manager')
+    OR (u.role = 'artist' AND t.is_active AND ${scope.all ? sql`TRUE` : sql`u.talent_id = ANY(${scope.talentIds}::uuid[])`})
+  )`;
+}
+
+/** Everyone a task can be given to (see TaskAssignee) */
+export async function listTaskAssignees(scope: CrmScope): Promise<TaskAssignee[]> {
+  const rows = await sql`
+    SELECT u.id, u.name, u.role, u.talent_id, t.name AS talent_name
+    FROM users u LEFT JOIN talents t ON t.id = u.talent_id
+    WHERE u.is_active AND (u.role <> 'artist' OR u.talent_id IS NOT NULL) AND ${assigneeVisible(scope)}
+    ORDER BY CASE u.role WHEN 'artist' THEN 2 WHEN 'road_manager' THEN 1 ELSE 0 END, COALESCE(t.name, u.name)
+  `;
+  return rows.map((r: any) => ({
+    id: r.id,
+    // A talent's login can be in their own name (e.g. William Goncalves for Deejay WG)
+    name: r.role === 'artist' && r.talent_name && r.talent_name !== r.name ? `${r.talent_name} (${r.name})` : r.name,
+    group: r.role === 'artist' ? 'talent' : r.role === 'road_manager' ? 'road_manager' : 'team',
+    talent_id: r.talent_id ?? null,
+  }));
+}
+
+export async function isTaskAssignee(scope: CrmScope, userId: string): Promise<boolean> {
+  const rows = await sql`
+    SELECT 1 FROM users u LEFT JOIN talents t ON t.id = u.talent_id
+    WHERE u.id = ${userId} AND u.is_active AND (u.role <> 'artist' OR u.talent_id IS NOT NULL) AND ${assigneeVisible(scope)}
+  `;
   return rows.length > 0;
 }
 
@@ -434,6 +471,9 @@ function mapContact(row: any): Contact {
     job_title: row.job_title,
     lawful_basis: row.lawful_basis,
     do_not_contact: row.do_not_contact,
+    is_sole_trader: Boolean(row.is_sole_trader),
+    linkedin_url: row.linkedin_url ?? null,
+    instagram: row.instagram ?? null,
     notes: row.notes,
     organisation: ref(row.organisation_id, row.organisation_name),
     created_at: iso(row.created_at)!,
@@ -475,10 +515,12 @@ type ContactInput = z.infer<typeof contactSchema>;
 
 export async function createContact(actor: CrmActor, data: ContactInput): Promise<string> {
   const rows = await sql`
-    INSERT INTO contacts (organisation_id, name, email, phone, job_title, lawful_basis, do_not_contact, notes, owner_user_id, created_by)
+    INSERT INTO contacts (organisation_id, name, email, phone, job_title, lawful_basis, do_not_contact, is_sole_trader,
+                          linkedin_url, instagram, notes, owner_user_id, created_by)
     VALUES (
       ${data.organisation_id ?? null}, ${data.name}, ${data.email ?? null}, ${data.phone ?? null}, ${data.job_title ?? null},
-      ${data.lawful_basis}, ${data.do_not_contact}, ${data.notes ?? null}, ${actor.userId}, ${actor.userId}
+      ${data.lawful_basis}, ${data.do_not_contact}, ${data.is_sole_trader ?? false}, ${data.linkedin_url ?? null},
+      ${data.instagram ?? null}, ${data.notes ?? null}, ${actor.userId}, ${actor.userId}
     )
     RETURNING id
   `;
@@ -500,10 +542,20 @@ export async function updateContact(scope: CrmScope, id: string, changes: Partia
       job_title = ${pick('job_title', current.job_title)},
       lawful_basis = ${changes.lawful_basis ?? current.lawful_basis},
       do_not_contact = ${changes.do_not_contact ?? current.do_not_contact},
+      is_sole_trader = ${changes.is_sole_trader ?? current.is_sole_trader},
+      linkedin_url = ${pick('linkedin_url', current.linkedin_url)},
+      instagram = ${pick('instagram', current.instagram)},
       notes = ${pick('notes', current.notes)},
       updated_at = NOW()
     WHERE id = ${id}
   `;
+  // Asked not to be contacted: stop any prospecting sequence they're in
+  if (changes.do_not_contact) {
+    await sql`
+      UPDATE prospect_enrolments SET status = 'stopped', status_changed_at = NOW(), next_due_at = NULL, updated_at = NOW()
+      WHERE contact_id = ${id} AND status = 'active'
+    `;
+  }
   return true;
 }
 
@@ -648,6 +700,9 @@ function mapEnquiry(row: any): Enquiry {
     payload: row.payload ?? {},
     status: row.status,
     deal: ref(row.deal_id, row.deal_title),
+    talent: ref(row.talent_id, row.talent_name),
+    source: row.source ?? 'website',
+    marketing_consent: Boolean(row.marketing_consent),
     handled_by_name: row.handled_by_name,
     handled_at: iso(row.handled_at),
     created_at: iso(row.created_at)!,
@@ -656,10 +711,11 @@ function mapEnquiry(row: any): Enquiry {
 
 export async function listEnquiries(status: EnquiryStatus | 'all'): Promise<Enquiry[]> {
   const rows = await sql`
-    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name
+    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name, t.name AS talent_name
     FROM enquiries e
     LEFT JOIN deals d ON d.id = e.deal_id
     LEFT JOIN users u ON u.id = e.handled_by
+    LEFT JOIN talents t ON t.id = e.talent_id
     WHERE (${status} = 'all' OR e.status = ${status})
     ORDER BY e.created_at DESC
     LIMIT 300
@@ -676,8 +732,9 @@ export async function countEnquiries(): Promise<Record<EnquiryStatus, number>> {
 
 export async function getEnquiry(id: string): Promise<Enquiry | null> {
   const rows = await sql`
-    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name
+    SELECT e.*, d.title AS deal_title, u.name AS handled_by_name, t.name AS talent_name
     FROM enquiries e LEFT JOIN deals d ON d.id = e.deal_id LEFT JOIN users u ON u.id = e.handled_by
+    LEFT JOIN talents t ON t.id = e.talent_id
     WHERE e.id = ${id} LIMIT 1
   `;
   return rows[0] ? mapEnquiry(rows[0]) : null;
@@ -696,7 +753,7 @@ export async function setEnquiryStatus(actor: CrmActor, id: string, status: 'new
 }
 
 export interface NewEnquiry {
-  form: 'contact' | 'brand' | 'talent';
+  form: 'contact' | 'brand' | 'talent' | 'booking';
   name: string | null;
   email: string | null;
   phone: string | null;
@@ -705,13 +762,17 @@ export interface NewEnquiry {
   message: string | null;
   payload: Record<string, string>;
   ip: string;
+  talent_id?: string | null;
+  source?: 'website' | 'card_tap';
+  marketing_consent?: boolean;
 }
 
 export async function createEnquiry(data: NewEnquiry): Promise<void> {
   await sql`
-    INSERT INTO enquiries (form, name, email, phone, company, subject, message, payload, ip)
+    INSERT INTO enquiries (form, name, email, phone, company, subject, message, payload, ip, talent_id, source, marketing_consent)
     VALUES (${data.form}, ${data.name}, ${data.email}, ${data.phone}, ${data.company}, ${data.subject}, ${data.message},
-            ${JSON.stringify(data.payload)}, ${data.ip})
+            ${JSON.stringify(data.payload)}, ${data.ip}, ${data.talent_id ?? null}, ${data.source ?? 'website'},
+            ${data.marketing_consent ?? false})
   `;
 }
 
@@ -764,7 +825,8 @@ export async function convertEnquiry(
         email: enquiry.email,
         phone: enquiry.phone,
         organisation_id: organisationId,
-        lawful_basis: 'legitimate_interest',
+        // The prospect's own choice on the booking form; otherwise we're answering their enquiry
+        lawful_basis: enquiry.marketing_consent ? 'consent' : 'legitimate_interest',
         do_not_contact: false,
         job_title: null,
         notes: null,
@@ -779,7 +841,7 @@ export async function convertEnquiry(
       value_cents: input.value_cents ?? null,
       currency: 'GBP',
       expected_close: null,
-      source: 'website_form',
+      source: enquiry.source === 'card_tap' ? 'event' : 'website_form',
       talent_ids: input.talent_ids,
       lost_reason: null,
       notes: null,
@@ -791,7 +853,7 @@ export async function convertEnquiry(
       actor,
       { deal_id: dealId, organisation_id: organisationId, contact_id: contactId },
       'note',
-      'Website enquiry',
+      enquiry.source === 'card_tap' ? 'Enquiry from a card tap' : 'Website enquiry',
       original || null
     );
 

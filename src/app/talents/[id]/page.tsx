@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
 import type { Talent } from "@/lib/data/talents";
 import { TalentProfile } from "@/components/talents/TalentProfile";
 import { HeroSection } from "@/components/talents/HeroSection";
+import { BookTalent } from "@/components/talents/BookTalent";
 
-export default function TalentPage() {
+function TalentPageContent() {
   const params = useParams();
+  // Arrived from a talent tapping their VersaTalent card on this phone
+  const fromCard = useSearchParams().get("from") === "card";
   const [talent, setTalent] = useState<Talent | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -69,7 +72,22 @@ export default function TalentPage() {
   return (
     <MainLayout>
       <HeroSection talent={talent} />
-      <TalentProfile talent={talent} />
+      <TalentProfile talent={talent} source={fromCard ? "card_tap" : "website"} />
+      {fromCard && (
+        <>
+          {/* Room so the sticky bar doesn't cover the end of the page */}
+          <div className="h-32" aria-hidden="true" />
+          <BookTalent talent={talent} source="card_tap" layout="bar" />
+        </>
+      )}
     </MainLayout>
+  );
+}
+
+export default function TalentPage() {
+  return (
+    <Suspense>
+      <TalentPageContent />
+    </Suspense>
   );
 }

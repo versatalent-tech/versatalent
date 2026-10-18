@@ -3,18 +3,23 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { TalentBooking } from "@/lib/portal/types";
+import type { PublicEventBlock } from "@/lib/bookings/types";
 import { api, errorMessage } from "@/components/crm/shared";
 import { TalentBookingCard } from "@/components/portal/TalentBookingCard";
 import { PortalCalendarLink } from "@/components/portal/PortalCalendarLink";
+import { TalentEventCard } from "@/components/portal/TalentEventCard";
 
 export default function PortalBookingsPage() {
   const [when, setWhen] = useState<"upcoming" | "past">("upcoming");
   const [bookings, setBookings] = useState<TalentBooking[] | null>(null);
+  const [events, setEvents] = useState<PublicEventBlock[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setBookings(null);
+    setEvents([]);
     api<TalentBooking[]>(`/api/portal/bookings?when=${when}`).then(setBookings).catch((err) => setError(errorMessage(err)));
+    api<PublicEventBlock[]>(`/api/portal/events?when=${when}`).then(setEvents).catch(() => undefined);
   }, [when]);
 
   const replace = (updated: TalentBooking) => setBookings((list) => list?.map((b) => (b.id === updated.id ? updated : b)) ?? null);
@@ -44,6 +49,14 @@ export default function PortalBookingsPage() {
             <TalentBookingCard key={b.id} booking={b} onChanged={replace} />
           ))}
         </div>
+      )}
+      {events.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">{when === "upcoming" ? "Events you're in" : "Past events"}</h2>
+          {events.map((e) => (
+            <TalentEventCard key={e.id} event={e} />
+          ))}
+        </section>
       )}
       <PortalCalendarLink />
     </div>

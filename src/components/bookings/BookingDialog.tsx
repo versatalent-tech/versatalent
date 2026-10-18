@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { CRM_CURRENCIES } from "@/lib/crm/types";
 import { BOOKING_STATUSES, TALENT_RESPONSES, commissionCents, netCents, payoutState, type Booking, type BookingStatus, type Clash } from "@/lib/bookings/types";
 import { Field, errorMessage, formatMoney, parseMoney, selectClass } from "@/components/crm/shared";
+import { DocumentsPanel } from "@/components/documents/DocumentsPanel";
 
 export interface BookingOptions {
   talents: { id: string; name: string; commission_percent: number | null }[];
@@ -476,6 +477,13 @@ export function BookingDialog({
                   <Switch checked={form.client_visible_to_talent} onCheckedChange={(v) => set("client_visible_to_talent", v)} />
                 </label>
               )}
+            </div>
+          )}
+
+          {booking && (
+            <div className="space-y-2 rounded border p-3">
+              <span className="block text-sm font-medium">Documents</span>
+              <DocumentsPanel owner={{ bookingId: booking.id }} />
             </div>
           )}
 

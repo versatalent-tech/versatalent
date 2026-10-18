@@ -324,7 +324,8 @@ export async function getOrdersCountByStatus(): Promise<Record<OrderStatus, numb
     pending: 0,
     paid: 0,
     cancelled: 0,
-    failed: 0
+    failed: 0,
+    refunded: 0
   };
 
   rows.forEach(row => {

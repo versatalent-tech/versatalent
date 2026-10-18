@@ -55,7 +55,12 @@ export type ActivityType = keyof typeof LOGGABLE_ACTIVITY_TYPES | 'stage_change'
 
 export const CRM_CURRENCIES = ['GBP', 'EUR', 'USD'] as const;
 
-export const ENQUIRY_FORMS = { contact: 'Contact form', brand: 'Brand partnership', talent: 'Talent application' } as const;
+export const ENQUIRY_FORMS = {
+  contact: 'Contact form',
+  brand: 'Brand partnership',
+  talent: 'Talent application',
+  booking: 'Booking enquiry',
+} as const;
 export type EnquiryForm = keyof typeof ENQUIRY_FORMS;
 export type EnquiryStatus = 'new' | 'converted' | 'archived' | 'spam';
 
@@ -96,6 +101,10 @@ export interface Contact {
   job_title: string | null;
   lawful_basis: 'legitimate_interest' | 'consent';
   do_not_contact: boolean;
+  /** Sole traders count as individuals: marketing emails need their consent */
+  is_sole_trader: boolean;
+  linkedin_url: string | null;
+  instagram: string | null;
   notes: string | null;
   organisation: PersonRef | null;
   created_at: string;
@@ -150,16 +159,94 @@ export interface Enquiry {
   payload: Record<string, string>;
   status: EnquiryStatus;
   deal: PersonRef | null;
+  /** Booking enquiries: the talent asked about */
+  talent: PersonRef | null;
+  /** card_tap: the prospect came from a talent tapping their card on their phone */
+  source: 'website' | 'card_tap';
+  marketing_consent: boolean;
   handled_by_name: string | null;
   handled_at: string | null;
   created_at: string;
 }
 
+/**
+ * Someone a task (or meeting action item) can be given to: admins and
+ * managers, road managers (they see their tasks on their dashboard) and
+ * talents with a portal login (they see them in the portal)
+ */
+export interface TaskAssignee {
+  id: string;
+  name: string;
+  group: 'team' | 'road_manager' | 'talent';
+  /** For talents: which talent the login belongs to */
+  talent_id: string | null;
+}
+
+export const ASSIGNEE_GROUPS: Record<TaskAssignee['group'], string> = {
+  team: 'Admins and managers',
+  road_manager: 'Road managers',
+  talent: 'Talents (in their portal)',
+};
+
 export interface CrmOptions {
   owners: PersonRef[];
   talents: PersonRef[];
+  assignees: TaskAssignee[];
 }
 
 export function weightedValue(deal: Pick<Deal, 'stage' | 'value_cents'>): number {
   return Math.round((deal.value_cents ?? 0) * STAGE_PROBABILITY[deal.stage]);
+}
+
+// ---------------------------------------------------------------------------
+// Meetings (phase 3b)
+// ---------------------------------------------------------------------------
+
+export type MeetingAiStatus = 'none' | 'pending' | 'ready' | 'failed';
+
+/** About 100k tokens: a long meeting. Longer transcripts are refused rather than cut short. */
+export const MAX_TRANSCRIPT_CHARS = 400_000;
+
+/** A drafting job still pending after this long has probably failed silently */
+export const MEETING_AI_STALE_MINUTES = 10;
+
+export interface MeetingActionItem {
+  id: string;
+  title: string;
+  owner_name: string | null;
+  owner_user_id: string | null;
+  due_date: string | null; // YYYY-MM-DD
+  task_activity_id: string | null; // set once it's been turned into a CRM task
+}
+
+export interface MeetingSummary {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string | null;
+  location: string | null;
+  deal: PersonRef | null; // name = deal title
+  organisation: PersonRef | null;
+  talents: PersonRef[];
+  has_transcript: boolean;
+  has_notes: boolean;
+  ai_status: MeetingAiStatus;
+  open_action_items: number;
+  created_by_name: string | null;
+}
+
+export interface Meeting extends MeetingSummary {
+  attendees: string | null;
+  transcript: string | null;
+  transcript_consent_at: string | null;
+  summary: string | null;
+  decisions: string[];
+  action_items: MeetingActionItem[];
+  notes_reviewed_at: string | null;
+  notes_reviewed_by_name: string | null;
+  ai_requested_at: string | null;
+  ai_generated_at: string | null;
+  ai_error: string | null;
+  created_by: string | null;
+  created_at: string;
 }

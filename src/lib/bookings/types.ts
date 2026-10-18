@@ -76,6 +76,7 @@ export interface PublicEventBlock {
   title: string;
   starts_at: string;
   ends_at: string | null;
+  location: string | null; // venue name and city
   talent_names: string[];
 }
 

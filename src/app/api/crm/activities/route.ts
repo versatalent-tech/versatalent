@@ -7,7 +7,7 @@ import {
   getContact,
   getDeal,
   getOrganisation,
-  isAssignableOwner,
+  isTaskAssignee,
   listTasks,
 } from '@/lib/db/repositories/crm';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
       return ApiErrors.BadRequest('Client not found');
     }
     if (data.contact_id && !(await getContact(ctx.scope, data.contact_id))) return ApiErrors.BadRequest('Contact not found');
-    if (data.owner_user_id && data.owner_user_id !== ctx.scope.userId && !(await isAssignableOwner(data.owner_user_id))) {
-      return ApiErrors.BadRequest('Tasks can be given to admins and managers');
+    if (data.owner_user_id && data.owner_user_id !== ctx.scope.userId && !(await isTaskAssignee(ctx.scope, data.owner_user_id))) {
+      return ApiErrors.BadRequest('Tasks can be given to the team, road managers and your talents with a portal login');
     }
 
     const id = await createActivity(ctx.actor, data);

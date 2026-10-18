@@ -190,12 +190,12 @@ Each phase ships on its own and is usable without the next one.
 |---|---|---|---|
 | **0. Foundation** ✅ built | Team roles + permission map; Team page with invite/reset links; talent assignments; login throttling; audit log; role-aware dashboard (see §9) | M | – |
 | **1. CRM core** ✅ built | Organisations, contacts, deals pipeline board, activities/tasks, enquiry inbox (forms → DB) (see §10) | L | 0 |
-| **2. Bookings & calendar** ✅ built (documents moved to 2b, see §11) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
+| **2. Bookings & calendar** ✅ built (documents built in 2b, see §15) | Bookings from deals, per-talent commission, client-visibility switch, holds, availability, **calendar (month/week/agenda, per talent or all)**, documents, clash detection | M | 1 |
 | **3. Talent portal** ✅ built (see §12) | `/portal` login, home, own calendar, availability, net earnings, **event points + artist perks**, profile change requests | M | 0, 2 |
-| **3c. Member accounts** ⏸ deferred to a later stage | Customers sign in by email link to see their tier, points, benefits, history and cards, edit their profile and consents; card-tap page tightened (see §14) | M | email provider + own domain |
-| **3b. Meetings & AI notes** | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
-| **4. Outreach v1** | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
-| **5. KPIs** | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
+| **3c. Member accounts** ⏸ deferred to a later stage | Customers sign in by email link to see their tier, points, benefits, history and cards, edit their profile and consents; card-tap page tightened (see §19) | M | email provider + own domain |
+| **3b. Meetings & AI notes** ✅ built (see §14) | Meetings linked to deals/talents/bookings; paste a transcript or upload a recording → AI summary, decisions and action items that become tasks | M | 1 |
+| **4. Outreach v1** ✅ built as Prospecting (see §17) | Campaigns, sequences, due-today tasks, templates, outcomes, compliance fields | M | 1 |
+| **5. KPIs** ✅ built (see §18) | KPI queries, targets, snapshots, role-filtered KPI page, alerts on dashboard | S–M | 1, 2, 4 |
 | **6. Finance (optional)** | Invoices and talent payouts; sync with the accounting package | M | 2 |
 | **Later** | Outreach v2 (sending + tracking), e-signature for contracts, real profile-view analytics | – | – |
 
@@ -375,7 +375,137 @@ Migration `028_talent_payouts.sql` adds `talent_paid_at`, `talent_paid_cents`, `
 
 **Go-live:** run migration 028 on production before deploying.
 
-## 14. Member accounts for customers (Phase 3c, deferred)
+## 14. Phase 3b: what was built
+
+Migration `033_meetings.sql` adds `meetings`.
+
+**Meetings (`/admin/crm/meetings`, plus a Meetings card on every deal and client page):**
+- Schedule a meeting or log one afterwards: title, start and end, where, client, deal, talents and who's attending. Choosing a deal fills in its client.
+- Visibility follows the CRM rules: admins see everything; managers see meetings they added, or that are on a deal or client they can see, or that involve a talent assigned to them. Road managers don't use the CRM.
+- Past and upcoming lists with search. Each meeting shows where its notes are up to (upcoming, transcript, drafting, open action items, notes).
+
+**Transcript:**
+- Paste it, or upload a `.txt`, `.vtt` or `.srt` file (caption files are turned into plain "Speaker: words" lines).
+- Saving a transcript needs a tick to confirm everyone was told the meeting was recorded. The confirmation is stored with the date.
+- Up to 400,000 characters (about 100k tokens). Longer transcripts are refused, not cut short.
+
+**AI notes (switched off until `ANTHROPIC_API_KEY` is set):**
+- Without the key, meetings, transcripts, notes and action items → tasks all work, and the Claude option and its wording are hidden. The drafting endpoint refuses with "AI notes aren't switched on yet". Adding the key in Netlify and redeploying switches it on; no code change.
+- "Draft with Claude" sends the transcript, with the meeting's details and the names of the admins and managers, to Claude (`claude-opus-5-5`, medium effort, structured output, server-side fallback if a request is declined).
+- Claude returns a summary, decisions, and action items with an owner and a due date where the transcript gives one. Owners are matched to team members by name. Dates that aren't real dates are dropped.
+- The draft is just a draft: the page says so until someone edits and saves it ("Saved by … on …").
+- Redrafting replaces the notes, but action items already turned into tasks are kept.
+- **How it runs:** the request returns at once and the page checks back every few seconds. On Netlify the work runs in the background function `netlify/functions/meeting-notes-background.mts` (up to 15 minutes; normal requests time out much sooner). The function only acts when given the meeting's current one-off job token, so calling its URL directly does nothing. Locally the work runs in the dev server.
+- Errors are shown in plain words: the key isn't set up, Claude is busy, the transcript couldn't be read, and so on. A job still running after 10 minutes can be restarted.
+
+**Action items → tasks:**
+- Tick action items and "Add selected as tasks". Each becomes a CRM task on the meeting's deal (or client), for the chosen owner, due at 10:00 UK time on its date, or a week after the meeting when it has none.
+- Each item becomes a task only once, even if the button is pressed twice at the same moment (a single SQL statement that locks the meeting).
+
+**Audit log:** adding, editing and deleting meetings, and each drafting request. Deleting a meeting (whoever added it, or an admin) leaves its tasks in place.
+
+**Not included yet:**
+- Uploading audio recordings to be transcribed. Claude reads text, not audio, so this needs a speech-to-text service. For now, use the transcript from Meet, Zoom, Teams or Otter.
+- Linking a meeting to a booking.
+- Sharing meeting notes with a talent in the portal.
+
+**Go-live:**
+1. Run migration 033 on production before deploying (done 13 Oct 2026).
+2. Meetings and notes work straight away. AI notes come later (decided 13 Oct 2026): add `ANTHROPIC_API_KEY` to the Netlify site's environment variables (Functions scope) and redeploy.
+3. Before switching AI notes on, add a line to the privacy notice that meeting transcripts are sent to Anthropic to draft notes.
+
+## 15. Phase 2b: documents (what was built)
+
+Migration `034_documents.sql` adds `documents`. Each document belongs to exactly one booking, deal or talent profile.
+
+**Where:**
+- **Bookings:** a Documents section in the booking window (contract, rider, brief, invoice, other).
+- **Deals:** a Documents card on the deal page (contract, brief, invoice, other). Never shown to talents.
+- **Talent profiles:** Admin → Bookings → **Talent documents** (`/admin/bookings/talent-documents`), also linked from each talent in Admin → Talents. Kinds: agency agreement, rider, comp card / press kit, insurance, ID / right to work, other. A rider on a talent's profile also shows (read-only) on each of their bookings, so the current version is always there.
+- **Talent portal:** documents shared on a booking appear on that booking's card; documents shared from the profile appear under **Profile → My documents**. Talents can't upload (team uploads only, decided 13 Oct 2026).
+
+**Storage and downloads:** files go to a private Netlify Blobs store (`documents`), never the public uploads store. They're only served by `/api/documents/[id]`, which checks access on every download and always sends them as attachments with `no-store`, `nosniff` and a sandboxing CSP. Locally they go to `.private-uploads/` (git-ignored). Up to 5 MB (Netlify's request limit is 6 MB); PDF, Word, Excel, CSV, text and images only.
+
+**Who sees what:**
+
+| | Bookings | Deals | Talent profiles |
+|---|---|---|---|
+| Admin | all | all | all, including admin-only |
+| Manager | assigned talents | deals they can see | assigned talents, not admin-only |
+| Road manager | riders and briefs, assigned talents | – | riders, assigned talents |
+| Talent | own, if shared | – | own, if shared |
+
+Admins and managers upload, edit and delete within the same scope. Anyone without access gets "not found", the same as a missing document.
+
+**ID / right to work (UK GDPR):** always admin-only, only admins can add or change them, and each needs a **delete by** date. Any document can also be marked admin-only by an admin.
+
+**Expiry:** insurance and ID documents can carry an expiry date. Anything expired, expiring within 30 days, or past its delete-by date appears on the Talent documents page and as a dashboard alert (admins; managers for their talents, without admin-only documents).
+
+**Clean-up:** deleting a booking, deal or talent removes its documents and their files. Every upload, change and deletion is in the audit log.
+
+**Go-live:** migration 034 run on production 13 Oct 2026 (with 035 for booking enquiries). No new environment variables: the Blobs store is created on first upload.
+
+## 16. Artist card taps (13 Oct 2026)
+
+What a prospect sees when a talent taps their VersaTalent card on the prospect's phone.
+
+**Where the tap goes:** `/nfc/<card>` logs the tap (never a check-in) and opens the talent's public profile `/talents/<id>?from=card`. The old `/artist/<id>` address redirects there. Cards of talents who've left say "This talent is no longer represented by VersaTalent". Staff cards show a staff page with a link to the staff sign-in; guest cards explain themselves and link to VIP sign-up. VIP cards open the member's pass, as before.
+
+**Card mode:** a bar fixed to the bottom of the profile: "You've connected with <name>, represented by VersaTalent", and three buttons. The same buttons replace the old "Book this talent" box for every visitor.
+- **Book <name>:** a short enquiry form (name, company, email, optional phone, when, event and venue, message), with an unticked box for marketing emails and a link to the privacy notice. It goes to Netlify Forms (email alert, form `versatalent-booking`) and to the CRM inbox as a **Booking enquiry** for that talent, marked **Card tap** when it came from one. Converting it to a deal fills in the talent; a card-tap deal's source is "At an event"; the contact's lawful basis is "consent" when the box was ticked.
+- **Save contact:** a contact card (`/api/talents/<id>/vcard`) for **VersaTalent Bookings** (agency phone and email, link to the talent's page). Never the talent's own details.
+- **Press kit:** shown only when the team has switched a comp card on the talent's profile to **Public press kit** (Talent documents). Served by `/api/talents/<id>/press-kit`; nothing else in the private documents store is reachable.
+
+**Link previews:** talent pages have a title, description and photo for WhatsApp, iMessage and social previews.
+
+**Privacy fixes:**
+- The card lookup returns only what the landing page needs: for artist cards the talent profile id, never the user account id.
+- Anonymous reads of membership, points and check-ins only answer for VIP members' own passes, so an artist's or staff member's id can't open their loyalty data.
+- Inactive talents are hidden from the public talent API.
+- The public talent API never included date of birth or commission; it's unchanged there.
+
+**Go-live:** migration 035 (run on production 13 Oct 2026). Nothing else to configure.
+
+**Later:** per-talent choice of which sections the card shows (e.g. measurements), tap and enquiry counts per talent in the portal, "recently performed at / next appearance" on the profile.
+
+## 17. Phase 4: Prospecting (outreach v1, what was built)
+
+Migration `036_prospecting_kpis.sql`. Called **Prospecting** (CRM → Prospecting, `/admin/crm/prospecting`) to keep it apart from the loyalty programme's **Member outreach**.
+
+**Campaigns:** name, goal, owner, and the talents being put forward. A new campaign starts as a draft with a three-step sequence (email, LinkedIn a few days later, follow-up email) that can be edited: up to 20 steps, each with a channel (email, LinkedIn, call, Instagram DM), a delay in days and a message. Placeholders: `{first_name}` `{name}` `{company}` `{talents}` `{talent_links}` `{sender}`. Start, pause, resume or finish; nothing is due while a campaign is a draft or paused.
+
+**Adding contacts (the segment):** search, client type, client tag and city, from the contacts the person can see in the CRM. Contacts marked do not contact can't be added; anyone already in the campaign is skipped.
+
+**Due today:** each person's steps due by the end of the day (or everyone's), with the message filled in. Copy it, or open email / LinkedIn / Instagram / phone with it, send it yourself, then press **Done** (or **Skip step**). The next step is scheduled after its delay. Record what happened at any point: replied, meeting booked, not interested, bounced, or asked to stop; each ends the sequence for that contact. Replies and meetings can become a deal in one click (source "Outreach", the campaign's talents, stage "Qualified" for a meeting). Sent messages and results are logged on the contact's timeline.
+
+**Compliance (UK GDPR / PECR):**
+- Do-not-contact contacts never appear; marking a contact do not contact (or recording "asked to stop") ends all their sequences and sets the flag.
+- Contacts can be marked **sole trader or private individual**; email steps to them are blocked unless their lawful basis is consent (LinkedIn, calls and DMs still listed).
+- Every email ends with an opt-out line.
+
+**Safety:** a step can only be completed once (double clicks are refused); creating a deal twice returns the same deal; campaign changes and deletions are audit-logged.
+
+**Also:** contacts gain LinkedIn and Instagram fields; the dashboard shows "N prospecting steps due today".
+
+**Later (v2):** sending from the platform through an email provider with open/reply tracking and one-click unsubscribe.
+
+## 18. Phase 5: KPIs (what was built)
+
+CRM → **KPIs** (`/admin/crm/kpis`). Month (with a month picker), last 3 months or year to date; each figure shows the change against the period of the same length just before, and a six-month trend (latest month in gold; hover for values).
+
+**Figures:** new leads (with a by-source breakdown), lead → won rate, weighted pipeline, average deal value, sales cycle, repeat clients, first response time to website enquiries; prospects contacted, prospecting reply rate, meetings booked, meetings held; bookings, bookings value, commission revenue, talent utilisation (with a per-talent table), cancellation rate; and for admins, membership: new VIP members, check-ins, member spend at the till, Founding Memberships sold. Each tile says how it's worked out. Money counts GBP only.
+
+**Who sees what:** admins see the whole agency. Managers see their own figures: deals they own or created or that involve their talents, their talents' bookings and utilisation, and prospects they own; commission and membership are admin-only. Road managers don't use the CRM.
+
+**Targets:** admins set a monthly target per figure (target icon on each tile, single-month view); tiles show progress against it.
+
+**Snapshots:** the scheduled function `netlify/functions/kpi-snapshots.mts` runs daily and saves the month so far; on the first three days of a month it also finalises the month just ended. The trend uses saved months, so editing old records doesn't rewrite history.
+
+**Not included:** outstanding invoices (there's no invoicing yet); per-person or per-talent targets.
+
+**Go-live:** migration 036 run on production 13 Oct 2026. The scheduled function deploys with the site; nothing to configure.
+
+## 19. Member accounts for customers (Phase 3c, deferred)
 
 _Deferred on 8 Oct 2026: customers keep using the card tap for now. This section holds the design for when it's picked up._
 
@@ -411,7 +541,7 @@ Today, VIP customers see their tier, points, benefits and history only by **tapp
 
 Recommendation: start with (a). It's simpler, and it avoids unverified accounts.
 
-### Data changes (migration 029)
+### Data changes (next free migration, 039 at the time of writing)
 - `auth_tokens.purpose`: add `'magic'`.
 - `users.email_verified_at`: set the first time a member signs in by link.
 - `member_sessions` (id, user_id, created_at, last_seen_at, revoked_at, user_agent): so "sign out everywhere" and lost-phone revocation work. The signed cookie carries the session id.
@@ -443,4 +573,4 @@ Third-party reviews from mid-2026 put Resend's free tier at 3,000 emails/month w
 4. Tell me when it's done. I'll send a test email, and build Phase 3c once the domain shows as verified.
 
 ### Size
-About the same as the talent portal (M): migration 029, the email module, sign-in and sessions, five member pages, the card-tap change, admin tweaks (resend a sign-in link, see last sign-in), and an end-to-end test on a Neon branch.
+About the same as the talent portal (M): one migration, the email module, sign-in and sessions, five member pages, the card-tap change, admin tweaks (resend a sign-in link, see last sign-in), and an end-to-end test on a Neon branch.

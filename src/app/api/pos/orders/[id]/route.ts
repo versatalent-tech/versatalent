@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  getOrderById,
   getOrderWithDetails,
   updateOrderStatus,
   cancelOrder
@@ -67,6 +68,15 @@ export const PUT = withPOSAuth(async (
       });
     }
 
+    // A paid order is undone by a refund, which also takes back its points
+    const current = await getOrderById(id);
+    if (current?.status === 'paid' || status === 'refunded') {
+      return NextResponse.json(
+        { error: 'Paid orders are refunded from Admin → Till orders, which also takes back the points.' },
+        { status: 400 }
+      );
+    }
+
     const order = await updateOrderStatus(id, status);
 
     if (!order) {
@@ -94,6 +104,13 @@ export const DELETE = withPOSAuth(async (
 ) => {
   try {
     const { id } = await context.params;
+    const current = await getOrderById(id);
+    if (current?.status === 'paid') {
+      return NextResponse.json(
+        { error: 'Paid orders are refunded from Admin → Till orders, which also takes back the points.' },
+        { status: 400 }
+      );
+    }
     const order = await cancelOrder(id);
 
     if (!order) {

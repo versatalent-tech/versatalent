@@ -5,7 +5,11 @@ import {
   deleteTalent
 } from '@/lib/db/repositories/talents';
 import type { UpdateTalentRequest } from '@/lib/db/types';
-import { withAdminAuth } from '@/lib/middleware/auth';
+import { getTeamSession, withAdminAuth } from '@/lib/middleware/auth';
+import { documentFileKeys, getPublicPressKit } from '@/lib/db/repositories/documents';
+import { deleteDocumentFiles } from '@/lib/services/document-storage';
+import { getTalentProfileStats } from '@/lib/db/repositories/talent-stats';
+import { publicStats } from '@/lib/talents/profile-stats';
 
 // GET single talent by ID
 export async function GET(
@@ -16,14 +20,16 @@ export async function GET(
     const { id } = await params;
     const talent = await getTalentById(id);
 
-    if (!talent) {
+    // Talents who've left (inactive) are only visible to the team
+    if (!talent || (!talent.is_active && !(await getTeamSession()))) {
       return NextResponse.json(
         { error: 'Talent not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(talent);
+    const [pressKit, stats] = await Promise.all([getPublicPressKit(id), getTalentProfileStats(id)]);
+    return NextResponse.json({ ...talent, has_press_kit: Boolean(pressKit), stats: stats ? publicStats(stats) : [] });
   } catch (error) {
     console.error('Error fetching talent:', error);
     return NextResponse.json(
@@ -110,7 +116,9 @@ export const DELETE = withAdminAuth(async (
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
     const { id } = await context.params;
+    const files = await documentFileKeys({ talentId: id });
     const success = await deleteTalent(id);
+    if (success) await deleteDocumentFiles(files);
 
     if (!success) {
       return NextResponse.json(

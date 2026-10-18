@@ -1,0 +1,607 @@
+<title>V•PRIVILEGE Benefit Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~68ch) for prose; the cost model and benefit register break out to a wider measure. Black-and-gold membership-card palette. */
+:root {
+  --bg: #F6F5F1;
+  --surface: #FFFFFF;
+  --ink: #17150F;
+  --muted: #6A6556;
+  --line: #E2DED2;
+  --gold: #8A6B10;          /* gold for text on light */
+  --gold-fill: #D4AF37;     /* brand gold for marks */
+  --gold-wash: #FBF5E2;
+  --good: #2F6B3A;
+  --warn: #8C5A00;
+  --bad: #A23B2A;
+  --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.1875rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F0E0B; --surface: #18160F; --ink: #F1ECDF; --muted: #A49D89; --line: #2E2A20;
+    --gold: #DDBB52; --gold-fill: #D4AF37; --gold-wash: #221D0E;
+    --good: #7CC08A; --warn: #E2B04A; --bad: #E58A78;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F0E0B; --surface: #18160F; --ink: #F1ECDF; --muted: #A49D89; --line: #2E2A20;
+  --gold: #DDBB52; --gold-fill: #D4AF37; --gold-wash: #221D0E;
+  --good: #7CC08A; --warn: #E2B04A; --bad: #E58A78;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: var(--step-0); line-height: 1.6;
+  padding: 0 20px;
+}
+.page { max-width: 1040px; margin: 0 auto; padding-block: 48px 80px; display: grid; gap: 56px; }
+.prose { max-width: 68ch; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(2rem, 6vw, 3.25rem); line-height: 1.05; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: var(--step-2); line-height: 1.2; }
+h3 { font-size: var(--step-1); font-weight: 600; line-height: 1.3; }
+p { margin: 0; }
+.eyebrow { font-size: var(--step--1); letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+.muted { color: var(--muted); }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 20px; }
+.stack { display: grid; gap: 12px; }
+
+/* Header */
+header { display: grid; gap: 18px; }
+.lede { font-size: var(--step-1); color: var(--muted); max-width: 60ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: var(--step--1); color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* Card-style hero: the membership card itself, carrying the live headline numbers */
+.card {
+  background: #121009; color: #F3EBD2;
+  border-radius: 14px; padding: 28px; display: grid; gap: 24px;
+  border: 1px solid #3A3220;
+  background-image: linear-gradient(135deg, rgba(212,175,55,0.16), rgba(212,175,55,0) 45%);
+}
+.card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.card-brand { font-family: var(--font-display); font-size: var(--step-2); letter-spacing: 0.04em; }
+.card-brand span { color: #D4AF37; }
+.card-no { font-family: var(--font-data); font-size: var(--step--1); color: #CDBF93; letter-spacing: 0.08em; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 20px; }
+.stat { display: grid; gap: 2px; min-width: 0; }
+.stat .label { font-size: var(--step--1); color: #BFB389; letter-spacing: 0.06em; text-transform: uppercase; }
+.stat .value { font-family: var(--font-data); font-size: 1.6rem; font-variant-numeric: tabular-nums; color: #F7EFD6; }
+.stat .sub { font-size: var(--step--1); color: #A89D78; }
+.card-foot { font-size: var(--step--1); color: #A89D78; border-top: 1px solid #3A3220; padding-top: 14px; }
+
+/* Callouts */
+.note { background: var(--gold-wash); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; font-size: 0.9375rem; }
+.note b { color: var(--gold); }
+
+/* Tables */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: var(--step--1); font-weight: 600; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; background: var(--bg); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+tr.group td { background: var(--bg); font-weight: 600; font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+tr.off td:not(:first-child) { opacity: 0.45; }
+tr.total td { font-weight: 600; background: var(--gold-wash); }
+.bname { font-weight: 600; }
+.basis { font-size: var(--step--1); color: var(--muted); max-width: 36ch; }
+input[type="number"] {
+  width: 5.5rem; font: inherit; font-family: var(--font-data); font-variant-numeric: tabular-nums;
+  padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); text-align: right;
+}
+input[type="number"]:focus-visible, input[type="checkbox"]:focus-visible, button:focus-visible { outline: 2px solid var(--gold-fill); outline-offset: 2px; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gold-fill); }
+.pill { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.core { color: var(--gold); }
+.pill.opt { color: var(--muted); }
+.pill.fixed { color: var(--warn); }
+.pos { color: var(--good); }
+.neg { color: var(--bad); }
+
+/* Assumption panel */
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
+.field label { font-size: var(--step--1); color: var(--muted); }
+.field .row { display: flex; align-items: center; gap: 8px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+button { font: inherit; font-size: 0.875rem; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+button:hover { border-color: var(--gold-fill); }
+
+/* Benefit register */
+.register { display: grid; gap: 16px; }
+.benefit { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.benefit-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.benefit-head h3 { display: flex; gap: 10px; align-items: baseline; }
+.benefit-head .idx { font-family: var(--font-data); color: var(--gold); font-size: var(--step--1); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 20px; margin: 0; }
+.facts div { min-width: 0; }
+.facts dt { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.facts dd { margin: 2px 0 0; font-size: 0.9375rem; }
+.steps { margin: 0; padding-left: 1.25rem; display: grid; gap: 4px; font-size: 0.9375rem; }
+.sys { font-size: var(--step--1); color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+.sys b { color: var(--ink); font-weight: 600; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: grid; gap: 10px; min-width: 0; }
+ul.clean { margin: 0; padding-left: 1.1rem; display: grid; gap: 6px; }
+footer { font-size: var(--step--1); color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 560px) {
+  .page { padding-block: 28px 56px; gap: 44px; }
+  .card { padding: 20px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stat .value { transition: color 0.3s; }
+}
+</style>
+
+<div class="page">
+
+  <header>
+    <span class="eyebrow">VersaTalent · Paid membership</span>
+    <h1>V•PRIVILEGE Founding Membership: costed benefit sheet</h1>
+    <p class="lede">What £29.99 a year buys, what each benefit costs us to deliver, who delivers it, and how many members we need before the programme pays for itself.</p>
+    <div class="meta">
+      <span><b>Status:</b> Draft launch configuration (D4). Payment model agreed (D5)</span>
+      <span><b>Prepared:</b> 9 Oct 2026</span>
+      <span><b>Price:</b> £29.99 for 12 months, one-off payment, no auto-renewal (agreed)</span>
+      <span><b>Founding run:</b> 500 numbered cards</span>
+    </div>
+  </header>
+
+  <div class="card" aria-live="polite">
+    <div class="card-top">
+      <div class="card-brand">V<span>•</span>PRIVILEGE</div>
+      <div class="card-no">FOUNDING MEMBER · No. 001 / 500</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="label">We keep per member</span><span class="value" id="s-net">£0.00</span><span class="sub">after VAT, card fees, refunds</span></div>
+      <div class="stat"><span class="label">Benefit cost per member</span><span class="value" id="s-var">£0.00</span><span class="sub" id="s-var-high">high scenario £0.00</span></div>
+      <div class="stat"><span class="label">Fixed cost per year</span><span class="value" id="s-fixed">£0</span><span class="sub">members' nights, ballots, launch</span></div>
+      <div class="stat"><span class="label">Break-even</span><span class="value" id="s-be">0</span><span class="sub" id="s-be-high">high scenario 0 members</span></div>
+    </div>
+    <div class="card-foot">Every figure except the price is an assumption. Change any number in the cost model below and these totals update.</div>
+  </div>
+
+  <section class="prose">
+    <h2>The offer in one paragraph</h2>
+    <p>V•PRIVILEGE is about access, not money off. Members get a numbered Founding card, priority entry, first access to tickets, a welcome drink and a birthday drink, two guest passes, four members-only nights and a chance at artist experiences. It is sold separately from the free Silver, Gold and Black tiers. Paying does not raise a member's tier or bar discount, and a member who lets it lapse keeps their tier and points.</p>
+    <p>Members pay once for 12 months. Nothing renews automatically: 30 days before expiry the member gets a reminder and can buy another year from their pass page or at the bar.</p>
+    <div class="note"><b>Benefits are managed in the admin.</b> The list below is the launch configuration, not a fixed menu. Admins can add, edit, pause or retire benefits and change their limits, cost and eligibility at any time. One rule protects members and the business: a change applies to memberships bought after it. Anyone who has already paid keeps the benefits they were sold until their 12 months end, unless the terms allow otherwise.</div>
+  </section>
+
+  <section>
+    <div class="prose stack">
+      <h2>Cost model</h2>
+      <p class="muted">Untick a benefit to see the package without it. Each cost is a figure we can check against a quote or invoice, such as a drink's cost price. "Expected" uses typical take-up. "High" assumes most members use everything.</p>
+    </div>
+
+    <div class="inputs" role="group" aria-label="Revenue assumptions">
+      <div class="field">
+        <label for="in-price">Price paid by the member (£)</label>
+        <div class="row"><input type="number" id="in-price" step="0.01" min="0"></div>
+      </div>
+      <div class="field">
+        <label for="in-vat">VAT-registered (price includes 20% VAT)</label>
+        <div class="row"><input type="checkbox" id="in-vat"><span class="muted" id="vat-note"></span></div>
+      </div>
+      <div class="field">
+        <label for="in-fee">Card payment fee (% of price)</label>
+        <div class="row"><input type="number" id="in-fee" step="0.05" min="0"></div>
+      </div>
+      <div class="field">
+        <label for="in-refund">Refund allowance (% of members)</label>
+        <div class="row"><input type="number" id="in-refund" step="0.5" min="0"></div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <table aria-label="Benefit cost model">
+        <thead>
+          <tr>
+            <th scope="col">In</th>
+            <th scope="col">Benefit</th>
+            <th scope="col" class="r">Unit cost £</th>
+            <th scope="col" class="r">Uses / yr</th>
+            <th scope="col" class="r">Expected £</th>
+            <th scope="col" class="r">High unit £</th>
+            <th scope="col" class="r">High uses</th>
+            <th scope="col" class="r">High £</th>
+          </tr>
+        </thead>
+        <tbody id="cost-body"></tbody>
+      </table>
+    </div>
+
+    <div class="toolbar">
+      <p class="muted" style="font-size: var(--step--1)">Your edits are kept in this browser only. Other viewers see the defaults.</p>
+      <button type="button" id="reset">Reset to defaults</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="prose stack">
+      <h2>What the programme makes at different sizes</h2>
+      <p class="muted">Net contribution = members × (what we keep − benefit cost) − fixed costs. This leaves out the extra bar and ticket spend from members, which we should measure after launch rather than assume.</p>
+    </div>
+    <div class="scroll">
+      <table aria-label="Contribution by member count">
+        <thead>
+          <tr>
+            <th scope="col">Members</th>
+            <th scope="col" class="r">Gross receipts</th>
+            <th scope="col" class="r">We keep</th>
+            <th scope="col" class="r">Benefit cost (expected)</th>
+            <th scope="col" class="r">Contribution (expected)</th>
+            <th scope="col" class="r">Contribution (high)</th>
+          </tr>
+        </thead>
+        <tbody id="scale-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="prose stack">
+      <h2>Benefit register</h2>
+      <p class="muted">Each benefit has an owner, a limit, an eligibility rule and a fulfilment routine, as the brief requires before anything goes on sale. These are the starting values for each benefit's admin record. "System" lists what the platform has to do, mapped to the build plan in the audit.</p>
+    </div>
+
+    <div class="register">
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">01</span>Numbered Founding card</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Membership lead (founder)</dd></div>
+          <div><dt>Limit</dt><dd>500 numbered cards in the founding run; one per member; replacement £5</dd></div>
+          <div><dt>Eligibility</dt><dd>Issued once payment is confirmed</dd></div>
+          <div><dt>Cost basis</dt><dd>Premium printed NTAG215 card, about £3.50 at a 500-card run</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>The system assigns the next free number when payment is confirmed.</li>
+          <li>Staff write the card in-house with the NFC Bridge and link it to the member.</li>
+          <li>The member collects it at their next event. The digital pass works from day one.</li>
+        </ol>
+        <p class="sys"><b>System:</b> founding number on the entitlement record; reuse of existing card registration and the Bridge write function.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">02</span>Priority entry lane</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Door lead</dd></div>
+          <div><dt>Limit</dt><dd>Faster queue only; security and capacity checks still apply</dd></div>
+          <div><dt>Eligibility</dt><dd>Active membership at the moment of the scan</dd></div>
+          <div><dt>Cost basis</dt><dd>None beyond signage</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>Separate lane signed "V•PRIVILEGE".</li>
+          <li>Staff scan the card; the check-in screen shows a Founding badge, or "expired" if lapsed.</li>
+        </ol>
+        <p class="sys"><b>System:</b> Founding badge on the existing event-day check-in screen.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">03</span>48-hour early ticket access</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Events lead</dd></div>
+          <div><dt>Limit</dt><dd>Up to 30% of capacity held for presale; 2 tickets per member</dd></div>
+          <div><dt>Eligibility</dt><dd>Active members at the time the presale opens</dd></div>
+          <div><dt>Cost basis</dt><dd>None. It brings ticket revenue forward</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>The events lead sets the presale window when the event is announced.</li>
+          <li>Members get the presale link on their pass page and by email.</li>
+          <li>Unsold presale tickets go on general sale when the window closes.</li>
+        </ol>
+        <p class="sys"><b>System:</b> presale link per event. Depends on the ticketing platform; confirm whether it supports access codes.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">04</span>Welcome drink</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Bar manager</dd></div>
+          <div><dt>Limit</dt><dd>Once per member; claim within 90 days; from the selected drinks list</dd></div>
+          <div><dt>Eligibility</dt><dd>18+ (age confirmed at sign-up and by staff where in doubt)</dd></div>
+          <div><dt>Cost basis</dt><dd>Cost price of a selected drink, about £1.50</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>Issued as reward points worth one selected drink (reward balance only).</li>
+          <li>The member claims it on their pass; staff scan the card at the till.</li>
+          <li>The till shows the open claim; staff pour and mark it redeemed. A second scan shows "already used".</li>
+        </ol>
+        <p class="sys"><b>System:</b> reward ledger and claim states from the redemption build. Never touches status points.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">05</span>Birthday drink</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Bar manager</dd></div>
+          <div><dt>Limit</dt><dd>Once per membership year, during the birthday month</dd></div>
+          <div><dt>Eligibility</dt><dd>18+; birth month on the profile</dd></div>
+          <div><dt>Cost basis</dt><dd>Cost price of a selected drink, about £1.50</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>The claim appears on the pass on the first day of the birthday month.</li>
+          <li>Redeemed at the till exactly like the welcome drink.</li>
+        </ol>
+        <p class="sys"><b>System:</b> new birth-month field (month only, to keep personal data to a minimum); monthly job to open claims.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">06</span>Two guest passes a year</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Door lead</dd></div>
+          <div><dt>Limit</dt><dd>2 per membership year; 1 per event; not valid at events marked "no guest passes"</dd></div>
+          <div><dt>Eligibility</dt><dd>Guest named on the pass at least 24 hours before; guest must be 18+</dd></div>
+          <div><dt>Cost basis</dt><dd>Nothing when the event has space; a lost ticket sale when it would have sold out</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>The member registers the guest's name and email for a specific event.</li>
+          <li>The guest gets a single-use code; the door scans it and it can't be used again.</li>
+          <li>Next day the guest gets an invitation to join free, which makes this an acquisition channel.</li>
+        </ol>
+        <p class="sys"><b>System:</b> guest-pass reward type with unique codes and door verification; feeds referral tracking.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">07</span>Members' night, four a year</h3><span class="pill fixed">Fixed cost</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Events lead with talent management</dd></div>
+          <div><dt>Limit</dt><dd>80 places per night, first come first served; member only</dd></div>
+          <div><dt>Eligibility</dt><dd>Active members who RSVP on their pass</dd></div>
+          <div><dt>Cost basis</dt><dd>Run as a 60–90 minute early-doors session before an existing event: about £150 for talent and staff time</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>Showcase, listening session or DJ set by a VersaTalent artist, announced 3 weeks ahead.</li>
+          <li>Members RSVP on their pass; places are released when they cancel.</li>
+          <li>Door check-in by card scan. Content is captured for the brand's channels.</li>
+        </ol>
+        <p class="sys"><b>System:</b> RSVP with a capacity cap on the event; existing event-day check-in.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">08</span>Artist experience ballots</h3><span class="pill fixed">Fixed cost</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Talent manager</dd></div>
+          <div><dt>Limit</dt><dd>4 ballots a year, about 5 winners each</dd></div>
+          <div><dt>Eligibility</dt><dd>Active members; one entry per member per ballot</dd></div>
+          <div><dt>Cost basis</dt><dd>About £50 per experience (artist thank-you or merchandise)</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>The artist agrees the experience first: meet-and-greet, soundcheck access or a photo session.</li>
+          <li>Members enter on their pass; the draw is random and recorded.</li>
+          <li>Winners confirm within 48 hours or the place is redrawn.</li>
+        </ol>
+        <p class="sys"><b>System:</b> ballot entry, random draw and an audit record of the draw.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">09</span>Members' updates and Founding wall</h3><span class="pill core">Launch pack</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Marketing lead</dd></div>
+          <div><dt>Limit</dt><dd>One update a month; wall shows first name and initial, opt-in only</dd></div>
+          <div><dt>Eligibility</dt><dd>Updates go only to members who gave email consent</dd></div>
+          <div><dt>Cost basis</dt><dd>Staff time, about 2 hours a month</dd></div>
+        </dl>
+        <ol class="steps">
+          <li>First look at line-ups and behind-the-scenes from the talent.</li>
+          <li>The wall on the website lists Founding Members by number.</li>
+        </ol>
+        <p class="sys"><b>System:</b> uses the retention email build; opt-in flag for the wall.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">10</span>No booking fee</h3><span class="pill opt">Optional, off by default</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Events lead</dd></div>
+          <div><dt>Limit</dt><dd>VersaTalent-promoted events only; 2 tickets per event</dd></div>
+          <div><dt>Eligibility</dt><dd>Active members</dd></div>
+          <div><dt>Cost basis</dt><dd>Forgone fee of about £1.50 a ticket, only if VersaTalent keeps that fee</dd></div>
+        </dl>
+        <p class="sys"><b>Why it's optional:</b> it costs real money on every ticket and depends on what the ticketing platform allows.</p>
+      </article>
+
+      <article class="benefit">
+        <div class="benefit-head"><h3><span class="idx">11</span>Free cloakroom</h3><span class="pill opt">Optional, off by default</span></div>
+        <dl class="facts">
+          <div><dt>Owner</dt><dd>Venue liaison</dd></div>
+          <div><dt>Limit</dt><dd>Venues that allow it</dd></div>
+          <div><dt>Eligibility</dt><dd>Active members</dd></div>
+          <div><dt>Cost basis</dt><dd>About £2 a use if we pay the venue's charge</dd></div>
+        </dl>
+        <p class="sys"><b>Why it's optional:</b> cost scales with every visit, and we don't control it across venues. It works better as a reward members spend points on.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="two">
+      <div class="panel">
+        <h3>What the membership does not include</h3>
+        <ul class="clean">
+          <li>No tier. Gold and Black are still earned by attending and spending.</li>
+          <li>No extra bar discount. The member's earned tier discount applies as usual.</li>
+          <li>No status points. Welcome and birthday drinks use the reward balance.</li>
+          <li>No automatic renewal. It is a one-off payment for 12 months; members get a reminder 30 days before expiry and choose whether to buy another year.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>For the membership terms</h3>
+        <ul class="clean">
+          <li>Price, the 12-month period and the full benefit list, shown before payment.</li>
+          <li>The 14-day right to cancel online purchases, and how benefits already used are deducted. Confirm the wording with an adviser.</li>
+          <li>Every benefit is subject to capacity and the limits above.</li>
+          <li>How benefit changes work: VersaTalent may change the benefit list for future purchases; benefits already sold are honoured for the paid 12 months. Confirm the wording with an adviser.</li>
+          <li>One-off payment: no card details are kept and nothing is charged again.</li>
+          <li>What happens at expiry: paid benefits stop, while tier and points stay.</li>
+          <li>Age limits on alcohol benefits.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="prose">
+    <h2>Figures to confirm before approval</h2>
+    <div class="scroll">
+      <table aria-label="Open assumptions">
+        <thead><tr><th scope="col">Assumption</th><th scope="col">Default used</th><th scope="col">Who confirms</th></tr></thead>
+        <tbody>
+          <tr><td>VAT registration</td><td>Registered (price includes VAT)</td><td>Accountant</td></tr>
+          <tr><td>Online card fee</td><td>2.5%</td><td>SumUp account</td></tr>
+          <tr><td>Cost price of a selected drink</td><td>£1.50</td><td>Bar manager</td></tr>
+          <tr><td>Founding card unit price</td><td>£3.50</td><td>Card supplier quote</td></tr>
+          <tr><td>Ticket value lost when a guest pass is used at a sell-out</td><td>£10, at 20% of events</td><td>Events lead</td></tr>
+          <tr><td>Members' night cost</td><td>£150 as early doors</td><td>Events lead</td></tr>
+          <tr><td>Presale support on the ticketing platform</td><td>Assumed available</td><td>Events lead</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Prepared from the VersaTalent loyalty audit (docs/LOYALTY_AUDIT.md). The price is set by the business. Every other figure is an assumption to be replaced with quotes and invoices. This sheet shows contribution, not profit: it excludes staff salaries and the uplift in bar and ticket spend.
+  </footer>
+</div>
+
+<script>
+(function () {
+  const STORE_KEY = "vprivilege-sheet-v1";
+  const DEFAULTS = {
+    price: 29.99, vat: true, feePct: 2.5, refundPct: 3,
+    items: [
+      { id: "card", group: "Per member", name: "Numbered Founding card", basis: "Printed NTAG215, one per member", kind: "var", on: true, unit: 3.5, uses: 1, unitHigh: 3.5, usesHigh: 1 },
+      { id: "welcome", group: "Per member", name: "Welcome drink", basis: "Drink cost price × share who claim it", kind: "var", on: true, unit: 1.5, uses: 0.8, unitHigh: 1.5, usesHigh: 1 },
+      { id: "birthday", group: "Per member", name: "Birthday drink", basis: "Drink cost price × share who claim it", kind: "var", on: true, unit: 1.5, uses: 0.6, unitHigh: 1.5, usesHigh: 1 },
+      { id: "guest", group: "Per member", name: "Guest passes (2)", basis: "£10 lost ticket × share used at sell-outs (20% / 50%)", kind: "var", on: true, unit: 2, uses: 1.2, unitHigh: 5, usesHigh: 2 },
+      { id: "priority", group: "Per member", name: "Priority entry, early tickets, updates, wall", basis: "No direct cost", kind: "var", on: true, unit: 0, uses: 1, unitHigh: 0, usesHigh: 1 },
+      { id: "fee", group: "Per member", name: "No booking fee (optional)", basis: "£1.50 forgone per ticket", kind: "var", on: false, unit: 1.5, uses: 3, unitHigh: 1.5, usesHigh: 6 },
+      { id: "cloak", group: "Per member", name: "Free cloakroom (optional)", basis: "£2 per visit", kind: "var", on: false, unit: 2, uses: 2, unitHigh: 2, usesHigh: 5 },
+      { id: "nights", group: "Fixed per year", name: "Members' nights", basis: "Early-doors session, cost per night × nights", kind: "fixed", on: true, unit: 150, uses: 4, unitHigh: 150, usesHigh: 4 },
+      { id: "ballots", group: "Fixed per year", name: "Artist experience ballots", basis: "Cost per experience × ballots", kind: "fixed", on: true, unit: 50, uses: 4, unitHigh: 50, usesHigh: 4 },
+      { id: "launch", group: "Fixed per year", name: "Launch marketing", basis: "Social assets, printed signage", kind: "fixed", on: true, unit: 250, uses: 1, unitHigh: 250, usesHigh: 1 },
+      { id: "artwork", group: "Fixed per year", name: "Card artwork and setup", basis: "One-off design and print setup", kind: "fixed", on: true, unit: 100, uses: 1, unitHigh: 100, usesHigh: 1 }
+    ]
+  };
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  let state = clone(DEFAULTS);
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (saved && Array.isArray(saved.items) && saved.items.length === DEFAULTS.items.length) state = saved;
+  } catch (e) { /* storage unavailable: use defaults */ }
+
+  const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} };
+  const gbp = (n, dp = 2) => (n < 0 ? "−£" : "£") + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 ? n : 0; };
+
+  function model() {
+    const netOfVat = state.vat ? state.price / 1.2 : state.price;
+    const fee = state.price * state.feePct / 100;
+    const refunds = netOfVat * state.refundPct / 100;
+    const keep = netOfVat - fee - refunds;
+    let varExp = 0, varHigh = 0, fixedExp = 0, fixedHigh = 0;
+    state.items.forEach((i) => {
+      if (!i.on) return;
+      const e = i.unit * i.uses, h = i.unitHigh * i.usesHigh;
+      if (i.kind === "var") { varExp += e; varHigh += h; } else { fixedExp += e; fixedHigh += h; }
+    });
+    return { netOfVat, keep, varExp, varHigh, fixedExp, fixedHigh };
+  }
+  const breakEven = (keep, v, f) => (keep - v) > 0 ? Math.ceil(f / (keep - v)) : null;
+
+  const body = document.getElementById("cost-body");
+  function renderTable() {
+    let html = "", group = "";
+    state.items.forEach((i, idx) => {
+      if (i.group !== group) { group = i.group; html += `<tr class="group"><td colspan="8">${group}</td></tr>`; }
+      const f = (field, step) => `<input type="number" id="${i.id}-${field}" data-idx="${idx}" data-field="${field}" step="${step}" min="0" value="${i[field]}" aria-label="${i.name}: ${field}">`;
+      const usesStep = i.kind === "var" ? "0.1" : "1";
+      html += `<tr class="${i.on ? "" : "off"}" id="row-${i.id}">
+        <td><input type="checkbox" id="${i.id}-on" data-idx="${idx}" data-field="on" ${i.on ? "checked" : ""} aria-label="Include ${i.name}"></td>
+        <td><div class="bname">${i.name}</div><div class="basis">${i.basis}</div></td>
+        <td class="r">${f("unit", "0.5")}</td>
+        <td class="r">${f("uses", usesStep)}</td>
+        <td class="r num" id="${i.id}-exp"></td>
+        <td class="r">${f("unitHigh", "0.5")}</td>
+        <td class="r">${f("usesHigh", usesStep)}</td>
+        <td class="r num" id="${i.id}-high"></td>
+      </tr>`;
+    });
+    html += `<tr class="total"><td></td><td>Benefit cost per member</td><td></td><td></td><td class="r num" id="t-var"></td><td></td><td></td><td class="r num" id="t-var-high"></td></tr>`;
+    html += `<tr class="total"><td></td><td>Fixed cost per year</td><td></td><td></td><td class="r num" id="t-fixed"></td><td></td><td></td><td class="r num" id="t-fixed-high"></td></tr>`;
+    body.innerHTML = html;
+  }
+
+  function update() {
+    const m = model();
+    state.items.forEach((i) => {
+      document.getElementById(`${i.id}-exp`).textContent = gbp(i.unit * i.uses);
+      document.getElementById(`${i.id}-high`).textContent = gbp(i.unitHigh * i.usesHigh);
+      document.getElementById(`row-${i.id}`).className = i.on ? "" : "off";
+    });
+    document.getElementById("t-var").textContent = gbp(m.varExp);
+    document.getElementById("t-var-high").textContent = gbp(m.varHigh);
+    document.getElementById("t-fixed").textContent = gbp(m.fixedExp, 0);
+    document.getElementById("t-fixed-high").textContent = gbp(m.fixedHigh, 0);
+
+    document.getElementById("vat-note").textContent = state.vat ? `net ${gbp(m.netOfVat)}` : "no VAT deducted";
+    document.getElementById("s-net").textContent = gbp(m.keep);
+    document.getElementById("s-var").textContent = gbp(m.varExp);
+    document.getElementById("s-var-high").textContent = `high scenario ${gbp(m.varHigh)}`;
+    document.getElementById("s-fixed").textContent = gbp(m.fixedExp, 0);
+    const be = breakEven(m.keep, m.varExp, m.fixedExp), beH = breakEven(m.keep, m.varHigh, m.fixedHigh);
+    document.getElementById("s-be").textContent = be === null ? "Never" : `${be} members`;
+    document.getElementById("s-be-high").textContent = beH === null ? "high scenario: never breaks even" : `high scenario ${beH} members`;
+
+    const rows = [50, 100, 250, 500].map((n) => {
+      const exp = n * (m.keep - m.varExp) - m.fixedExp;
+      const high = n * (m.keep - m.varHigh) - m.fixedHigh;
+      return `<tr><td class="num">${n}</td><td class="r num">${gbp(n * state.price, 0)}</td><td class="r num">${gbp(n * m.keep, 0)}</td><td class="r num">${gbp(n * m.varExp, 0)}</td>
+        <td class="r num ${exp >= 0 ? "pos" : "neg"}">${gbp(exp, 0)}</td><td class="r num ${high >= 0 ? "pos" : "neg"}">${gbp(high, 0)}</td></tr>`;
+    });
+    document.getElementById("scale-body").innerHTML = rows.join("");
+  }
+
+  function bindTop() {
+    const price = document.getElementById("in-price"), vat = document.getElementById("in-vat");
+    const fee = document.getElementById("in-fee"), refund = document.getElementById("in-refund");
+    price.value = state.price; vat.checked = state.vat; fee.value = state.feePct; refund.value = state.refundPct;
+    price.oninput = () => { state.price = num(price.value); save(); update(); };
+    vat.onchange = () => { state.vat = vat.checked; save(); update(); };
+    fee.oninput = () => { state.feePct = num(fee.value); save(); update(); };
+    refund.oninput = () => { state.refundPct = num(refund.value); save(); update(); };
+  }
+
+  body.addEventListener("input", (e) => {
+    const t = e.target; if (!t.dataset.field) return;
+    const item = state.items[+t.dataset.idx];
+    if (t.dataset.field === "on") item.on = t.checked; else item[t.dataset.field] = num(t.value);
+    save(); update();
+  });
+  body.addEventListener("change", (e) => {
+    const t = e.target; if (t.dataset.field !== "on") return;
+    state.items[+t.dataset.idx].on = t.checked; save(); update();
+  });
+  document.getElementById("reset").addEventListener("click", () => {
+    state = clone(DEFAULTS); save(); bindTop(); renderTable(); update();
+  });
+
+  bindTop(); renderTable(); update();
+})();
+</script>

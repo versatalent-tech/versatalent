@@ -1,3 +1,4 @@
+import type { PublicProfileStat } from '@/lib/talents/profile-stats';
 // Database model types
 
 export type UserRole = 'artist' | 'vip' | 'staff' | 'admin';
@@ -80,7 +81,17 @@ export interface CheckInWithDetails extends CheckIn {
 // VIP System Types
 export type VIPTier = 'silver' | 'gold' | 'black';
 export type VIPStatus = 'active' | 'suspended' | 'cancelled';
-export type PointsSource = 'event_checkin' | 'consumption' | 'manual_adjust' | 'tier_bonus';
+export type PointsSource =
+  | 'event_checkin'
+  | 'consumption'
+  | 'manual_adjust'
+  | 'tier_bonus'
+  | 'opening_balance'
+  | 'reward_claim'
+  | 'reward_release'
+  | 'order_refund'
+  | 'year_end'
+  | 'ticket_purchase';
 
 export interface VIPMembership {
   id: string;
@@ -225,6 +236,8 @@ export interface CreateVIPConsumptionRequest {
   amount: number;
   currency?: string;
   description?: string;
+  /** Set for till orders, so a refund can find it */
+  order_id?: string;
 }
 
 export interface ManualPointsAdjustmentRequest {
@@ -463,6 +476,8 @@ export interface Talent {
   social_links?: SocialLinks;
   portfolio?: PortfolioItem[];
   industry_details?: IndustryDetails; // Industry-specific fields
+  /** Profile hero figures; only on GET /api/talents/[id] */
+  stats?: PublicProfileStat[];
   created_at: Date;
   updated_at: Date;
   // camelCase aliases the repository still returns for older components
@@ -517,7 +532,7 @@ export interface UpdateTalentRequest {
 // POS (Point of Sale) System Types
 // ============================================
 
-export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'failed';
+export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'failed' | 'refunded';
 
 export interface Product {
   id: string;

@@ -30,8 +30,11 @@ import {
   Trophy,
   UserCog,
   Users,
+  Crown,
+  Ticket,
 } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
+import { MyTasks } from "@/components/tasks/MyTasks";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { formatCurrency, PAYMENT_METHOD_LABELS } from "@/lib/utils/formatting";
 import type {
@@ -71,11 +74,17 @@ const SECTIONS = [
     links: [
       { title: "NFC cards & check-ins", description: "Users, cards, events and scans", icon: Nfc, href: "/admin/nfc" },
       { title: "VIP programme", description: "Tiers, points and benefits", icon: Trophy, href: "/admin/vip" },
+      { title: "Membership cards", description: "Online applications and cards to post", icon: CreditCard, href: "/admin/membership-cards" },
+      { title: "V•PRIVILEGE Founding", description: "Paid memberships, benefits and payments", icon: Crown, href: "/admin/founding-members" },
+      { title: "Rewards & points", description: "Rewards, claims, costs and balance checks", icon: Gift, href: "/admin/rewards" },
+      { title: "Member outreach", description: "Who to contact: welcome, renewals, inactive", icon: Mail, href: "/admin/outreach" },
+      { title: "Referrals", description: "Member invites and points for referrers", icon: Users, href: "/admin/referrals" },
     ],
   },
   {
     title: "Sales",
     links: [
+      { title: "Tickets", description: "Online ticket sales, buyers and door lists", icon: Ticket, href: "/admin/tickets" },
       { title: "Products & stock", description: "Till catalogue and inventory", icon: Package, href: "/admin/pos/products" },
       { title: "Orders", description: "Payments, refunds and history", icon: Receipt, href: "/admin/pos/orders" },
       { title: "SumUp card payments", description: "Account and card readers", icon: CreditCard, href: "/admin/pos/sumup" },
@@ -251,6 +260,9 @@ function ScopedView({
   return (
     <>
       <AttentionList items={summary.attention} />
+
+      {/* People without the CRM (road managers) see the tasks given to them here */}
+      {!canUseCrm && <MyTasks endpoint="/api/tasks/mine" title="Your tasks" />}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">{canUseCrm ? "Bookings & sales" : "Bookings"}</h2>

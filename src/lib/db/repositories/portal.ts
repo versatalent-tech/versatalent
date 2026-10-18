@@ -46,7 +46,12 @@ function dateOnly(value: unknown): string | null {
 // ---------------------------------------------------------------------------
 
 const talentBookingSelect = () => sql`
-  SELECT b.*, CASE WHEN b.client_visible_to_talent THEN o.name ELSE NULL END AS visible_client_name
+  SELECT b.*, CASE WHEN b.client_visible_to_talent THEN o.name ELSE NULL END AS visible_client_name,
+    COALESCE(
+      (SELECT json_agg(json_build_object('id', doc.id, 'kind', doc.kind, 'filename', doc.filename) ORDER BY doc.created_at)
+         FROM documents doc WHERE doc.booking_id = b.id AND doc.visible_to_talent),
+      '[]'
+    ) AS shared_documents
   FROM bookings b
   LEFT JOIN organisations o ON o.id = b.organisation_id
 `;
@@ -74,6 +79,7 @@ function mapTalentBooking(row: any): TalentBooking {
     payout: payoutState({ status: row.status, ends_at: iso(row.ends_at)!, fee_cents: fee, paid_at: iso(row.talent_paid_at) }),
     paid_at: iso(row.talent_paid_at),
     paid_cents: row.talent_paid_cents === null || row.talent_paid_cents === undefined ? null : Number(row.talent_paid_cents),
+    documents: row.shared_documents ?? [],
   };
 }
 
@@ -210,6 +216,11 @@ const SOURCE_LABELS: Record<string, string> = {
   consumption: 'Purchase at an event',
   manual_adjust: 'Adjustment by VersaTalent',
   tier_bonus: 'Tier bonus',
+  opening_balance: 'Opening balance',
+  reward_claim: 'Reward claimed',
+  reward_release: 'Reward points returned',
+  order_refund: 'Purchase refunded',
+  ticket_purchase: 'Tickets bought online',
 };
 
 async function listPointsHistory(userId: string, limit = 30): Promise<PointsEntry[]> {
@@ -218,7 +229,7 @@ async function listPointsHistory(userId: string, limit = 30): Promise<PointsEntr
     FROM vip_points_log l
     LEFT JOIN checkins c ON l.source = 'event_checkin' AND c.id::text = l.metadata->>'checkin_id'
     LEFT JOIN nfc_events ne ON ne.id = c.event_id
-    WHERE l.user_id = ${userId}
+    WHERE l.user_id = ${userId} AND l.ledger = 'reward'
     ORDER BY l.created_at DESC
     LIMIT ${limit}
   `;

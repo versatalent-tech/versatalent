@@ -1,49 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNFCCardByUID } from '@/lib/db/repositories/nfc-cards';
+import { getTalentById } from '@/lib/db/repositories/talents';
 
+/**
+ * GET /api/nfc/[card_uid] - public: what a phone tapping this card should open.
+ *
+ * Returns only what that page needs, by card type:
+ *   artist: the talent's public profile id (never the user account id, which
+ *           would unlock member data)
+ *   vip:    the member's pass id (it's their own card)
+ *   staff / guest: just the type
+ */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ card_uid: string }> }
 ) {
   try {
     const { card_uid } = await params;
-
-    // Get NFC card with user data
     const card = await getNFCCardByUID(card_uid);
 
-    if (!card) {
-      return NextResponse.json(
-        { error: 'NFC card not found' },
-        { status: 404 }
-      );
+    if (!card || !card.user?.id) {
+      return NextResponse.json({ error: 'NFC card not found' }, { status: 404 });
+    }
+    if (!card.is_active || card.status === 'blocked') {
+      return NextResponse.json({ error: 'This NFC card has been deactivated' }, { status: 403 });
     }
 
-    if (!card.is_active) {
-      return NextResponse.json(
-        { error: 'This NFC card has been deactivated' },
-        { status: 403 }
-      );
+    switch (card.type) {
+      case 'artist':
+      {
+        if (!card.user.talent_id) {
+          return NextResponse.json({ error: "This card isn't linked to a talent profile yet" }, { status: 404 });
+        }
+        const talent = await getTalentById(card.user.talent_id);
+        if (!talent?.is_active) {
+          return NextResponse.json({ error: 'This talent is no longer represented by VersaTalent.' }, { status: 404 });
+        }
+        return NextResponse.json({ type: 'artist', talent_id: talent.id });
+      }
+      case 'vip':
+        return NextResponse.json({ type: 'vip', member_id: card.user.id, name: card.user.name });
+      default:
+        return NextResponse.json({ type: card.type });
     }
-
-    // Return card data with user info (exclude sensitive data)
-    const { user, ...cardData } = card;
-    const sanitizedUser = {
-      id: user.id,
-      name: user.name,
-      role: user.role,
-      avatar_url: user.avatar_url,
-      talent_id: user.talent_id
-    };
-
-    return NextResponse.json({
-      ...cardData,
-      user: sanitizedUser
-    });
   } catch (error) {
     console.error('Error fetching NFC card:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch NFC card' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch NFC card' }, { status: 500 });
   }
 }

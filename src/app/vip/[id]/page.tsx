@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FoundingPassCard } from "@/components/membership/FoundingPassCard";
+import { RewardsPassCard } from "@/components/loyalty/RewardsPassCard";
+import { ReferralPassCard } from "@/components/loyalty/ReferralPassCard";
+import { POINT_SOURCE_LABELS } from "@/lib/loyalty/types";
 import type { TierProgress } from "@/lib/vip-tier-rules";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -319,6 +323,10 @@ export default function VIPPassPage() {
               </div>
             </div>
 
+            <FoundingPassCard memberId={vipUser.id} />
+            <RewardsPassCard memberId={vipUser.id} />
+            <ReferralPassCard memberId={vipUser.id} />
+
             {/* Activity Tabs */}
             <div className="bg-white rounded-2xl shadow-2xl p-8">
               <Tabs defaultValue="benefits" className="w-full">
@@ -398,7 +406,7 @@ export default function VIPPassPage() {
                             )}
                             <div>
                               <div className="font-semibold">
-                                {log.source.replace('_', ' ').toUpperCase()}
+                                {(POINT_SOURCE_LABELS[log.source] ?? log.source.replace('_', ' ')).toUpperCase()}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {new Date(log.created_at).toLocaleDateString()}

@@ -26,8 +26,39 @@ export default function AdminOrdersPage() {
     pending: 0,
     paid: 0,
     cancelled: 0,
-    failed: 0
+    failed: 0,
+    refunded: 0
   });
+  const [refunding, setRefunding] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Refund the money in SumUp (or as cash) first; this records it and takes back the points
+  const refund = async (order: POSOrder) => {
+    const reason = window.prompt(
+      `Refund order #${order.id.slice(0, 8)} (${formatCurrency(order.total_cents, order.currency)})?\n\nRefund the money in SumUp (or as cash) first. This returns the stock and takes back any points the order earned.\n\nReason (optional):`
+    );
+    if (reason === null) return;
+    setRefunding(order.id);
+    try {
+      const response = await fetch(`/api/pos/orders/${order.id}/refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.error || 'Refund failed');
+      setNotice({
+        ok: true,
+        text: `Order #${order.id.slice(0, 8)} refunded${body.data.points_reversed ? `; ${body.data.points_reversed} reward points taken back` : ''}.`,
+      });
+      fetchOrders();
+      fetchStats();
+    } catch (err) {
+      setNotice({ ok: false, text: err instanceof Error ? err.message : 'Refund failed' });
+    } finally {
+      setRefunding(null);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -65,7 +96,8 @@ export default function AdminOrdersPage() {
       pending: 'bg-yellow-100 text-yellow-800',
       paid: 'bg-green-100 text-green-800',
       cancelled: 'bg-gray-100 text-gray-800',
-      failed: 'bg-red-100 text-red-800'
+      failed: 'bg-red-100 text-red-800',
+      refunded: 'bg-purple-100 text-purple-800'
     };
 
     return (
@@ -142,6 +174,7 @@ export default function AdminOrdersPage() {
                   <SelectItem value="paid">Paid</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="refunded">Refunded</SelectItem>
                   <SelectItem value="failed">Failed</SelectItem>
                 </SelectContent>
               </Select>
@@ -152,6 +185,11 @@ export default function AdminOrdersPage() {
         {/* Orders List */}
         <section className="py-8">
           <div className="container px-4 mx-auto">
+            {notice && (
+              <p className={`mb-4 rounded border p-3 text-sm ${notice.ok ? 'border-green-200 bg-green-50 text-green-900' : 'border-red-200 bg-red-50 text-red-800'}`}>
+                {notice.text}
+              </p>
+            )}
             {loading ? (
               <div className="text-center py-12">Loading orders...</div>
             ) : orders.length === 0 ? (
@@ -210,6 +248,11 @@ export default function AdminOrdersPage() {
                           </p>
                         )}
                         <p className="text-xs text-gray-500">{order.currency}</p>
+                        {order.status === 'paid' && (
+                          <Button size="sm" variant="outline" className="mt-2" disabled={refunding === order.id} onClick={() => refund(order)}>
+                            {refunding === order.id ? 'Refunding…' : 'Refund'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
