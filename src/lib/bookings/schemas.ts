@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CRM_CURRENCIES } from '@/lib/crm/types';
+import { updateSchema } from '@/lib/crm/schemas';
 import { AVAILABILITY_KINDS, BOOKING_STATUSES } from './types';
 
 const optionalText = (max: number) =>
@@ -46,7 +47,7 @@ const endsAfterStart = (b: { starts_at?: string; ends_at?: string }) =>
 const endsMessage = { message: 'The end must be after the start', path: ['ends_at'] };
 
 export const bookingSchema = bookingFields.refine(endsAfterStart, endsMessage);
-export const bookingUpdateSchema = bookingFields.partial().refine(endsAfterStart, endsMessage);
+export const bookingUpdateSchema = updateSchema(bookingFields).refine(endsAfterStart, endsMessage);
 
 /** What a road manager may change */
 export const LOGISTICS_FIELDS = ['call_time', 'logistics_notes'] as const;

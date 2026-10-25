@@ -48,7 +48,7 @@ export const ticketOrderSchema = z.object({
   age_range: z.enum(AGE_RANGES).nullable().optional().or(z.literal('').transform(() => null)),
   heard_from: z.enum(keys(HEARD_FROM)).nullable().optional().or(z.literal('').transform(() => null)),
   marketing_consent: z.boolean().default(false),
-  accept_terms: z.literal(true, { errorMap: () => ({ message: 'Please accept the ticket terms to continue' }) }),
+  accept_terms: z.literal(true, { error: 'Please accept the ticket terms to continue' }),
   source: z.enum(['website', 'card_tap', 'member_pass']).default('website'),
   utm_source: optionalText(100),
   utm_medium: optionalText(100),

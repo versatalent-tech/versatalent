@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { crmContext, parseBody } from '@/lib/crm/route-helpers';
-import { organisationSchema } from '@/lib/crm/schemas';
+import { organisationSchema, updateSchema } from '@/lib/crm/schemas';
 import {
   deleteOrganisation,
   getOrganisation,
@@ -45,7 +45,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if ('response' in ctx) return ctx.response;
   const { id } = await params;
   if (!isValidUUID(id)) return ApiErrors.NotFound('Client');
-  const body = await parseBody(request, organisationSchema.partial());
+  const body = await parseBody(request, updateSchema(organisationSchema));
   if ('response' in body) return body.response;
 
   try {

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { crmContext, parseBody } from '@/lib/crm/route-helpers';
-import { dealSchema } from '@/lib/crm/schemas';
+import { dealSchema, updateSchema } from '@/lib/crm/schemas';
 import { checkDealLinks } from '@/lib/crm/deal-links';
 import { deleteDeal, getDeal, listTimeline, updateDeal } from '@/lib/db/repositories/crm';
 import { documentFileKeys } from '@/lib/db/repositories/documents';
@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const { id } = await params;
   if (!isValidUUID(id)) return ApiErrors.NotFound('Deal');
 
-  const body = await parseBody(request, dealSchema.partial());
+  const body = await parseBody(request, updateSchema(dealSchema));
   if ('response' in body) return body.response;
 
   try {

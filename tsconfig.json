@@ -27,8 +27,7 @@
         "./src/*"
       ]
     },
-    "target": "ES2017",
-    "jsxImportSource": "same-runtime/dist"
+    "target": "ES2017"
   },
   "include": [
     "**/*.ts",
