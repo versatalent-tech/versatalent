@@ -48,3 +48,6 @@ next-env.d.ts
 /e2e/results/
 /e2e/.auth/
 /.next-e2e/
+
+# bun.lock is the only lockfile (Netlify and CI install from it)
+package-lock.json
