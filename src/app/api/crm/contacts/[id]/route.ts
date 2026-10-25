@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { crmContext, parseBody } from '@/lib/crm/route-helpers';
-import { contactSchema } from '@/lib/crm/schemas';
+import { contactSchema, updateSchema } from '@/lib/crm/schemas';
 import { contactEmailTaken, deleteContact, getContact, getOrganisation, updateContact } from '@/lib/db/repositories/crm';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can } from '@/lib/auth/permissions';
@@ -15,7 +15,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if ('response' in ctx) return ctx.response;
   const { id } = await params;
   if (!isValidUUID(id)) return ApiErrors.NotFound('Contact');
-  const body = await parseBody(request, contactSchema.partial());
+  const body = await parseBody(request, updateSchema(contactSchema));
   if ('response' in body) return body.response;
 
   try {

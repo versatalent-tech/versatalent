@@ -13,8 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
-    "@auth/core": "^0.40.0",
-    "@hookform/resolvers": "^5.0.1",
+    "@hookform/resolvers": "^6.0.0",
     "@neondatabase/serverless": "^1.0.2",
     "@netlify/blobs": "^11.1.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -33,24 +32,22 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.475.0",
-    "next": "^15.2.0",
-    "next-auth": "^4.24.11",
+    "next": "^15.5.28",
+    "next-auth": "^4.24.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-grab": "latest",
     "react-hook-form": "^7.56.1",
     "react-intersection-observer": "^9.13.1",
     "react-masonry-css": "^1.0.16",
     "react-share": "^5.1.0",
     "recharts": "^3.1.0",
-    "same-runtime": "^0.0.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "yet-another-react-lightbox": "^3.23.2",
-    "zod": "^3.24.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -63,7 +60,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "postcss": "^8",
-    "sharp": "^0.34.1",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

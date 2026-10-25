@@ -828,6 +828,7 @@ export async function convertEnquiry(
         // The prospect's own choice on the booking form; otherwise we're answering their enquiry
         lawful_basis: enquiry.marketing_consent ? 'consent' : 'legitimate_interest',
         do_not_contact: false,
+        is_sole_trader: false,
         job_title: null,
         notes: null,
       });

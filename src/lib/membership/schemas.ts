@@ -29,7 +29,7 @@ export const applicationSchema = z
     plan: z.enum(['free', 'founding']).default('free'),
     /** A member's referral code (optional) */
     referral_code: z.string().trim().max(20).optional().default(''),
-    accept_terms: z.literal(true, { errorMap: () => ({ message: 'Please accept the membership terms' }) }),
+    accept_terms: z.literal(true, { error: 'Please accept the membership terms' }),
   })
   .superRefine((data, ctx) => {
     const age = ageOn(data.date_of_birth);

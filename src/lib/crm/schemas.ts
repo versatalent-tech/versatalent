@@ -153,6 +153,18 @@ export const publicEnquirySchema = z.object({
   fields: z.record(z.string().max(100), z.string().max(5000)),
 });
 
+/**
+ * Schema for a partial update (PATCH): every field optional and no defaults,
+ * so fields left out of the request stay as they are. Plain .partial() isn't
+ * enough: zod 4 still fills in .default() values, which would reset them.
+ */
+export function updateSchema<S extends z.ZodRawShape>(schema: z.ZodObject<S>) {
+  const shape = Object.fromEntries(
+    Object.entries(schema.shape).map(([key, field]) => [key, field instanceof z.ZodDefault ? field.unwrap() : field])
+  ) as S;
+  return z.object(shape).partial();
+}
+
 /** First validation message, for showing to the person */
 export function firstIssue(error: z.ZodError): string {
   const issue = error.issues[0];
