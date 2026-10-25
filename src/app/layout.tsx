@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import "lenis/dist/lenis.css";
 import "./globals.css";
 
 const geistSans = Inter({
@@ -38,7 +40,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       {/* suppressHydrationWarning: browser extensions often add attributes to <body> */}
       <body className="antialiased" suppressHydrationWarning>
-        {children}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );
