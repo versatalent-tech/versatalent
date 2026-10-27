@@ -44,9 +44,15 @@ jobs:
         with:
           node-version: 20
 
+      - uses: oven-sh/setup-bun@v2
+        if: steps.key.outputs.ready == 'true'
+        with:
+          bun-version: 1.3.14
+
+      # Install exactly what bun.lock records, as the Netlify build does
       - name: Install dependencies
         if: steps.key.outputs.ready == 'true'
-        run: npm install --no-audit --no-fund
+        run: bun install --frozen-lockfile
 
       - name: Install the test browser
         if: steps.key.outputs.ready == 'true'
