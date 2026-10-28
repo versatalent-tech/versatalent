@@ -67,8 +67,8 @@ export default function PrivacyPage() {
       <h2>Cookies</h2>
       <p>
         We don&apos;t use our own advertising or tracking cookies. Sign-in areas for our team, staff and talents use essential cookies
-        to keep you signed in. Some talent and blog pages show videos or posts embedded from services such as YouTube and
-        Instagram, which may set their own cookies under their privacy policies.
+        to keep you signed in. Our homepage, talent and blog pages show videos or posts embedded from services such as YouTube and
+        Instagram, which may set their own cookies under their privacy policies. Instagram posts only load as you scroll to them.
       </p>
     </LegalPage>
   );

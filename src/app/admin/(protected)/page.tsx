@@ -65,7 +65,7 @@ const SECTIONS = [
       { title: "Talents", description: "Profiles, portfolios and logins", icon: Users, href: "/admin/talents" },
       { title: "Events", description: "Create, publish and close events", icon: Calendar, href: "/admin/events" },
       { title: "Blog", description: "Posts with images and video", icon: PenLine, href: "/admin/blogs" },
-      { title: "Instagram", description: "Feed connection and settings", icon: Instagram, href: "/admin/instagram" },
+      { title: "Instagram", description: "Posts shown on the website", icon: Instagram, href: "/admin/instagram" },
       { title: "Newsletter", description: "Subscribers and exports", icon: Mail, href: "/admin/newsletter" },
     ],
   },

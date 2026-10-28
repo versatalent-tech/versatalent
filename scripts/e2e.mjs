@@ -116,6 +116,38 @@ function assertNotLive(url) {
   }
 }
 
+/**
+ * The copy is made from the live database, so a new migration isn't in it
+ * until it's been run on production. Migrations listed in
+ * e2e/pending-migrations.txt are run on the copy first (never on the live
+ * database: the caller has already checked). Each must be safe to run twice,
+ * and end every statement with ";" at the end of a line.
+ */
+async function applyPendingMigrations(databaseUrl) {
+  const list = path.join(ROOT, 'e2e', 'pending-migrations.txt');
+  if (!existsSync(list)) return;
+  const files = readFileSync(list, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'));
+  if (files.length === 0) return;
+
+  const { neon } = await import('@neondatabase/serverless');
+  const sql = neon(databaseUrl);
+  for (const file of files) {
+    const text = readFileSync(path.join(ROOT, 'migrations', file), 'utf8');
+    const statements = text
+      .split(/\r?\n/)
+      .filter((line) => !/^\s*--/.test(line))
+      .join('\n')
+      .split(/;\s*$/m)
+      .map((statement) => statement.trim())
+      .filter((statement) => statement && !/^(BEGIN|COMMIT)$/i.test(statement));
+    await sql.transaction(statements.map((statement) => sql.query(statement)));
+    console.log(`Ran ${file} on the test copy (not on production yet)`);
+  }
+}
+
 function run(command, args, env) {
   return new Promise((resolve) => {
     const child = spawn(command, args, { cwd: ROOT, env, stdio: 'inherit', shell: process.platform === 'win32' });
@@ -168,6 +200,7 @@ async function main() {
   }
   try {
     assertNotLive(databaseUrl);
+    await applyPendingMigrations(databaseUrl);
   } catch (error) {
     await fail(error.message);
   }
@@ -182,6 +215,7 @@ async function main() {
     SUMUP_API_BASE: 'http://127.0.0.1:4010',
     SUMUP_API_KEY: 'sup_sk_e2e_not_a_real_key',
     SUMUP_MERCHANT_CODE: 'ME2E0001',
+    INSTAGRAM_OEMBED_BASE: 'http://127.0.0.1:4011',
     NEXT_TELEMETRY_DISABLED: '1',
   };
   delete env.ANTHROPIC_API_KEY; // AI notes stay off in tests
