@@ -43,6 +43,12 @@ export default defineConfig({
       stdout: 'ignore',
     },
     {
+      command: 'node e2e/mocks/instagram.mjs',
+      url: 'http://127.0.0.1:4011/__health',
+      reuseExistingServer: false,
+      stdout: 'ignore',
+    },
+    {
       // A production build (made by scripts/e2e.mjs); E2E_DEV=1 uses `next dev` instead
       command: process.env.E2E_DEV ? `npx next dev -p ${PORT}` : `npx next start -p ${PORT}`,
       url: `http://localhost:${PORT}/privacy`,

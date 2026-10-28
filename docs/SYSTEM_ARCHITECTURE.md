@@ -264,7 +264,7 @@ src/app/
 │                                                                      │
 │  CLIENT COMPONENTS                                                   │
 │  ├── fetch() to /api/* routes                                       │
-│  ├── Custom hooks (useInstagramFeed, useAnalytics)                  │
+│  ├── Custom hooks (useAnalytics)                                    │
 │  ├── Real-time updates via polling/SSE                              │
 │  └── Form submissions with optimistic UI                            │
 │                                                                      │
@@ -294,7 +294,6 @@ src/lib/services/
 ├── analytics-service.ts       # Event and page analytics
 ├── analytics-database.ts      # Analytics data persistence
 ├── realtime-analytics.ts      # Live dashboard data
-└── instagram-service.ts       # Social media feed integration
 ```
 
 ### Authentication Services
@@ -392,7 +391,7 @@ Currently handled via:
 | `/api/analytics/events` | POST | Track user events | All Clients |
 | `/api/analytics/realtime` | GET | Live analytics data | Admin |
 | `/api/webhooks/sumup` | POST | SumUp reader payment results | SumUp |
-| `/api/instagram/feed` | GET | Instagram feed proxy | Public |
+| `/api/instagram/posts` | GET | Featured Instagram posts (homepage or one talent) | Public |
 | `/api/upload` | POST | File upload handler | Admin |
 
 ### Data Flow Direction
@@ -598,13 +597,13 @@ Currently handled via:
 
 Setup: `docs/setup/SUMUP_SETUP_GUIDE.md`.
 
-### Social Media: Instagram Graph API
+### Social Media: Instagram embeds
 
 ```
-PURPOSE: Display social feed on homepage, talent profiles
-INTEGRATION POINT: /api/instagram/feed
-CACHING: 5-minute TTL to respect API rate limits
-DATA: Media URLs, captions, engagement metrics
+PURPOSE: Show posts chosen in Admin → Instagram on the homepage and talent profiles
+INTEGRATION POINT: /api/instagram/posts (instagram_posts table, migration 039)
+DISPLAY: Instagram's own embed (instagram.com/embed.js), loaded as posts scroll into view
+CHECK: new links are checked with Instagram's public oEmbed endpoint (no token)
 ```
 
 ### NFC Hardware Integration

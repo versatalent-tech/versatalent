@@ -18,6 +18,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
+- [ ] Instagram posts (phase 1): run migration 039 on production **before** deploying, then remove it from `e2e/pending-migrations.txt`. Admin → Instagram should list the 5 carried-over posts (Deejay WG ×2, Jessica Dias ×2, João Rodolfo ×1); add Antonio Monteiro's and others' posts there, and check the homepage section and a talent profile
 - [ ] Netlify has deployed `main` (latest merge `1d28b75`); merges didn't always trigger builds in the past
 - [ ] Tasks for road managers and talents: in "Weekly Meeting DJs", give the actions to Milo Ramos and Deejay WG and add them as tasks; Milo sees them under "Your tasks" on his dashboard, William Goncalves under "Your to-dos" in the portal
 - [ ] Booking document: the photo uploaded on 16 Oct is on "Dj set + equipment" (24 Oct), not "Birthday Party"; confirm it's in the right place, or ask to move it
@@ -31,6 +32,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Set this month's KPI targets (CRM → KPIs, target icon); the nightly snapshots are already running
 
 ## 3. To build
+- [ ] Instagram phase 2: "Connect Instagram" for talents (portal) and @versatalent (admin), daily stats sync. Profile and insights permissions only, never messages or comment text. Needs a Meta developer app (business owner)
+- [ ] Instagram phase 3: insights page (engagement by talent, format, content tags, posting time)
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { FeaturedTalents } from "@/components/home/FeaturedTalents";
 import { CTASection } from "@/components/home/CTASection";
+import { InstagramSection } from "@/components/instagram/InstagramSection";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 
@@ -87,6 +88,9 @@ export default function Home() {
 
       {/* Featured Talents */}
       <FeaturedTalents />
+
+      {/* Instagram posts chosen in the admin */}
+      <InstagramSection homepage />
 
       {/* Enhanced Story Section with Background Visual */}
       <section className="py-16 bg-white relative overflow-hidden">

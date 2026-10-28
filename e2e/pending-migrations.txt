@@ -1,0 +1,4 @@
+# Migrations not yet run on the live database. The test runner runs these on
+# its copy before the tests (scripts/e2e.mjs). Remove a line once the
+# migration has been run on production.
+039_instagram_posts.sql

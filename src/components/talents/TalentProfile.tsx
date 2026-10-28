@@ -8,6 +8,7 @@ import { PortfolioSection } from "./PortfolioSection";
 import { HeroSection } from "./HeroSection";
 import { IndustryDetailsDisplay } from "./IndustryDetailsDisplay";
 import { BookTalent, type EnquirySource } from "./BookTalent";
+import { InstagramSection } from "@/components/instagram/InstagramSection";
 import type { Industry, IndustryDetails } from "@/lib/db/types";
 
 interface TalentProfileProps {
@@ -211,6 +212,9 @@ export function TalentProfile({ talent, source = "website" }: TalentProfileProps
                 />
               </div>
             )}
+
+            {/* Instagram posts chosen in the admin */}
+            <InstagramSection talentId={talent.id} instagramUrl={socialLinks?.instagram} />
 
             {/* Portfolio Section */}
             {talent.portfolio && talent.portfolio.length > 0 && (
