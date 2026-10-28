@@ -146,7 +146,8 @@ test.describe('Instagram posts on the website', () => {
     const asked = page.waitForResponse((r) => r.url().includes(`/api/instagram/posts?talent=${without.id}`));
     await page.goto(`/talents/${without.id}`);
     await asked;
-    await expect(page.getByText(without.name).first()).toBeVisible();
+    // The name is on the page more than once, some copies hidden at this size
+    await expect(page.getByText(without.name, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'On Instagram' })).toHaveCount(0);
   });
 });
