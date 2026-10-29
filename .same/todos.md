@@ -32,7 +32,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Set this month's KPI targets (CRM → KPIs, target icon); the nightly snapshots are already running
 
 ## 3. To build
-- [ ] Instagram phase 2 (built): run migration 040 on production before deploying, then remove it from `e2e/pending-migrations.txt`. Set up the Meta app and Netlify variables (`docs/INSTAGRAM_SETUP.md`), connect @versatalent in Admin → Instagram, and ask each talent to connect from their portal
+- [ ] Instagram phase 2: migration 040 is on production (29 Oct 2026). Set up the Meta app and Netlify variables (`docs/INSTAGRAM_SETUP.md`), connect @versatalent in Admin → Instagram, and ask each talent to connect from their portal
 - [ ] Instagram phase 3: insights page (engagement by talent, format, content tags, posting time)
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
