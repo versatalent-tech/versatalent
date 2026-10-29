@@ -216,6 +216,12 @@ async function main() {
     SUMUP_API_KEY: 'sup_sk_e2e_not_a_real_key',
     SUMUP_MERCHANT_CODE: 'ME2E0001',
     INSTAGRAM_OEMBED_BASE: 'http://127.0.0.1:4011',
+    // Connecting accounts goes to the pretend Instagram too, and syncs run inline
+    INSTAGRAM_MOCK_BASE: 'http://127.0.0.1:4011',
+    INSTAGRAM_APP_ID: 'e2e-instagram-app',
+    INSTAGRAM_APP_SECRET: randomBytes(24).toString('hex'),
+    INSTAGRAM_TOKEN_KEY: randomBytes(32).toString('base64'),
+    INSTAGRAM_SYNC_INLINE: '1',
     NEXT_TELEMETRY_DISABLED: '1',
   };
   delete env.ANTHROPIC_API_KEY; // AI notes stay off in tests

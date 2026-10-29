@@ -6,6 +6,7 @@ import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 import { InstagramEmbed } from "@/components/instagram/InstagramEmbed";
+import { InstagramAccounts } from "@/components/admin/InstagramAccounts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -160,12 +161,15 @@ export default function InstagramAdminPage() {
               <div className="p-2 bg-gold/10 rounded-lg">
                 <Instagram className="h-6 w-6 text-gold" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">Instagram posts</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Instagram</h1>
             </div>
             <p className="text-gray-600 mb-8">
-              Choose the posts and reels shown on the website: on each talent&apos;s profile, and on the homepage (up to
-              6). They appear as Instagram&apos;s own embeds, and changes show on the site within a few minutes.
+              Connected accounts give the team each talent&apos;s figures. Featured posts are what the website shows: on each
+              talent&apos;s profile, and on the homepage (up to 6), as Instagram&apos;s own embeds. Changes show on the site within a
+              few minutes.
             </p>
+
+            <InstagramAccounts />
 
             <Card className="mb-8">
               <CardHeader>
