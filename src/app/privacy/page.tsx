@@ -20,6 +20,7 @@ export default function PrivacyPage() {
         <li><strong>Payments:</strong> when you pay online, SumUp processes your card. We receive a payment reference and outcome, never your card details.</li>
         <li><strong>Messages:</strong> anything you send through our website forms or by email.</li>
         <li><strong>Referrals:</strong> if you join with a friend&apos;s code, we record that they referred you. They see how many friends joined and came to an event, not who.</li>
+        <li><strong>Talents&apos; connected Instagram accounts:</strong> if a talent we represent connects their Instagram professional account, we receive their username, profile picture, follower count, their posts and reels from the last 90 days with each one&apos;s caption, and the figures Instagram provides for them (views, reach, likes, comments, saves, shares, follows and profile visits). We never ask for, and can&apos;t access, their messages or the text of comments, and we can&apos;t post anything.</li>
       </ul>
 
       <h2>Why we use it, and our lawful basis</h2>
@@ -29,6 +30,7 @@ export default function PrivacyPage() {
         <li><strong>To understand who comes to our events and which promotion works</strong> (for example how many buyers heard about an event on Instagram, or come back for another), and to look up the Instagram username you gave us so we can tag or credit you: our legitimate interests.</li>
         <li><strong>To check you&apos;re 18 or over</strong>, and to keep records we&apos;re required to keep (for example payment records for tax): legal obligation.</li>
         <li><strong>To prevent fraud and misuse, keep our systems secure and improve the programme</strong>: our legitimate interests.</li>
+        <li><strong>To see how our talents&apos; Instagram posts perform</strong> and plan content and bookings with them: the talent&apos;s consent, given when they connect, which they can withdraw at any time by disconnecting in their portal or removing our access in Instagram.</li>
         <li><strong>To send you news and offers</strong> by email, text or post: only with your consent for each channel, which you can withdraw at any time.</li>
         <li><strong>To tell you about something you&apos;ve paid for</strong>, such as your Founding Membership ending: to perform our contract with you.</li>
       </ul>
@@ -54,6 +56,7 @@ export default function PrivacyPage() {
         <li>Applications that are never paid for: up to 6 months.</li>
         <li>Ticket orders: 2 years after the event for the buyer&apos;s details; unpaid orders up to 6 months; payment records 6 years.</li>
         <li>Marketing choices: until you change them.</li>
+        <li>Connected Instagram accounts: the access is deleted as soon as the account is disconnected; figures already collected are kept while we represent the talent, and deleted straight away if they ask us or Meta to delete their data.</li>
       </ul>
 
       <h2>Your rights</h2>
