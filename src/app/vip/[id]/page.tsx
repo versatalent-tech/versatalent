@@ -48,6 +48,8 @@ interface VIPMembership {
   status: string;
   created_at: string;
   progress?: TierProgress;
+  /** Reward points (points_balance) are shown only once rewards open */
+  rewards_open?: boolean;
 }
 
 interface PointsLog {
@@ -265,13 +267,15 @@ export default function VIPPassPage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-gold mb-1">
-                        {membership.points_balance}
+                  <div className={`grid grid-cols-1 ${membership.rewards_open ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
+                    {membership.rewards_open && (
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-gold mb-1">
+                          {membership.points_balance}
+                        </div>
+                        <div className="text-sm text-gray-600">Current Points</div>
                       </div>
-                      <div className="text-sm text-gray-600">Current Points</div>
-                    </div>
+                    )}
                     <div className="text-center">
                       <div className="text-4xl font-bold text-gray-900 mb-1">
                         {progress?.status_points ?? 0}

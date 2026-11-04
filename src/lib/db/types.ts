@@ -91,7 +91,8 @@ export type PointsSource =
   | 'reward_release'
   | 'order_refund'
   | 'year_end'
-  | 'ticket_purchase';
+  | 'ticket_purchase'
+  | 'points_expiry';
 
 export interface VIPMembership {
   id: string;

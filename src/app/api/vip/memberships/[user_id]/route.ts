@@ -7,6 +7,7 @@ import type { UpdateVIPMembershipRequest } from '@/lib/db/types';
 import { getCurrentSession, requireAdmin } from '@/lib/middleware/auth';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { canReadMemberData } from '@/lib/auth/member-access';
+import { getLoyaltySettings } from '@/lib/db/repositories/loyalty';
 
 // GET VIP membership by user_id
 export async function GET(
@@ -25,8 +26,9 @@ export async function GET(
     }
 
     // What the member needs to keep or reach a tier, for the VIP page
-    const progress = getTierProgress(membership, await getTierSettings());
-    return NextResponse.json({ ...membership, progress });
+    const [progress, loyalty] = await Promise.all([getTierSettings().then((s) => getTierProgress(membership, s)), getLoyaltySettings()]);
+    // Reward points build up while rewards are closed; the pass only shows them once they open
+    return NextResponse.json({ ...membership, progress, rewards_open: loyalty.rewards_open });
   } catch (error) {
     console.error('Error fetching VIP membership:', error);
     return NextResponse.json(

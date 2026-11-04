@@ -68,8 +68,9 @@ function GiveForm({ reward, userId, onDone, onError }: { reward: MemberReward; u
 }
 
 /**
- * Staff rewards: tap the member's card or type their claim code, then mark
- * a claim used, or give a reward on the spot. A used code is refused.
+ * Staff rewards: tap the member's card (or type a claim code), then confirm
+ * what they asked for on their pass (the points are taken now), or give a
+ * reward on the spot. A used claim is refused.
  */
 export default function StaffRewardsPage() {
   const [code, setCode] = useState("");
@@ -98,7 +99,8 @@ export default function StaffRewardsPage() {
 
   const { state } = useBridgeCardTaps((uid) => find({ card_uid: uid }));
 
-  const redeem = async (claimId: string, title: string) => {
+  const redeem = async (claimId: string, title: string, points: number) => {
+    if (points > 0 && !window.confirm(`Give ${title}? ${points} points will be taken from ${lookup?.member.name ?? "the member"}.`)) return;
     setBusy(claimId);
     setMessage(null);
     try {
@@ -170,19 +172,26 @@ export default function StaffRewardsPage() {
             </div>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">Ready to use</h2>
-              {lookup.claims.length === 0 && <p className="text-gray-400">Nothing claimed.</p>}
+              <h2 className="text-lg font-semibold">Asked for</h2>
+              {lookup.claims.length === 0 && <p className="text-gray-400">Nothing asked for on their pass.</p>}
               {lookup.claims.map((c) => (
                 <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/40 p-4">
                   <div>
                     <p className="text-xl font-semibold">{c.reward_title}</p>
-                    <p className="font-mono text-sm text-gray-400">{formatClaimCode(c.code)}</p>
+                    <p className="font-mono text-sm text-gray-400">
+                      {formatClaimCode(c.code)}
+                      {c.status === "requested" && c.points_due > 0 ? ` · ${c.points_due} pts when you confirm` : ""}
+                    </p>
                     {c.event && <p className="text-sm text-gray-300">{c.event.title} · {day(c.event.start_time)}</p>}
                     {c.guest_name && <p className="text-sm text-gray-300">Guest: {c.guest_name} (check ID, 18+)</p>}
                   </div>
-                  <Button onClick={() => redeem(c.id, c.reward_title)} disabled={busy === c.id} className="bg-gold px-8 py-6 text-lg text-black hover:bg-gold/90">
+                  <Button
+                    onClick={() => redeem(c.id, c.reward_title, c.status === "requested" ? c.points_due : 0)}
+                    disabled={busy === c.id}
+                    className="bg-gold px-8 py-6 text-lg text-black hover:bg-gold/90"
+                  >
                     {busy === c.id && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                    Mark used
+                    {c.status === "requested" ? "Confirm and give" : "Mark used"}
                   </Button>
                 </div>
               ))}

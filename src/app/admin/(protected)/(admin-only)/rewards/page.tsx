@@ -39,6 +39,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
 
 function SettingsPanel({ settings, onSaved }: { settings: LoyaltySettings; onSaved: (s: LoyaltySettings) => void }) {
   const [percent, setPercent] = useState(String(settings.reward_earn_percent));
+  const [months, setMonths] = useState(String(settings.reward_expiry_months));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,13 +66,17 @@ function SettingsPanel({ settings, onSaved }: { settings: LoyaltySettings; onSav
             onCheckedChange={(on) =>
               save(
                 { rewards_open: on },
-                on ? "Open rewards? Members can claim active rewards on their pass, and staff can give them." : "Close rewards? Nobody can claim; codes already claimed can still be used."
+                on ? "Open rewards? Members can ask for active rewards on their pass, and staff give them by tapping the member's card." : "Close rewards? Nobody can ask for or be given a reward; requests already made can still be confirmed."
               )
             }
           />
           <span>
             <span className="block font-medium">{settings.rewards_open ? "Rewards open" : "Rewards closed"}</span>
-            <span className="block text-xs text-gray-500">Emergency stop: closing stops new claims straight away.</span>
+            <span className="block text-xs text-gray-500">
+              {settings.rewards_open
+                ? "Emergency stop: closing stops new claims straight away."
+                : "Hidden from members. Reward points still build up from check-ins and purchases, ready for launch."}
+            </span>
           </span>
         </label>
         <div className="flex items-end gap-2">
@@ -92,9 +97,33 @@ function SettingsPanel({ settings, onSaved }: { settings: LoyaltySettings; onSav
           </Button>
         </div>
       </div>
+      <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+        <label className="text-sm">
+          <span className="mb-1 block text-xs text-gray-500">Reward points expire after (months with nothing earned or spent; 0 = never)</span>
+          <Input value={months} onChange={(e) => setMonths(e.target.value)} inputMode="numeric" className="w-24" />
+        </label>
+        <Button
+          variant="outline"
+          disabled={saving}
+          onClick={() => {
+            const value = parseInt(months, 10);
+            if (!Number.isFinite(value) || value < 0 || value > 120) return setError("Enter a number of months from 0 to 120");
+            save(
+              { reward_expiry_months: value },
+              value === 0
+                ? "Turn off points expiry? Reward points will never expire."
+                : settings.rewards_open
+                  ? `Reward points will expire for members with nothing earned or spent in the last ${value} months. Everyone gets the full ${value} months from today. Members see the date on their pass. Continue?`
+                  : `Reward points will expire after ${value} months with nothing earned or spent, counted from the day rewards open. Nothing expires before then. Continue?`
+            );
+          }}
+        >
+          <Save className="mr-2 h-4 w-4" /> Save
+        </Button>
+      </div>
       <p className="text-xs text-gray-500">
         Check-ins and purchases earn status points (they decide the tier) and reward points (to spend). Status points reset each
-        membership year; reward points don&apos;t.
+        membership year. Reward points carry over{settings.reward_expiry_months > 0 ? `, and expire after ${settings.reward_expiry_months} months with nothing earned or spent` : " and never expire"}.
       </p>
       {error && <p className="text-sm text-red-700">{error}</p>}
     </div>
@@ -390,7 +419,7 @@ function ClaimsTab({ rewards }: { rewards: RewardWithUsage[] }) {
                   <td className="px-3 py-2">
                     {CLAIM_STATUSES[c.status]}
                     <span className="block text-xs text-gray-500">
-                      {c.status === "reserved"
+                      {c.status === "reserved" || c.status === "requested"
                         ? `until ${format(new Date(c.expires_at), "d MMM")}`
                         : c.redeemed_at
                           ? format(new Date(c.redeemed_at), "d MMM HH:mm")
@@ -398,7 +427,7 @@ function ClaimsTab({ rewards }: { rewards: RewardWithUsage[] }) {
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    {c.status === "reserved" && (
+                    {(c.status === "reserved" || c.status === "requested") && (
                       <Button size="sm" variant="ghost" className="text-red-700" onClick={() => cancel(c)}>
                         Cancel
                       </Button>

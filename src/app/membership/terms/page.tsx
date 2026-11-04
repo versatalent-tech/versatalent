@@ -6,18 +6,21 @@ import { getTierSettings } from '@/lib/services/vip-tiers';
 import { getActivePointRules } from '@/lib/db/repositories/vip-point-rules';
 import { getFoundingSettings } from '@/lib/db/repositories/founding';
 import { getReferralConfig } from '@/lib/db/repositories/referrals';
+import { getLoyaltySettings } from '@/lib/db/repositories/loyalty';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'VIP Membership Terms | VersaTalent' };
 
 export default async function MembershipTermsPage() {
-  const [settings, tiers, rules, founding, referrals] = await Promise.all([
+  const [settings, tiers, rules, founding, referrals, loyalty] = await Promise.all([
     getProgrammeSettings(),
     getTierSettings(),
     getActivePointRules(),
     getFoundingSettings(),
     getReferralConfig(),
+    getLoyaltySettings(),
   ]);
+  const expiryMonths = loyalty.reward_expiry_months;
   const minOrder = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(referrals.settings.min_order_cents / 100);
   const foundingPrice = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(founding.founding_price_cents / 100);
   const fee = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(settings.card_delivery_fee_cents / 100);
@@ -79,6 +82,16 @@ export default async function MembershipTermsPage() {
           Points have no cash value and can&apos;t be sold or transferred. We may correct points added by mistake, or remove points
           linked to refunds, cancelled purchases or misuse.
         </li>
+        <li>
+          When rewards are open, you can spend reward points on them. Ask for a reward on your member pass, then tap your card at
+          the bar or door: our staff confirm it and the points are taken then, never from the pass alone.
+        </li>
+        {expiryMonths > 0 && (
+          <li>
+            Reward points expire if you don&apos;t earn or spend any for {expiryMonths} months. Your pass shows the date. Status points
+            and your tier aren&apos;t affected.
+          </li>
+        )}
       </ul>
 
       <h2>5. Tiers</h2>

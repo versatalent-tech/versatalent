@@ -136,14 +136,22 @@ async function applyPendingMigrations(databaseUrl) {
   const sql = neon(databaseUrl);
   for (const file of files) {
     const text = readFileSync(path.join(ROOT, 'migrations', file), 'utf8');
-    const statements = text
-      .split(/\r?\n/)
-      .filter((line) => !/^\s*--/.test(line))
-      .join('\n')
-      .split(/;\s*$/m)
-      .map((statement) => statement.trim())
-      .filter((statement) => statement && !/^(BEGIN|COMMIT)$/i.test(statement));
-    await sql.transaction(statements.map((statement) => sql.query(statement)));
+    // One statement per `;` at the end of a line, except inside $$ function bodies
+    const statements = [];
+    let current = [];
+    let inBody = false;
+    for (const line of text.split(/\r?\n/)) {
+      if (!inBody && /^\s*--/.test(line)) continue;
+      current.push(line);
+      if ((line.match(/\$\$/g) ?? []).length % 2 === 1) inBody = !inBody;
+      if (!inBody && /;\s*$/.test(line)) {
+        statements.push(current.join('\n').trim().replace(/;$/, ''));
+        current = [];
+      }
+    }
+    if (current.join('').trim()) statements.push(current.join('\n').trim());
+    const runnable = statements.filter((statement) => statement && !/^(BEGIN|COMMIT)$/i.test(statement));
+    await sql.transaction(runnable.map((statement) => sql.query(statement)));
     console.log(`Ran ${file} on the test copy (not on production yet)`);
   }
 }
