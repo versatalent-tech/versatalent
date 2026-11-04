@@ -188,7 +188,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           {settings.signup_open ? (
             <>
               <p className="mb-8 text-gray-600">
-                Takes two minutes. Your card is usually posted within 5 working days of payment.
+                Takes two minutes. Your card is posted within 7 to 14 working days of payment.
               </p>
               <MembershipForm
                 feeCents={settings.card_delivery_fee_cents}

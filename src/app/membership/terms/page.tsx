@@ -31,7 +31,7 @@ export default async function MembershipTermsPage() {
   const ticketPoundsPerPoint = ticketRule && ticketRule.points_per_unit > 0 ? Math.round((1 / ticketRule.points_per_unit) * 100) / 100 : null;
 
   return (
-    <LegalPage title="VersaTalent VIP Membership Terms" updated="October 2026">
+    <LegalPage title="VersaTalent VIP Membership Terms" updated="November 2026">
       <p>
         These terms explain how the VersaTalent VIP programme works. By joining you agree to them. They don&apos;t affect your
         legal rights as a consumer.
@@ -53,14 +53,15 @@ export default async function MembershipTermsPage() {
       <h2>3. Your card and delivery</h2>
       <ul>
         <li>Your VersaTalent NFC card is free. You pay {fee} towards postage and packaging when you apply.</li>
-        <li>We aim to post your card within 5 working days of payment. Your membership starts when the payment is confirmed.</li>
+        <li>We post your card within 7 to 14 working days of payment. Your membership starts when the payment is confirmed.</li>
         <li>
           Changed your mind? Tell us within 14 days of paying and we&apos;ll refund the delivery fee in full, whether or not the card
           has been posted.
         </li>
         <li>
           The card is personal to you and can&apos;t be transferred. If it&apos;s lost, stolen or damaged, tell us straight away so we
-          can block it. A replacement may need a new delivery fee.
+          can block it. A replacement card may be charged: the fee covers the new card, setting it up and posting it to you, and
+          we&apos;ll tell you the amount before we make it.
         </li>
       </ul>
 

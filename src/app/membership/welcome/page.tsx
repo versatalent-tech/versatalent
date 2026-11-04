@@ -82,7 +82,7 @@ function FoundingWelcome({ id }: { id: string }) {
           <p className="text-gray-600">
             {status.card.status === "posted"
               ? "Your card is on its way."
-              : `We'll post your card to your address (${status.card.postcode_hint}), usually within 5 working days.`}
+              : `We'll post your card to your address (${status.card.postcode_hint}) within 7 to 14 working days.`}
           </p>
         )}
         <p className="text-gray-600">Your benefits are on your member pass: tap your card with your phone to open it.</p>
@@ -205,7 +205,7 @@ function CardWelcome({ id }: { id: string }) {
         <p className="text-gray-600">
           {status.status === "posted"
             ? "Your card is on its way."
-            : `Payment received. We'll post your card to your address (${status.postcode_hint}), usually within 5 working days.`}
+            : `Payment received. We'll post your card to your address (${status.postcode_hint}) within 7 to 14 working days.`}
         </p>
         <p className="text-gray-600">
           When it arrives, bring it to our next event and tap in at the door to start collecting points.
