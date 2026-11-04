@@ -34,9 +34,10 @@ export async function GET() {
 const settingsSchema = z.object({
   rewards_open: z.boolean().optional(),
   reward_earn_percent: z.number().int().min(0).max(1000).optional(),
+  reward_expiry_months: z.number().int().min(0).max(120).optional(),
 });
 
-// PUT /api/admin/rewards - open/close claiming, reward points earned as % of status points
+// PUT /api/admin/rewards - open/close rewards, reward points earned as % of status points, points expiry
 export async function PUT(request: NextRequest) {
   const auth = await requireTeamPermission('venue.manage');
   if ('response' in auth) return auth.response;

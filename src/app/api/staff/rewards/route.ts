@@ -12,7 +12,7 @@ import {
   getRewardsForMember,
   listMemberClaims,
 } from '@/lib/db/repositories/loyalty';
-import { normaliseClaimCode, type StaffRewardLookup } from '@/lib/loyalty/types';
+import { OPEN_CLAIM_STATUSES, normaliseClaimCode, type StaffRewardLookup } from '@/lib/loyalty/types';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 
@@ -24,7 +24,7 @@ async function lookup(userId: string): Promise<StaffRewardLookup | null> {
   const [view, claims] = await Promise.all([getRewardsForMember(userId), listMemberClaims(userId)]);
   return {
     member: { id: member[0].id, name: member[0].name, tier: view.tier, reward_balance: view.balance, founding: view.founding },
-    claims: claims.filter((c) => c.status === 'reserved'),
+    claims: claims.filter((c) => OPEN_CLAIM_STATUSES.includes(c.status)),
     rewards: view.rewards,
     rewards_open: view.settings.rewards_open,
   };
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       const claim = await getClaimByCode(code);
       if (!claim) return ApiErrors.NotFound('Claim code');
       userId = claim.member.id;
-      if (claim.status !== 'reserved') {
+      if (!OPEN_CLAIM_STATUSES.includes(claim.status)) {
         claimNote =
           claim.status === 'redeemed'
             ? `Code ${code} was already used${claim.redeemed_at ? ` on ${new Date(claim.redeemed_at).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })}` : ''}.`
@@ -84,7 +84,8 @@ const actionSchema = z.discriminatedUnion('action', [
 
 /**
  * POST /api/staff/rewards
- * - redeem: mark a claim used (a second scan is refused)
+ * - redeem: confirm a member's request (its points are taken now) or mark a
+ *   reserved claim used; a second scan is refused
  * - give: claim and use a reward now for the member in front of you
  * - cancel: cancel a claim; its points go back
  */
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
         eventId: input.event_id ?? null,
         guestName: input.guest_name ?? null,
         actorId: session.userId ?? null,
-        redeemNow: true,
+        mode: 'redeem',
       });
       if ('error' in result) return ApiErrors.BadRequest(result.error);
       const claim = await getClaim(result.claimId);

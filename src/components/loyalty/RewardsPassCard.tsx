@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Gift, Loader2, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CLAIM_STATUSES, formatClaimCode, type MemberReward, type MemberRewards, type RewardClaim } from "@/lib/loyalty/types";
+import { CLAIM_STATUSES, OPEN_CLAIM_STATUSES, type MemberReward, type MemberRewards, type RewardClaim } from "@/lib/loyalty/types";
 
 const when = (value: string) =>
   new Date(value).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
@@ -35,7 +35,7 @@ function ClaimForm({ reward, memberId, onDone }: { reward: MemberReward; memberI
       if (!body.success) throw new Error(body.error);
       onDone(body.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't claim that reward");
+      setError(err instanceof Error ? err.message : "Couldn't ask for that reward");
       setSaving(false);
     }
   };
@@ -68,15 +68,20 @@ function ClaimForm({ reward, memberId, onDone }: { reward: MemberReward; memberI
       {error && <p className="text-sm text-red-700">{error}</p>}
       <Button onClick={claim} disabled={saving} className="bg-gold text-black hover:bg-gold/90">
         {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Claim{reward.point_cost > 0 ? ` for ${reward.point_cost.toLocaleString("en-GB")} points` : ""}
+        Ask for it{reward.point_cost > 0 ? ` (${reward.point_cost.toLocaleString("en-GB")} points)` : ""}
       </Button>
+      <p className="text-xs text-gray-500">
+        Nothing is taken yet. Staff tap your card to give it to you{reward.point_cost > 0 ? ", and the points are taken then" : ""}.
+      </p>
     </div>
   );
 }
 
 /**
- * Rewards on the member's pass: spendable points, rewards to claim, and
- * claim codes to show at the bar or door.
+ * Rewards on the member's pass: spendable points, and rewards to ask for.
+ * Anyone with the pass link can see this page, so nothing here spends
+ * points: staff tap the member's card to give a reward, and the points are
+ * taken then. No claim codes are shown.
  */
 export function RewardsPassCard({ memberId }: { memberId: string }) {
   const [data, setData] = useState<MemberRewards | null>(null);
@@ -93,12 +98,13 @@ export function RewardsPassCard({ memberId }: { memberId: string }) {
   useEffect(load, [load]);
 
   if (!data) return null;
-  const openClaims = data.claims.filter((c) => c.status === "reserved");
-  const pastClaims = data.claims.filter((c) => c.status !== "reserved").slice(0, 5);
+  const openClaims = data.claims.filter((c) => OPEN_CLAIM_STATUSES.includes(c.status));
+  const pastClaims = data.claims.filter((c) => !OPEN_CLAIM_STATUSES.includes(c.status)).slice(0, 5);
+  // Hidden until rewards launch (points still build up in the background)
   if (!data.rewards_open && data.claims.length === 0) return null;
 
   const cancel = async (claim: RewardClaim) => {
-    if (!window.confirm(`Cancel your ${claim.reward_title}?${claim.points_held ? ` Your ${claim.points_held} points come back.` : ""}`)) return;
+    if (!window.confirm(`Withdraw your request for ${claim.reward_title}?`)) return;
     setError(null);
     const response = await fetch(`/api/rewards/claims/${claim.id}/cancel`, {
       method: "POST",
@@ -125,11 +131,17 @@ export function RewardsPassCard({ memberId }: { memberId: string }) {
         </div>
       </div>
 
+      {data.points_expire_on && data.reward_balance > 0 && (
+        <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          Your points expire on {day(data.points_expire_on)} unless you earn or spend some before then.
+        </p>
+      )}
+
       {error && <p className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
 
       {openClaims.length > 0 && (
         <div className="mb-6 space-y-3">
-          <h3 className="font-semibold">Ready to use</h3>
+          <h3 className="font-semibold">Asked for</h3>
           {openClaims.map((c) => (
             <div
               key={c.id}
@@ -146,16 +158,22 @@ export function RewardsPassCard({ memberId }: { memberId: string }) {
                     </p>
                   )}
                   {c.guest_name && <p className="text-sm text-gray-600">Guest: {c.guest_name}</p>}
-                  <p className="text-xs text-gray-500">Use by {when(c.expires_at)}</p>
+                  <p className="text-xs text-gray-500">Until {when(c.expires_at)}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-mono text-2xl font-bold tracking-widest">{formatClaimCode(c.code)}</p>
-                  <p className="text-xs text-gray-500">Show this code, or tap your card, at the {c.kind === "drink" ? "bar" : "door"}</p>
+                <div className="max-w-[14rem] text-right">
+                  <p className="text-sm font-medium">Tap your card at the {c.kind === "drink" ? "bar" : "door"}</p>
+                  <p className="text-xs text-gray-500">
+                    {c.status === "requested" && c.points_due > 0
+                      ? `Staff will confirm it, and ${c.points_due.toLocaleString("en-GB")} points are taken then.`
+                      : "Staff will hand it over."}
+                  </p>
                 </div>
               </div>
-              <button type="button" onClick={() => cancel(c)} className="mt-2 text-xs text-gray-500 underline">
-                Cancel
-              </button>
+              {c.status === "requested" && (
+                <button type="button" onClick={() => cancel(c)} className="mt-2 text-xs text-gray-500 underline">
+                  Withdraw request
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -180,7 +198,7 @@ export function RewardsPassCard({ memberId }: { memberId: string }) {
                   ) : (
                     open !== r.id && (
                       <Button size="sm" variant="outline" className="mt-1" onClick={() => setOpen(r.id)}>
-                        Claim
+                        Ask for it
                       </Button>
                     )
                   )}

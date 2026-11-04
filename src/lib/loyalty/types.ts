@@ -26,6 +26,7 @@ export const POINT_SOURCE_LABELS: Record<string, string> = {
   order_refund: 'Purchase refunded',
   ticket_purchase: 'Tickets bought online',
   year_end: 'New membership year',
+  points_expiry: 'Points expired',
 };
 
 export const REWARD_KINDS = {
@@ -37,17 +38,22 @@ export const REWARD_KINDS = {
 export type RewardKind = keyof typeof REWARD_KINDS;
 
 export const CLAIM_STATUSES = {
+  requested: 'Requested',
   reserved: 'Ready to use',
   redeemed: 'Used',
   cancelled: 'Cancelled',
   expired: 'Expired',
 } as const;
 export type ClaimStatus = keyof typeof CLAIM_STATUSES;
+/** Claims not yet used: a member's request, or one staff reserved (older claims) */
+export const OPEN_CLAIM_STATUSES: ClaimStatus[] = ['requested', 'reserved'];
 
 export interface LoyaltySettings {
   rewards_open: boolean;
   /** Reward points earned as a percentage of the status points earned */
   reward_earn_percent: number;
+  /** Reward points expire after this many months with nothing earned or spent; 0 = never */
+  reward_expiry_months: number;
 }
 
 export interface Reward {
@@ -92,6 +98,8 @@ export interface RewardClaim {
   status: ClaimStatus;
   code: string;
   points_held: number;
+  /** A request's cost, taken when staff confirm it */
+  points_due: number;
   unit_cost_cents: number | null;
   event: { id: string; title: string; start_time: string } | null;
   guest_name: string | null;
@@ -132,6 +140,8 @@ export interface MemberRewards {
   status_points: number;
   rewards: MemberReward[];
   claims: RewardClaim[];
+  /** When the reward points expire unless the member earns or spends some first */
+  points_expire_on: string | null;
 }
 
 /** Staff lookup at the door or till */

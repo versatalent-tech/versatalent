@@ -44,7 +44,8 @@ export function loyaltyErrorMessage(error: unknown): string | null {
 // Posting points
 // ---------------------------------------------------------------------------
 
-export type PostMode = 'strict' | 'clamp';
+/** strict: refuse to go below zero; clamp: take what's there; reset: empty the balance */
+export type PostMode = 'strict' | 'clamp' | 'reset';
 
 export interface PostInput {
   userId: string;
@@ -89,17 +90,29 @@ export async function startMembershipYear(userId: string, previousYearStart: str
 // ---------------------------------------------------------------------------
 
 export async function getLoyaltySettings(): Promise<LoyaltySettings> {
-  const rows = await sql`SELECT key, value FROM programme_settings WHERE key IN ('rewards_open', 'reward_earn_percent')`;
+  const rows = await sql`SELECT key, value FROM programme_settings WHERE key IN ('rewards_open', 'reward_earn_percent', 'reward_expiry_months')`;
   const values = Object.fromEntries(rows.map((r: any) => [r.key, r.value]));
   const percent = Number(values.reward_earn_percent);
+  const months = Number(values.reward_expiry_months);
   return {
     rewards_open: values.rewards_open === true,
     reward_earn_percent: Number.isFinite(percent) ? Math.min(1000, Math.max(0, percent)) : 100,
+    reward_expiry_months: Number.isFinite(months) ? Math.min(120, Math.max(0, Math.trunc(months))) : 0,
   };
 }
 
 export async function updateLoyaltySettings(changes: Partial<LoyaltySettings>, userId: string | null): Promise<LoyaltySettings> {
-  const entries = Object.entries(changes).filter(([, v]) => v !== undefined);
+  const entries: [string, unknown][] = Object.entries(changes).filter(([, v]) => v !== undefined);
+  // Switching expiry on gives everyone the full period from today: points
+  // already earned aren't taken away by the change itself (programme terms)
+  const before = await getLoyaltySettings();
+  if (changes.reward_expiry_months && changes.reward_expiry_months > 0 && before.reward_expiry_months === 0) {
+    entries.push(['reward_expiry_since', new Date().toISOString()]);
+  }
+  // Points build up while rewards are closed; opening them starts everyone's expiry clock that day
+  if (changes.rewards_open === true && !before.rewards_open) {
+    entries.push(['rewards_opened_at', new Date().toISOString()]);
+  }
   if (entries.length > 0) {
     await sql.transaction(
       entries.map(
@@ -192,7 +205,7 @@ function mapReward(r: any): Reward {
 export async function listRewards(): Promise<RewardWithUsage[]> {
   const rows = await sql`
     SELECT r.*,
-      COUNT(c.id) FILTER (WHERE c.status = 'reserved') AS reserved,
+      COUNT(c.id) FILTER (WHERE c.status IN ('requested', 'reserved')) AS reserved,
       COUNT(c.id) FILTER (WHERE c.status = 'redeemed') AS redeemed,
       COUNT(c.id) FILTER (WHERE c.status = 'cancelled') AS cancelled,
       COUNT(c.id) FILTER (WHERE c.status = 'expired') AS expired
@@ -270,13 +283,14 @@ export async function claimReward(input: {
   eventId?: string | null;
   guestName?: string | null;
   actorId?: string | null;
-  redeemNow?: boolean;
+  /** request: the member, from their pass (no points yet); redeem: staff, used now */
+  mode: 'request' | 'redeem';
 }): Promise<ClaimResult> {
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       const rows = await sql`
         SELECT reward_claim(${input.rewardId}::uuid, ${input.userId}::uuid, ${input.eventId ?? null}::uuid,
-          ${input.guestName ?? null}, ${newClaimCode()}, ${input.actorId ?? null}::uuid, ${Boolean(input.redeemNow)}) AS id
+          ${input.guestName ?? null}, ${newClaimCode()}, ${input.actorId ?? null}::uuid, ${input.mode}) AS id
       `;
       return { ok: true, claimId: rows[0].id };
     } catch (error: any) {
@@ -314,6 +328,7 @@ function mapClaim(r: any): RewardClaim {
     status: r.status,
     code: r.code,
     points_held: Number(r.points_held),
+    points_due: Number(r.points_due ?? r.points_held),
     unit_cost_cents: r.unit_cost_cents === null ? null : Number(r.unit_cost_cents),
     event: r.event_id ? { id: r.event_id, title: r.event_title, start_time: iso(r.event_start)! } : null,
     guest_name: r.guest_name,
@@ -341,7 +356,7 @@ export async function listClaims(filter: ClaimFilter, rewardId: string | null = 
   const reward = rewardId ? sql`AND c.reward_id = ${rewardId}` : sql``;
   const rows =
     filter === 'open'
-      ? await sql`${claimSelect()} WHERE c.status = 'reserved' ${reward} ORDER BY c.expires_at LIMIT 500`
+      ? await sql`${claimSelect()} WHERE c.status IN ('requested', 'reserved') ${reward} ORDER BY c.expires_at LIMIT 500`
       : filter === 'redeemed'
         ? await sql`${claimSelect()} WHERE c.status = 'redeemed' ${reward} ORDER BY c.redeemed_at DESC LIMIT 500`
         : filter === 'closed'
@@ -361,11 +376,48 @@ export async function getClaimByCode(code: string): Promise<RewardClaim | null> 
   return rows[0] ? mapClaim(rows[0]) : null;
 }
 
+/** True while the member has an open request for this reward (and event) */
+export async function hasOpenRequest(userId: string, rewardId: string, eventId: string | null): Promise<boolean> {
+  const rows = await sql`
+    SELECT 1 FROM reward_claims WHERE user_id = ${userId} AND reward_id = ${rewardId} AND status = 'requested'
+      AND event_id IS NOT DISTINCT FROM ${eventId}::uuid LIMIT 1
+  `;
+  return rows.length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Points expiry
+// ---------------------------------------------------------------------------
+
+/** Ledger entries that count as the member earning or spending points */
+const ACTIVITY = sql`l.ledger IN ('status', 'reward') AND l.source NOT IN ('points_expiry', 'year_end', 'opening_balance')`;
+
+/**
+ * When a member's reward points expire if nothing happens before then (their
+ * last earn or spend, or joining, or the day expiry was switched on or
+ * rewards opened if later, plus the expiry months). Null when expiry is off,
+ * rewards haven't opened yet, or they have no points.
+ * The nightly job is src/lib/loyalty/expiry.ts.
+ */
+export async function getPointsExpiry(userId: string): Promise<string | null> {
+  const { reward_expiry_months: months, rewards_open } = await getLoyaltySettings();
+  if (!months || !rewards_open) return null; // nothing expires before rewards launch
+  const rows = await sql`
+    SELECT (GREATEST(
+        COALESCE((SELECT MAX(l.created_at) FROM vip_points_log l WHERE l.user_id = m.user_id AND ${ACTIVITY}), m.created_at),
+        COALESCE((SELECT MAX((value #>> '{}')::timestamptz) FROM programme_settings
+          WHERE key IN ('reward_expiry_since', 'rewards_opened_at')), '-infinity')
+      ) + make_interval(months => ${months})) AS expires_on
+    FROM vip_memberships m WHERE m.user_id = ${userId} AND m.points_balance > 0
+  `;
+  return rows[0] ? iso(rows[0].expires_on) : null;
+}
+
 /** A member's claims: open ones first, then the last few used or closed */
 export async function listMemberClaims(userId: string): Promise<RewardClaim[]> {
   const rows = await sql`
     ${claimSelect()} WHERE c.user_id = ${userId}
-    ORDER BY (c.status = 'reserved') DESC, c.created_at DESC LIMIT 30
+    ORDER BY (c.status IN ('requested', 'reserved')) DESC, c.created_at DESC LIMIT 30
   `;
   return rows.map(mapClaim);
 }
@@ -395,9 +447,9 @@ export async function getRewardsForMember(userId: string): Promise<{ rewards: Me
     `,
     sql`
       SELECT r.*,
-        (SELECT COUNT(*) FROM reward_claims c WHERE c.reward_id = r.id AND c.status IN ('reserved', 'redeemed')) AS used_total,
+        (SELECT COUNT(*) FROM reward_claims c WHERE c.reward_id = r.id AND c.status IN ('requested', 'reserved', 'redeemed')) AS used_total,
         (SELECT json_agg(json_build_object('at', c.created_at, 'event', c.event_id)) FROM reward_claims c
-          WHERE c.reward_id = r.id AND c.user_id = ${userId} AND c.status IN ('reserved', 'redeemed')) AS mine
+          WHERE c.reward_id = r.id AND c.user_id = ${userId} AND c.status IN ('requested', 'reserved', 'redeemed')) AS mine
       FROM rewards r
       WHERE r.is_active
         AND (r.valid_from IS NULL OR r.valid_from <= (NOW() AT TIME ZONE 'Europe/London')::date)
@@ -470,13 +522,15 @@ export async function getRewardsForMember(userId: string): Promise<{ rewards: Me
 
 export async function getMemberRewards(userId: string): Promise<MemberRewards> {
   await expireClaims();
-  const [view, claims] = await Promise.all([getRewardsForMember(userId), listMemberClaims(userId)]);
+  const [view, claims, expiresOn] = await Promise.all([getRewardsForMember(userId), listMemberClaims(userId), getPointsExpiry(userId)]);
   return {
     rewards_open: view.settings.rewards_open,
     reward_balance: view.balance,
     status_points: view.status_points,
     rewards: view.rewards,
-    claims,
+    // Claim codes stay with staff: anyone with the pass link could read them
+    claims: claims.map((c) => ({ ...c, code: '' })),
+    points_expire_on: expiresOn,
   };
 }
 
@@ -490,8 +544,8 @@ export async function rewardsReport(): Promise<RewardsReport> {
     SELECT
       (SELECT COUNT(*) FROM vip_memberships WHERE status = 'active') AS members,
       (SELECT COALESCE(SUM(points_balance), 0) FROM vip_memberships) AS points_outstanding,
-      (SELECT COUNT(*) FROM reward_claims WHERE status = 'reserved') AS open_claims,
-      (SELECT COALESCE(SUM(unit_cost_cents), 0) FROM reward_claims WHERE status = 'reserved') AS open_claims_cost,
+      (SELECT COUNT(*) FROM reward_claims WHERE status IN ('requested', 'reserved')) AS open_claims,
+      (SELECT COALESCE(SUM(unit_cost_cents), 0) FROM reward_claims WHERE status IN ('requested', 'reserved')) AS open_claims_cost,
       (SELECT COUNT(*) FROM reward_claims WHERE created_at > NOW() - INTERVAL '30 days') AS claimed_30d,
       (SELECT COUNT(*) FROM reward_claims WHERE status = 'redeemed' AND redeemed_at > NOW() - INTERVAL '30 days') AS redeemed_30d,
       (SELECT COALESCE(SUM(unit_cost_cents), 0) FROM reward_claims WHERE status = 'redeemed' AND redeemed_at > NOW() - INTERVAL '30 days') AS redeemed_cost_30d,
