@@ -4,11 +4,9 @@ _Last updated 4 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM,
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
-- [ ] Programme terms and privacy notice approved (drafts at `/membership/terms`)
-- [ ] Minimum age: 18+ for everyone, or only for drink rewards
-- [ ] Card fulfilment: who posts cards and how quickly
+- [ ] Programme terms and privacy notice approved (drafts at `/membership/terms`; updated 4 Nov with card replacement fees, posting in 7 to 14 working days and 20 points per check-in)
 - [ ] Earning rules per ledger (reward share of each award, default 100%)
-- [ ] Reward point costs (current values are placeholders), stock and limits. Check-ins (50 points) are worth as much as £100 at the bar; consider balancing them
+- [ ] Reward point costs (current values are placeholders), stock and limits. A check-in (20 points since 4 Nov) is worth as much as £40 at the bar. Gold now takes 10 check-ins a year (200 points) and Black about 33 (650): check the tier levels still feel right
 - [ ] Points expiry: how many months with nothing earned or spent (Admin → Rewards; off until set). Nothing expires before rewards open, and the clock starts on launch day
 - [ ] Rewards launch: when to open them (Admin → Rewards → switch on). Until then they're hidden from members while reward points build up (110 across 5 members on 4 Nov)
 - [ ] Opening reward balances: keep the points built up before launch, or start everyone at 0 on launch day
@@ -16,7 +14,6 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Ticket terms approved (draft at `/tickets/terms`), and the ticket lines added to the privacy notice
 - [ ] Ticket points rate (VIP → Point Rules → Ticket Points; 1 point per £3, while the till gives 1 per £2). Recommended: no extra bonus for buying on the website; buyers already earn twice (buying and checking in), and a temporary double-points launch offer can be tried later
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
-- [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
@@ -39,7 +36,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Instagram phase 2: migration 040 is on production (29 Oct 2026). Set up the Meta app and Netlify variables (`docs/INSTAGRAM_SETUP.md`), connect @versatalent in Admin → Instagram, and ask each talent to connect from their portal
 - [ ] Instagram phase 3: insights page (engagement by talent, format, content tags, posting time)
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
-- [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
+- [ ] Sign the macOS NFC Bridge app so staff don't get a security warning: needs an Apple Developer Program membership (Developer ID certificate, then the app is signed and notarised); no certificate on this Mac yet
 
 ## 4. Later
 - [ ] AI meeting notes (built, off): privacy notice line about Anthropic, add `ANTHROPIC_API_KEY` in Netlify (Functions scope), redeploy, test one draft
@@ -58,12 +55,16 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Talent portal logins switched off for Claudio Costa and Joao Rodolfo: switch them on if they should get tasks or see bookings
 - [ ] Card payments: Solo Lite works through the SumUp app (till → "SumUp app" + transaction code); a SumUp Solo would let the till send amounts straight to the reader
 
+- [ ] Backups: a longer Neon restore window needs a paid Neon plan (the free plan's 6 hours is already set); staying on free for now
+
 ## 5. Housekeeping
 - [ ] Clean up unused variables and imports (100 lint warnings)
 - [ ] Replace `<img>` with Next.js `Image` (15 warnings)
 
 ## Completed
 ### November 2026
+- [x] Decided: minimum age 18+ for everyone; cards posted within 7 to 14 working days; replacement cards may be charged (new card, set-up and postage)
+- [x] Check-in points 50 → 20 (VIP → Point Rules, 4 Nov)
 - [x] Netlify deployed `main` up to `7a250cd` (checked 4 Nov)
 - [x] Rewards need staff and the card: members ask on their pass (no points taken), staff tap the card and confirm, and the points are taken then; claim codes are no longer shown on the pass (migration 041)
 - [x] Reward points expiry (off until a number of months is set); nothing expires while rewards are closed, and everyone gets the full period from launch
