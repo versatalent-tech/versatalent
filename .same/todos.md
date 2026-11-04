@@ -10,7 +10,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Earning rules per ledger (reward share of each award, default 100%)
 - [ ] Reward point costs (current values are placeholders), stock and limits. Check-ins (50 points) are worth as much as £100 at the bar; consider balancing them
 - [ ] Points expiry: how many months with nothing earned or spent (Admin → Rewards; off until set). Nothing expires before rewards open, and the clock starts on launch day
-- [ ] Opening reward balances: 0 or carry over (10 points in total)
+- [ ] Rewards launch: when to open them (Admin → Rewards → switch on). Until then they're hidden from members while reward points build up (110 across 5 members on 4 Nov)
+- [ ] Opening reward balances: keep the points built up before launch, or start everyone at 0 on launch day
 - [ ] Confirm the open figures in the benefit sheet (VAT, card fee, drink cost, card price, guest-pass cost, members' night cost, presale support)
 - [ ] Ticket terms approved (draft at `/tickets/terms`), and the ticket lines added to the privacy notice
 - [ ] Ticket points rate (VIP → Point Rules → Ticket Points; 1 point per £3, while the till gives 1 per £2). Recommended: no extra bonus for buying on the website; buyers already earn twice (buying and checking in), and a temporary double-points launch offer can be tried later
@@ -18,11 +19,11 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
+- [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
 - [ ] Member pass with rewards closed: no reward points balance or rewards list; "Points this year" still shows. Admin → Rewards says points are building up for launch
 - [ ] Tickets with a membership card: tap a VIP card on a phone; the pass shows "Buy tickets with your card" (only while an event has tickets on sale); the ticket page says "Points go to <first name>"; buy with a different email and check the points reach the card's member; "Not you?" removes the link
 - [ ] Public member pass: shows the first name, tier, points and benefits only; points history and check-ins appear only when signed in as the team
 - [ ] Instagram posts (phase 1): migration 039 is on production (28 Oct 2026). Admin → Instagram should list the 5 carried-over posts (Deejay WG ×2, Jessica Dias ×2, João Rodolfo ×1); add Antonio Monteiro's and others' posts there, and check the homepage section and a talent profile
-- [ ] Netlify has deployed `main` (latest merge `1d28b75`); merges didn't always trigger builds in the past
 - [ ] Tasks for road managers and talents: in "Weekly Meeting DJs", give the actions to Milo Ramos and Deejay WG and add them as tasks; Milo sees them under "Your tasks" on his dashboard, William Goncalves under "Your to-dos" in the portal
 - [ ] Booking document: the photo uploaded on 16 Oct is on "Dj set + equipment" (24 Oct), not "Birthday Party"; confirm it's in the right place, or ask to move it
 - [ ] Talent profiles show real figures (jobs, events, clients); add earlier work in Admin → Talents → Edit → Profile figures
@@ -37,7 +38,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 ## 3. To build
 - [ ] Instagram phase 2: migration 040 is on production (29 Oct 2026). Set up the Meta app and Netlify variables (`docs/INSTAGRAM_SETUP.md`), connect @versatalent in Admin → Instagram, and ask each talent to connect from their portal
 - [ ] Instagram phase 3: insights page (engagement by talent, format, content tags, posting time)
-- [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
+- [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
 
 ## 4. Later
@@ -63,6 +64,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Netlify deployed `main` up to `7a250cd` (checked 4 Nov)
 - [x] Rewards need staff and the card: members ask on their pass (no points taken), staff tap the card and confirm, and the points are taken then; claim codes are no longer shown on the pass (migration 041)
 - [x] Reward points expiry (off until a number of months is set); nothing expires while rewards are closed, and everyone gets the full period from launch
 - [x] Reward points build up in the background while rewards are hidden
