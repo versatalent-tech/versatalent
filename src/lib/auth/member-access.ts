@@ -15,3 +15,15 @@ export async function canReadMemberData(userId: string): Promise<boolean> {
   const user = await getUserById(userId).catch(() => null);
   return user?.role === 'vip';
 }
+
+/**
+ * May the caller see where a member has been and what they've earned (points
+ * history, check-ins)? Only the team, or the member's own talent login. Anyone
+ * with the card's link sees the pass (name, tier, points, benefits) but not
+ * this, until members can sign in.
+ */
+export async function canReadMemberHistory(userId: string): Promise<boolean> {
+  if ((await getCurrentSession()) || (await getTeamSession())) return true;
+  const talent = await getTalentSession();
+  return talent?.userId === userId;
+}

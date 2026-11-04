@@ -50,6 +50,8 @@ export const ticketOrderSchema = z.object({
   marketing_consent: z.boolean().default(false),
   accept_terms: z.literal(true, { error: 'Please accept the ticket terms to continue' }),
   source: z.enum(['website', 'card_tap', 'member_pass']).default('website'),
+  /** Member id from a card tap: the order earns that member's points */
+  member: z.string().uuid().nullable().optional().or(z.literal('').transform(() => null)),
   utm_source: optionalText(100),
   utm_medium: optionalText(100),
   utm_campaign: optionalText(100),

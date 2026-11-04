@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 17 Oct 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 038 are on production. Tests: `npm run test:e2e` (32 tests, also run on GitHub for every PR)._
+_Last updated 4 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 038 are on production. Tests: `npm run test:e2e` (49 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -13,11 +13,13 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Black discount to 10% (VIP → Point Rules, a settings change)
 - [ ] Confirm the open figures in the benefit sheet (VAT, card fee, drink cost, card price, guest-pass cost, members' night cost, presale support)
 - [ ] Ticket terms approved (draft at `/tickets/terms`), and the ticket lines added to the privacy notice
-- [ ] Ticket points rate (VIP → Point Rules → Ticket Points; starts at the till rate, 1 point per £3)
+- [ ] Ticket points rate (VIP → Point Rules → Ticket Points; starts at the till rate, 1 point per £3). Recommended: no extra bonus for buying on the website; buyers already earn twice (buying and checking in), and a temporary double-points launch offer can be tried later
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
 - [ ] Backups: longer Neon restore window or scheduled snapshots
 
 ## 2. Check after the latest deploys
+- [ ] Tickets with a membership card: tap a VIP card on a phone; the pass shows "Buy tickets with your card" (only while an event has tickets on sale); the ticket page says "Points go to <first name>"; buy with a different email and check the points reach the card's member; "Not you?" removes the link
+- [ ] Public member pass: shows the first name, tier, points and benefits only; points history and check-ins appear only when signed in as the team
 - [ ] Instagram posts (phase 1): migration 039 is on production (28 Oct 2026). Admin → Instagram should list the 5 carried-over posts (Deejay WG ×2, Jessica Dias ×2, João Rodolfo ×1); add Antonio Monteiro's and others' posts there, and check the homepage section and a talent profile
 - [ ] Netlify has deployed `main` (latest merge `1d28b75`); merges didn't always trigger builds in the past
 - [ ] Tasks for road managers and talents: in "Weekly Meeting DJs", give the actions to Milo Ramos and Deejay WG and add them as tasks; Milo sees them under "Your tasks" on his dashboard, William Goncalves under "Your to-dos" in the portal
@@ -36,6 +38,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Instagram phase 3: insights page (engagement by talent, format, content tags, posting time)
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), reward claims, referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning
+- [ ] Before rewards open: claiming a reward on the pass needs only the card's link, so anyone with it could spend that member's points; make claims need staff at the bar (or member sign-in)
 
 ## 4. Later
 - [ ] AI meeting notes (built, off): privacy notice line about Anthropic, add `ANTHROPIC_API_KEY` in Netlify (Functions scope), redeploy, test one draft
@@ -46,6 +49,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Artist card: tap and enquiry counts per talent, shown in their portal
 - [ ] Artist card: "Recently performed at / next appearance" on the profile
 - [ ] Tickets: confirmation email with the order link (needs the email provider)
+- [ ] Member accounts (plan in `docs/CRM_PORTAL_PLAN.md` §19): members sign in by email link to see their own points history and check-ins again (needs the email provider)
 - [ ] Tickets: scan a QR code at the door instead of the name list; per-event age limit (18+) on the form
 - [ ] Tickets: discount codes, member presale (48-hour early access benefit) and member-only ticket types
 - [ ] Tickets: link ticket buyers to CRM contacts / newsletter when they agree to marketing
@@ -58,6 +62,10 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Replace `<img>` with Next.js `Image` (15 warnings)
 
 ## Completed
+### November 2026
+- [x] Tickets bought from a membership card earn that member's points, whichever email is used; the pass lists events on sale; the form never fills in the member's details
+- [x] Public member pass shows less: first name only, no points history or check-ins for anyone outside the team
+
 ### October 2026
 - [x] Tests run on GitHub for every PR and on `main` (NEON_API_KEY Actions secret set; first run passed 29/29)
 - [x] Online ticket payments confirmed working with a real £1 test purchase and refund (15 Oct)

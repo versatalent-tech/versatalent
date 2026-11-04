@@ -6,7 +6,7 @@ import { AlertCircle, Instagram, Loader2, Lock, Minus, Plus, Star } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HONEYPOT_FIELD } from "@/lib/crm/types";
-import { AGE_RANGES, HEARD_FROM, formatPrice, normaliseInstagram, type PublicTicketEvent } from "@/lib/tickets/types";
+import { AGE_RANGES, HEARD_FROM, formatPrice, normaliseInstagram, type CardMember, type PublicTicketEvent } from "@/lib/tickets/types";
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
@@ -38,7 +38,20 @@ function readTracking() {
   };
 }
 
-export function TicketPurchase({ event, poundsPerPoint }: { event: PublicTicketEvent; poundsPerPoint: number | null }) {
+const tierLabel = (tier: string | null) => (tier ? `${tier.charAt(0).toUpperCase()}${tier.slice(1)} member` : "member");
+
+export function TicketPurchase({
+  event,
+  poundsPerPoint,
+  member,
+}: {
+  event: PublicTicketEvent;
+  poundsPerPoint: number | null;
+  /** Opened from a membership card: points go to this member */
+  member?: CardMember | null;
+}) {
+  // The buyer can unlink the card ("Not you?"); the form is never filled in from it
+  const [linked, setLinked] = useState<CardMember | null>(member ?? null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [form, setForm] = useState({
     first_name: "",
@@ -103,6 +116,7 @@ export function TicketPurchase({ event, poundsPerPoint }: { event: PublicTicketE
           marketing_consent: marketing,
           accept_terms: true,
           ...(tracking ?? {}),
+          member: linked?.id ?? null,
           [HONEYPOT_FIELD]: trap,
         }),
       });
@@ -224,7 +238,27 @@ export function TicketPurchase({ event, poundsPerPoint }: { event: PublicTicketE
             </select>
           </div>
         </div>
-        {poundsPerPoint && (
+        {linked ? (
+          <div className="flex items-start gap-2 rounded-lg bg-gold/10 p-3 text-sm text-gray-800">
+            <Star className="mt-0.5 h-4 w-4 flex-shrink-0 text-gold" />
+            <span>
+              Points go to <strong>{linked.first_name}</strong> ({tierLabel(linked.tier)}), the card you tapped
+              {poundsPerPoint ? `: 1 point for every £${poundsPerPoint} spent on tickets` : ""}, whichever email you use.{" "}
+              <button
+                type="button"
+                className="text-gold underline"
+                onClick={() => {
+                  setLinked(null);
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete("member");
+                  window.history.replaceState(null, "", url);
+                }}
+              >
+                Not you?
+              </button>
+            </span>
+          </div>
+        ) : poundsPerPoint && (
           <p className="flex items-start gap-2 rounded-lg bg-gold/10 p-3 text-sm text-gray-800">
             <Star className="mt-0.5 h-4 w-4 flex-shrink-0 text-gold" />
             <span>

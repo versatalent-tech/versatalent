@@ -18,12 +18,12 @@ export async function GET(
       );
     }
 
-    // Public VIP/artist pages use this endpoint, so anonymous callers only
-    // get public profile fields. Staff and admins get the full record.
+    // The public pass page uses this endpoint, so anonymous callers only get
+    // the first name and public fields. Staff and admins get the full record.
     if (!(await verifyStaffAuth())) {
       return NextResponse.json({
         id: user.id,
-        name: user.name,
+        name: String(user.name ?? '').trim().split(/\s+/)[0],
         role: user.role,
         avatar_url: user.avatar_url,
         talent_id: user.talent_id,

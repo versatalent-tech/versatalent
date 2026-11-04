@@ -111,7 +111,8 @@ function OrderContent() {
         {summary}
         {order.points_awarded > 0 && (
           <p className="flex items-center justify-center gap-2 rounded-lg bg-gold/10 p-3 text-sm">
-            <Star className="h-4 w-4 text-gold" /> {order.points_awarded} V•PRIVILEGE points added to your membership.
+            <Star className="h-4 w-4 text-gold" /> {order.points_awarded} V•PRIVILEGE points added to{" "}
+            {order.member ? `${order.member.first_name}’s membership` : "your membership"}.
           </p>
         )}
         {order.event.id && (

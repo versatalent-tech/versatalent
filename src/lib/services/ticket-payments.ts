@@ -4,10 +4,11 @@
  * counts as paid once we read the checkout back from SumUp and it is PAID,
  * for our merchant, with the exact amount, currency and reference.
  *
- * When an order is paid, a member buying with their membership email earns
- * points (the "ticket_purchase" rule, per £1, times their tier rate).
+ * When an order is paid, a member who tapped their card to buy, or bought
+ * with their membership email, earns points (the "ticket_purchase" rule, per £1, times their tier rate).
  */
 import {
+  findCardMember,
   findMemberByEmail,
   getLatestTicketCheckout,
   getPayableOrder,
@@ -99,7 +100,8 @@ async function afterTicketOrderPaid(orderId: string): Promise<void> {
   try {
     const order = await getPayableOrder(orderId);
     if (!order || order.total_cents <= 0) return;
-    const memberId = await findMemberByEmail(order.email);
+    // The card they tapped to buy, or else the membership with the email they used
+    const memberId = (await findCardMember(order.member_user_id))?.id ?? (await findMemberByEmail(order.email));
     if (!memberId) return;
 
     const rule = await getPointRuleByActionType('ticket_purchase');
