@@ -5,7 +5,7 @@ import { getUserById } from '@/lib/db/repositories/users';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
 import { requireAdmin, getCurrentSession } from '@/lib/middleware/auth';
 import { getNFCCardByUID } from '@/lib/db/repositories/nfc-cards';
-import { canReadMemberData } from '@/lib/auth/member-access';
+import { canReadMemberHistory } from '@/lib/auth/member-access';
 import type { CheckInSource, CreateCheckInRequest } from '@/lib/db/types';
 
 export async function GET(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('user_id');
     const eventId = searchParams.get('event_id');
 
-    // Per-user history backs the public VIP pass page; everything else is admin only
+    // Per-user history: the team (and a talent's own); everything else is admin only
     if (!userId) {
       const denied = await requireAdmin();
       if (denied) return denied;
@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
 
     let checkins;
     if (userId) {
-      if (!(await canReadMemberData(userId))) return NextResponse.json([]);
+      if (!(await canReadMemberHistory(userId))) {
+        return NextResponse.json({ error: 'Check-ins are only shown to the team for now' }, { status: 403 });
+      }
       checkins = await getCheckInsByUserId(userId);
     } else if (eventId) {
       checkins = await getCheckInsByEventId(eventId);

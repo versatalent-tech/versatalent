@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { sql } from '../client';
-import { HOLD_MINUTES, type PublicOrder, type PublicTicketEvent, type PublicTicketType } from '@/lib/tickets/types';
+import { HOLD_MINUTES, type CardMember, type EventOnSale, type PublicOrder, type PublicTicketEvent, type PublicTicketType } from '@/lib/tickets/types';
 import type { ticketOrderSchema, ticketTypeSchema } from '@/lib/tickets/schemas';
 import type { z } from 'zod';
 
@@ -71,6 +71,37 @@ export async function getPublicTicketEvent(idOrSlug: string): Promise<PublicTick
   };
 }
 
+/** Upcoming events with tickets on sale now (the member pass page lists them) */
+export async function listEventsOnSale(limit = 6): Promise<EventOnSale[]> {
+  const rows = await sql`
+    SELECT e.id, e.title, e.start_time,
+      NULLIF(concat_ws(', ', NULLIF(e.venue->>'name', ''), NULLIF(e.venue->>'city', '')), '') AS venue
+    FROM events e
+    WHERE e.is_published IS NOT FALSE AND e.status NOT IN ('cancelled', 'completed')
+      AND EXISTS (
+        SELECT 1 FROM ticket_types t WHERE t.event_id = e.id AND t.is_active
+          AND (t.sales_start IS NULL OR t.sales_start <= NOW())
+          AND COALESCE(t.sales_end, e.end_time, e.start_time) > NOW()
+      )
+    ORDER BY e.start_time LIMIT ${limit}
+  `;
+  return rows.map((r: any) => ({ id: r.id, title: r.title, starts_at: iso(r.start_time)!, venue: r.venue ?? null }));
+}
+
+/**
+ * The member a card tap links an order to: an active member (or artist), with
+ * only what the buyer is shown (first name and tier), never their email
+ */
+export async function findCardMember(memberId: string | null | undefined): Promise<CardMember | null> {
+  if (!memberId || !/^[0-9a-f-]{36}$/i.test(memberId)) return null;
+  const rows = await sql`
+    SELECT u.id, u.name, m.tier FROM users u LEFT JOIN vip_memberships m ON m.user_id = u.id
+    WHERE u.id = ${memberId}::uuid AND u.role IN ('vip', 'artist') AND u.is_active LIMIT 1
+  `;
+  const r = rows[0];
+  return r ? { id: r.id, first_name: String(r.name ?? '').trim().split(/\s+/)[0] || 'Member', tier: r.tier ?? null } : null;
+}
+
 function newReference(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const bytes = randomBytes(6);
@@ -108,6 +139,13 @@ export async function createTicketOrder(input: OrderInput): Promise<{ id: string
         ) AS id
       `;
       const id = rows[0].id as string;
+      if (input.member) {
+        // Bought after tapping a membership card: points go to that member, whatever email was used
+        await sql`
+          UPDATE ticket_orders SET member_user_id = u.id FROM users u
+          WHERE ticket_orders.id = ${id} AND u.id = ${input.member}::uuid AND u.role IN ('vip', 'artist') AND u.is_active
+        `;
+      }
       const totals = await sql`SELECT total_cents FROM ticket_orders WHERE id = ${id}`;
       return { id, token, total_cents: Number(totals[0].total_cents) };
     } catch (error: any) {
@@ -130,11 +168,13 @@ export interface PayableOrder {
   quantity: number;
   email: string;
   access_token: string;
+  /** Set when the order was linked to a membership card */
+  member_user_id: string | null;
 }
 
 export async function getPayableOrder(orderId: string): Promise<PayableOrder | null> {
   const rows = await sql`
-    SELECT id, reference, status, total_cents, currency, payment_attempts, event_title, quantity, email, access_token
+    SELECT id, reference, status, total_cents, currency, payment_attempts, event_title, quantity, email, access_token, member_user_id
     FROM ticket_orders WHERE id = ${orderId} LIMIT 1
   `;
   const r = rows[0];
@@ -254,11 +294,13 @@ export async function findMemberByEmail(email: string): Promise<string | null> {
 
 export async function getPublicOrder(orderId: string): Promise<PublicOrder | null> {
   const rows = await sql`
-    SELECT o.*, e.start_time,
+    SELECT o.*, e.start_time, mu.name AS member_name, mm.tier AS member_tier,
       NULLIF(concat_ws(', ', NULLIF(e.venue->>'name', ''), NULLIF(e.venue->>'city', '')), '') AS venue,
       COALESCE((SELECT json_agg(json_build_object('name', i.name, 'quantity', i.quantity, 'unit_price_cents', i.unit_price_cents) ORDER BY i.name)
         FROM ticket_order_items i WHERE i.order_id = o.id), '[]') AS items
     FROM ticket_orders o LEFT JOIN events e ON e.id = o.event_id
+      LEFT JOIN users mu ON mu.id = o.member_user_id
+      LEFT JOIN vip_memberships mm ON mm.user_id = o.member_user_id
     WHERE o.id = ${orderId} LIMIT 1
   `;
   const r = rows[0];
@@ -275,6 +317,7 @@ export async function getPublicOrder(orderId: string): Promise<PublicOrder | nul
     currency: r.currency,
     items: r.items,
     points_awarded: r.points_awarded,
+    member: r.member_name ? { first_name: String(r.member_name).trim().split(/\s+/)[0], tier: r.member_tier ?? null } : null,
     can_retry: ['pending', 'payment_failed', 'expired'].includes(r.status),
   };
 }

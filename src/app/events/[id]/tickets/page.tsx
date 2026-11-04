@@ -4,12 +4,12 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, Calendar, MapPin } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { TicketPurchase } from '@/components/tickets/TicketPurchase';
-import { getPublicTicketEvent } from '@/lib/db/repositories/tickets';
+import { findCardMember, getPublicTicketEvent } from '@/lib/db/repositories/tickets';
 import { getPointRuleByActionType } from '@/lib/db/repositories/vip-point-rules';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ member?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -17,9 +17,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: event ? `Tickets: ${event.title} | VersaTalent` : 'Tickets | VersaTalent' };
 }
 
-export default async function EventTicketsPage({ params }: Props) {
+export default async function EventTicketsPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const [event, rule] = await Promise.all([getPublicTicketEvent(id), getPointRuleByActionType('ticket_purchase').catch(() => null)]);
+  const { member: memberId } = (await searchParams) ?? {};
+  // Opened from a membership card: the order earns that member's points
+  const [event, rule, member] = await Promise.all([
+    getPublicTicketEvent(id),
+    getPointRuleByActionType('ticket_purchase').catch(() => null),
+    findCardMember(memberId).catch(() => null),
+  ]);
   if (!event) notFound();
   const perPound = rule ? Number(rule.points_per_unit) : 0;
   const poundsPerPoint = perPound > 0 ? Math.round((1 / perPound) * 100) / 100 : null;
@@ -52,7 +58,7 @@ export default async function EventTicketsPage({ params }: Props) {
             )}
           </div>
           <div className="mt-8">
-            <TicketPurchase event={event} poundsPerPoint={poundsPerPoint} />
+            <TicketPurchase event={event} poundsPerPoint={poundsPerPoint} member={member} />
           </div>
         </div>
       </section>

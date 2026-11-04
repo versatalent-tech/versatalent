@@ -8,6 +8,7 @@ import { FoundingPassCard } from "@/components/membership/FoundingPassCard";
 import { RewardsPassCard } from "@/components/loyalty/RewardsPassCard";
 import { ReferralPassCard } from "@/components/loyalty/ReferralPassCard";
 import { POINT_SOURCE_LABELS } from "@/lib/loyalty/types";
+import type { EventOnSale } from "@/lib/tickets/types";
 import type { TierProgress } from "@/lib/vip-tier-rules";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,9 @@ import {
   History,
   ArrowUp,
   ArrowDown,
-  Nfc
+  Nfc,
+  Lock,
+  Ticket
 } from "lucide-react";
 
 interface VIPUser {
@@ -89,6 +92,9 @@ export default function VIPPassPage() {
   const [consumptions, setConsumptions] = useState<Consumption[]>([]);
   const [checkins, setCheckins] = useState<CheckIn[]>([]);
   const [benefits, setBenefits] = useState<TierBenefit[]>([]);
+  // Points history and check-ins are for the team only until members can sign in
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const [eventsOnSale, setEventsOnSale] = useState<EventOnSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +125,7 @@ export default function VIPPassPage() {
         if (pointsResponse.ok) {
           const pointsData = await pointsResponse.json();
           setPointsLog(pointsData);
+          setHistoryVisible(true);
         }
 
         // Fetch consumptions (would need to create this endpoint)
@@ -130,6 +137,12 @@ export default function VIPPassPage() {
           const checkinsData = await checkinsResponse.json();
           setCheckins(checkinsData.slice(0, 10));
         }
+
+        // Events they can buy tickets for with this card (points go to them)
+        fetch('/api/tickets/on-sale')
+          .then((r) => (r.ok ? r.json() : null))
+          .then((body) => setEventsOnSale(body?.data ?? []))
+          .catch(() => undefined);
 
         // Fetch tier benefits if membership exists
         if (membershipData) {
@@ -323,6 +336,35 @@ export default function VIPPassPage() {
               </div>
             </div>
 
+            {eventsOnSale.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
+                <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                  <Ticket className="h-5 w-5 text-gold" /> Buy tickets with your card
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Tickets bought from these links earn points for {vipUser.name}, whichever email you use.
+                </p>
+                <div className="space-y-3">
+                  {eventsOnSale.map((ev) => (
+                    <Link
+                      key={ev.id}
+                      href={`/events/${ev.id}/tickets?from=pass&member=${encodeURIComponent(vipUser.id)}`}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-gold/30 p-4 hover:bg-gold/5"
+                    >
+                      <div>
+                        <div className="font-semibold text-gray-900">{ev.title}</div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(ev.starts_at).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          {ev.venue ? ` · ${ev.venue}` : ''}
+                        </div>
+                      </div>
+                      <span className="shrink-0 rounded-md bg-gold px-3 py-1.5 text-sm font-medium text-black">Buy tickets</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <FoundingPassCard memberId={vipUser.id} />
             <RewardsPassCard memberId={vipUser.id} />
             <ReferralPassCard memberId={vipUser.id} />
@@ -330,19 +372,23 @@ export default function VIPPassPage() {
             {/* Activity Tabs */}
             <div className="bg-white rounded-2xl shadow-2xl p-8">
               <Tabs defaultValue="benefits" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className={`grid w-full ${historyVisible ? 'grid-cols-3' : 'grid-cols-1'} mb-6`}>
                   <TabsTrigger value="benefits">
                     <Award className="h-4 w-4 mr-2" />
                     Benefits
                   </TabsTrigger>
-                  <TabsTrigger value="history">
-                    <History className="h-4 w-4 mr-2" />
-                    Points History
-                  </TabsTrigger>
-                  <TabsTrigger value="checkins">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Check-ins
-                  </TabsTrigger>
+                  {historyVisible && (
+                    <>
+                      <TabsTrigger value="history">
+                        <History className="h-4 w-4 mr-2" />
+                        Points History
+                      </TabsTrigger>
+                      <TabsTrigger value="checkins">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Check-ins
+                      </TabsTrigger>
+                    </>
+                  )}
                 </TabsList>
 
                 <TabsContent value="benefits">
@@ -385,6 +431,13 @@ export default function VIPPassPage() {
                         <Trophy className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500">No benefits configured for this tier yet</p>
                       </div>
+                    )}
+
+                    {!historyVisible && (
+                      <p className="flex items-start gap-2 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+                        <Lock className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                        Your points history and check-ins are kept private. Ask a member of the team at the bar or the door if you&apos;d like to see them.
+                      </p>
                     )}
                   </div>
                 </TabsContent>

@@ -39,7 +39,7 @@ export async function GET(
         return NextResponse.json({ type: 'artist', talent_id: talent.id });
       }
       case 'vip':
-        return NextResponse.json({ type: 'vip', member_id: card.user.id, name: card.user.name });
+        return NextResponse.json({ type: 'vip', member_id: card.user.id });
       default:
         return NextResponse.json({ type: card.type });
     }

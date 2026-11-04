@@ -91,5 +91,21 @@ export interface PublicOrder {
   currency: string;
   items: { name: string; quantity: number; unit_price_cents: number }[];
   points_awarded: number;
+  /** The membership the order earns points for, if any */
+  member: { first_name: string; tier: string | null } | null;
   can_retry: boolean;
+}
+
+/** A membership card holder, as shown to whoever is buying with that card */
+export interface CardMember {
+  id: string;
+  first_name: string;
+  tier: string | null;
+}
+
+export interface EventOnSale {
+  id: string;
+  title: string;
+  starts_at: string;
+  venue: string | null;
 }
