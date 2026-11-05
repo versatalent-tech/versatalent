@@ -18,6 +18,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useBridgeCardTaps } from "@/lib/hooks/useBridgeCardTaps";
+import { usePhoneCardTaps } from "@/lib/hooks/usePhoneCardTaps";
+import { PhoneTapControl } from "@/components/staff/PhoneTapControl";
 import type { EventDayCheckin, EventDayEvent } from "@/lib/db/repositories/event-day";
 import type { FoundingBadge } from "@/lib/membership/founding";
 
@@ -154,6 +156,8 @@ export default function EventDayCheckinPage() {
 
   const tapsEnabled = !!event?.checkins_enabled;
   const { state: readerState, readerName } = useBridgeCardTaps(checkIn, { paused: processing || !tapsEnabled });
+  // Android phones and tablets can read the card themselves, without the bridge
+  const phone = usePhoneCardTaps(checkIn, { paused: processing || !tapsEnabled });
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -173,6 +177,7 @@ export default function EventDayCheckinPage() {
   };
 
   const reader = (() => {
+    if (phone.state === "on" && readerState !== "ready") return { dot: "bg-green-500", text: "Phone tap ready · hold the card to this device" };
     switch (readerState) {
       case "ready":
         return { dot: "bg-green-500", text: readerName ? `Reader ready · ${readerName}` : "Reader ready" };
@@ -299,6 +304,8 @@ export default function EventDayCheckinPage() {
                 </ul>
               )}
             </div>
+
+            <PhoneTapControl state={phone.state} onStart={phone.start} />
 
             {/* Manual entry for when a card won't read */}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
