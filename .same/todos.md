@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 4 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 041 are on production. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
+_Last updated 5 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 041 are on production. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -19,8 +19,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day and Staff → Rewards, press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
 - [ ] Member pass with rewards closed: no reward points balance or rewards list; "Points this year" still shows. Admin → Rewards says points are building up for launch
-- [ ] Tickets with a membership card: tap a VIP card on a phone; the pass shows "Buy tickets with your card" (only while an event has tickets on sale); the ticket page says "Points go to <first name>"; buy with a different email and check the points reach the card's member; "Not you?" removes the link
-- [ ] Public member pass: shows the first name, tier, points and benefits only; points history and check-ins appear only when signed in as the team
+- [ ] Tickets with a membership card: tap a VIP card on a phone; the pass always shows "Buy tickets with your card" (with "No tickets on sale right now" until ticket types are added); the ticket page says "Points go to <first name>"; buy with a different email and check the points reach the card's member; "Not you?" removes the link
+- [ ] Public member pass: shows the first name, tier, points and benefits only; points history, check-ins and the email appear only when signed in as the team. Check in a private tab or on a phone never signed in to the admin (on 5 Nov the history showed because the phone was signed in as the team)
 - [ ] Instagram posts (phase 1): migration 039 is on production (28 Oct 2026). Admin → Instagram should list the 5 carried-over posts (Deejay WG ×2, Jessica Dias ×2, João Rodolfo ×1); add Antonio Monteiro's and others' posts there, and check the homepage section and a talent profile
 - [ ] Tasks for road managers and talents: in "Weekly Meeting DJs", give the actions to Milo Ramos and Deejay WG and add them as tasks; Milo sees them under "Your tasks" on his dashboard, William Goncalves under "Your to-dos" in the portal
 - [ ] Booking document: the photo uploaded on 16 Oct is on "Dj set + equipment" (24 Oct), not "Birthday Party"; confirm it's in the right place, or ask to move it
@@ -64,7 +64,9 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
-- [x] Door check-in and staff Rewards read cards on Android phones and tablets (Chrome's NFC), as the till already did; no Bridge or computer needed
+- [x] Member pass always shows "Buy tickets with your card", with a note while nothing is on sale (PR #61)
+- [x] Checked on 5 Nov: the public pass hides points history, check-ins and the email from anyone not signed in as the team
+- [x] Door check-in and staff Rewards read cards on Android phones and tablets (Chrome's NFC), as the till already did; no Bridge or computer needed (PR #61)
 - [x] Decided: minimum age 18+ for everyone; cards posted within 7 to 14 working days; replacement cards may be charged (new card, set-up and postage)
 - [x] Check-in points 50 → 20 (VIP → Point Rules, 4 Nov)
 - [x] Netlify deployed `main` up to `7a250cd` (checked 4 Nov)
