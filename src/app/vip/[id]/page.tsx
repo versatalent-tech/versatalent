@@ -340,34 +340,38 @@ export default function VIPPassPage() {
               </div>
             </div>
 
-            {eventsOnSale.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
-                <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
-                  <Ticket className="h-5 w-5 text-gold" /> Buy tickets with your card
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Tickets bought from these links earn points for {vipUser.name}, whichever email you use.
+            {/* Always shown, so members know their card works for tickets */}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 mb-6">
+              <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                <Ticket className="h-5 w-5 text-gold" /> Buy tickets with your card
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Tickets bought from these links earn points for {vipUser.name}, whichever email you use.
+              </p>
+              {eventsOnSale.length === 0 && (
+                <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+                  No tickets on sale right now. Tickets for upcoming events will appear here.
                 </p>
-                <div className="space-y-3">
-                  {eventsOnSale.map((ev) => (
-                    <Link
-                      key={ev.id}
-                      href={`/events/${ev.id}/tickets?from=pass&member=${encodeURIComponent(vipUser.id)}`}
-                      className="flex items-center justify-between gap-4 rounded-lg border border-gold/30 p-4 hover:bg-gold/5"
-                    >
-                      <div>
-                        <div className="font-semibold text-gray-900">{ev.title}</div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(ev.starts_at).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          {ev.venue ? ` · ${ev.venue}` : ''}
-                        </div>
+              )}
+              <div className="space-y-3">
+                {eventsOnSale.map((ev) => (
+                  <Link
+                    key={ev.id}
+                    href={`/events/${ev.id}/tickets?from=pass&member=${encodeURIComponent(vipUser.id)}`}
+                    className="flex items-center justify-between gap-4 rounded-lg border border-gold/30 p-4 hover:bg-gold/5"
+                  >
+                    <div>
+                      <div className="font-semibold text-gray-900">{ev.title}</div>
+                      <div className="text-sm text-gray-500">
+                        {new Date(ev.starts_at).toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        {ev.venue ? ` · ${ev.venue}` : ''}
                       </div>
-                      <span className="shrink-0 rounded-md bg-gold px-3 py-1.5 text-sm font-medium text-black">Buy tickets</span>
-                    </Link>
-                  ))}
-                </div>
+                    </div>
+                    <span className="shrink-0 rounded-md bg-gold px-3 py-1.5 text-sm font-medium text-black">Buy tickets</span>
+                  </Link>
+                ))}
               </div>
-            )}
+            </div>
 
             <FoundingPassCard memberId={vipUser.id} />
             <RewardsPassCard memberId={vipUser.id} />

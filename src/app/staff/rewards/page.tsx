@@ -6,6 +6,8 @@ import { ArrowLeft, CheckCircle2, Crown, Gift, Loader2, Nfc, Search, XCircle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBridgeCardTaps } from "@/lib/hooks/useBridgeCardTaps";
+import { usePhoneCardTaps } from "@/lib/hooks/usePhoneCardTaps";
+import { PhoneTapControl } from "@/components/staff/PhoneTapControl";
 import { formatClaimCode, type MemberReward, type StaffRewardLookup } from "@/lib/loyalty/types";
 
 type Lookup = StaffRewardLookup & { note?: string | null };
@@ -98,6 +100,7 @@ export default function StaffRewardsPage() {
   }, []);
 
   const { state } = useBridgeCardTaps((uid) => find({ card_uid: uid }));
+  const phone = usePhoneCardTaps((uid) => find({ card_uid: uid }), { paused: loading });
 
   const redeem = async (claimId: string, title: string, points: number) => {
     if (points > 0 && !window.confirm(`Give ${title}? ${points} points will be taken from ${lookup?.member.name ?? "the member"}.`)) return;
@@ -122,12 +125,21 @@ export default function StaffRewardsPage() {
             <ArrowLeft className="h-4 w-4" /> Event day
           </Link>
           <span className="flex items-center gap-1 text-xs text-gray-400">
-            <Nfc className="h-4 w-4" /> {state === "ready" ? "Card reader ready" : state === "no-reader" ? "No card reader" : "Card reader offline"}
+            <Nfc className="h-4 w-4" />{" "}
+            {state === "ready"
+              ? "Card reader ready"
+              : phone.state === "on"
+                ? "Phone tap ready"
+                : state === "no-reader"
+                  ? "No card reader"
+                  : "Card reader offline"}
           </span>
         </div>
         <h1 className="flex items-center gap-2 text-3xl font-bold">
           <Gift className="h-8 w-8 text-gold" /> Rewards
         </h1>
+
+        <PhoneTapControl state={phone.state} onStart={phone.start} />
 
         <form
           onSubmit={(e) => {

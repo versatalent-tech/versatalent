@@ -16,6 +16,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
 
 ## 2. Check after the latest deploys
+- [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day and Staff → Rewards, press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
 - [ ] Member pass with rewards closed: no reward points balance or rewards list; "Points this year" still shows. Admin → Rewards says points are building up for launch
 - [ ] Tickets with a membership card: tap a VIP card on a phone; the pass shows "Buy tickets with your card" (only while an event has tickets on sale); the ticket page says "Points go to <first name>"; buy with a different email and check the points reach the card's member; "Not you?" removes the link
@@ -36,7 +37,6 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Instagram phase 2: migration 040 is on production (29 Oct 2026). Set up the Meta app and Netlify variables (`docs/INSTAGRAM_SETUP.md`), connect @versatalent in Admin → Instagram, and ask each talent to connect from their portal
 - [ ] Instagram phase 3: insights page (engagement by talent, format, content tags, posting time)
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
-- [ ] Sign the macOS NFC Bridge app so staff don't get a security warning: needs an Apple Developer Program membership (Developer ID certificate, then the app is signed and notarised); no certificate on this Mac yet
 
 ## 4. Later
 - [ ] AI meeting notes (built, off): privacy notice line about Anthropic, add `ANTHROPIC_API_KEY` in Netlify (Functions scope), redeploy, test one draft
@@ -55,6 +55,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Talent portal logins switched off for Claudio Costa and Joao Rodolfo: switch them on if they should get tasks or see bookings
 - [ ] Card payments: Solo Lite works through the SumUp app (till → "SumUp app" + transaction code); a SumUp Solo would let the till send amounts straight to the reader
 
+- [ ] Sign the macOS NFC Bridge app so staff don't get a security warning: needs an Apple Developer Program membership (not yet, decided 5 Nov). Until then, staff open it the first time with right-click → Open → Open. Android phones and tablets don't need the Bridge (phone tap)
 - [ ] Backups: a longer Neon restore window needs a paid Neon plan (the free plan's 6 hours is already set); staying on free for now
 
 ## 5. Housekeeping
@@ -63,6 +64,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Door check-in and staff Rewards read cards on Android phones and tablets (Chrome's NFC), as the till already did; no Bridge or computer needed
 - [x] Decided: minimum age 18+ for everyone; cards posted within 7 to 14 working days; replacement cards may be charged (new card, set-up and postage)
 - [x] Check-in points 50 → 20 (VIP → Point Rules, 4 Nov)
 - [x] Netlify deployed `main` up to `7a250cd` (checked 4 Nov)
