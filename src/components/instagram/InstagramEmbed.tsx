@@ -33,8 +33,8 @@ function loadEmbedScript(): Promise<void> {
 }
 
 /**
- * One Instagram post or reel, shown with Instagram's own embed (real image,
- * caption and link). Nothing is loaded from Instagram until the post is about
+ * One Instagram post or reel, shown with Instagram's own embed (real image
+ * and link; no caption, so the card stays compact). Nothing is loaded from Instagram until the post is about
  * to scroll into view. The blockquote is built outside React because
  * Instagram's script replaces it with its own iframe.
  */
@@ -49,10 +49,9 @@ export function InstagramEmbed({ permalink }: { permalink: string }) {
 
     const quote = document.createElement("blockquote");
     quote.className = "instagram-media";
-    quote.setAttribute("data-instgrm-captioned", "");
     quote.setAttribute("data-instgrm-permalink", permalink);
     quote.setAttribute("data-instgrm-version", "14");
-    quote.style.cssText = "background:#fff;border:0;margin:0;max-width:540px;min-width:280px;width:100%;";
+    quote.style.cssText = "background:#fff;border:0;margin:0;min-width:280px;width:100%;";
     const link = document.createElement("a");
     link.href = permalink;
     link.target = "_blank";
@@ -67,7 +66,7 @@ export function InstagramEmbed({ permalink }: { permalink: string }) {
   }, [inView, permalink]);
 
   return (
-    <div ref={ref} className="flex justify-center min-h-[480px] rounded-lg bg-gray-50">
+    <div ref={ref} className="flex justify-center min-h-[420px] rounded-lg bg-gray-50">
       {failed ? (
         <a
           href={permalink}

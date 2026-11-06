@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Instagram } from "lucide-react";
+import { ChevronLeft, ChevronRight, Instagram } from "lucide-react";
 import { InstagramEmbed } from "./InstagramEmbed";
 import type { PublicInstagramPost } from "@/lib/instagram/types";
 
@@ -33,11 +33,10 @@ export function InstagramSection(props: InstagramSectionProps) {
 
   if (posts.length === 0) return null;
 
-  // Instagram's embeds are never narrower than 326px, so fit as many columns as that allows
-  const grid = (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,326px),1fr))] gap-6">
+  const row = (
+    <PostRow>
       {posts.map((post) => (
-        <div key={post.id} className="space-y-2">
+        <div key={post.id} className="w-[326px] max-w-[85vw] shrink-0 snap-start space-y-2">
           <InstagramEmbed permalink={post.permalink} />
           {props.homepage && (
             <p className="text-sm text-center text-gray-600">
@@ -56,7 +55,7 @@ export function InstagramSection(props: InstagramSectionProps) {
           )}
         </div>
       ))}
-    </div>
+    </PostRow>
   );
 
   if (props.homepage) {
@@ -71,7 +70,7 @@ export function InstagramSection(props: InstagramSectionProps) {
               What our artists are sharing on Instagram right now
             </p>
           </div>
-          {grid}
+          {row}
         </div>
       </section>
     );
@@ -95,7 +94,66 @@ export function InstagramSection(props: InstagramSectionProps) {
           </a>
         )}
       </div>
-      {grid}
+      {row}
+    </div>
+  );
+}
+
+/**
+ * The posts in a single row that scrolls sideways, so they take up one card's
+ * height on the page however many there are. Cards are 326px wide, the
+ * narrowest Instagram's embeds allow. Arrows appear when there's more to see.
+ */
+function PostRow({ children }: { children: ReactNode }) {
+  const row = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState({ back: false, forward: false });
+
+  const update = useCallback(() => {
+    const el = row.current;
+    if (!el) return;
+    setCanScroll({
+      back: el.scrollLeft > 4,
+      forward: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    update();
+    // Embeds change size as Instagram loads them
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    Array.from(el.children).forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, [update, children]);
+
+  const scroll = (direction: 1 | -1) => {
+    const el = row.current;
+    if (el) el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: "smooth" });
+  };
+
+  const arrow = "absolute top-[200px] -translate-y-1/2 z-10 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md border border-gray-200 text-gray-700 hover:text-gold";
+
+  return (
+    <div className="relative">
+      {canScroll.back && (
+        <button type="button" onClick={() => scroll(-1)} aria-label="Previous posts" className={`${arrow} -left-3`}>
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      <div
+        ref={row}
+        onScroll={update}
+        className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 [scrollbar-width:thin]"
+      >
+        {children}
+      </div>
+      {canScroll.forward && (
+        <button type="button" onClick={() => scroll(1)} aria-label="More posts" className={`${arrow} -right-3`}>
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 }
