@@ -111,9 +111,10 @@ test.describe('Portal', () => {
     await bell.click();
     await expect(page.getByText('New to-do')).toHaveCount(3);
     await expect(bell).not.toContainText('3');
-    const list = await (await portal.get('/api/portal/notifications')).json();
-    expect(list.data.unread).toBe(0);
-    expect(list.data.items).toHaveLength(3);
+    // The badge clears at once; marking them read on the server follows
+    const list = async () => (await (await portal.get('/api/portal/notifications')).json()).data;
+    await expect.poll(async () => (await list()).unread).toBe(0);
+    expect((await list()).items).toHaveLength(3);
   });
 
   test('badge shows 9+', async ({ page }) => {
