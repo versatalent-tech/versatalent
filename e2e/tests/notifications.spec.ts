@@ -10,6 +10,7 @@ import {
   savePushDevice,
 } from '../../src/lib/db/repositories/notifications';
 import { notify, notifyTalent } from '../../src/lib/notifications/notify';
+import { runReminders } from '../../src/lib/notifications/reminders';
 
 const aMessage = () => ({ kind: 'task_assigned' as const, title: 'New to-do', body: uniq('Send the mix'), link: '/portal' });
 
@@ -328,5 +329,79 @@ test.describe('Profile, document and payout triggers', () => {
     expect((await admin.delete(`/api/payouts/${booking.id}`)).status()).toBe(200);
     expect((await pay('2026-11-06')).status()).toBe(200);
     expect(await notificationsFor(user.id)).toHaveLength(2);
+  });
+});
+
+test.describe('Reminders', () => {
+  /** A confirmed booking shared with the talent, starting at the given moment */
+  async function bookingAt(talentId: string, startsAt: string, extra: { shared?: boolean; status?: string } = {}) {
+    const ends = new Date(new Date(startsAt).getTime() + 3 * 3_600_000).toISOString();
+    const [row] = await sql`
+      INSERT INTO bookings (talent_id, title, status, starts_at, ends_at, location, call_time, shared_with_talent)
+      VALUES (${talentId}, ${uniq('E2E Gig')}, ${extra.status ?? 'confirmed'}, ${startsAt}, ${ends}, 'Leeds', '19:00', ${extra.shared ?? true})
+      RETURNING id, title
+    `;
+    return row as { id: string; title: string };
+  }
+  const reminders = async (userId: string) =>
+    (await notificationsFor(userId)).filter((n: any) => n.kind === 'booking_reminder' || n.kind === 'task_due');
+
+  test('booking reminder sent once at 10:00 UK', async () => {
+    const user = await talentUser();
+    const gig = await bookingAt(user.talentId, '2027-01-21T20:00:00Z');
+    await bookingAt(user.talentId, '2027-01-21T21:00:00Z', { shared: false });
+    await bookingAt(user.talentId, '2027-01-21T22:00:00Z', { status: 'hold' });
+    await runReminders(new Date('2027-01-20T10:05:00Z'));
+    await runReminders(new Date('2027-01-20T10:35:00Z'));
+    const sent = await reminders(user.id);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toEqual(expect.objectContaining({ kind: 'booking_reminder', title: 'Tomorrow', link: '/portal/bookings' }));
+    expect(sent[0].body).toBe(`${gig.title} · Call time 19:00 · Leeds`);
+  });
+
+  test('not sent at 11:00', async () => {
+    const user = await talentUser();
+    await bookingAt(user.talentId, '2027-02-11T20:00:00Z');
+    await runReminders(new Date('2027-02-10T11:05:00Z'));
+    expect(await reminders(user.id)).toHaveLength(0);
+  });
+
+  test("booking at 23:30 UK tomorrow is reminded; one at 00:30 the day after isn't", async () => {
+    const user = await talentUser();
+    const late = await bookingAt(user.talentId, '2027-01-15T23:30:00Z');
+    await bookingAt(user.talentId, '2027-01-16T00:30:00Z');
+    await runReminders(new Date('2027-01-14T10:05:00Z'));
+    const sent = await reminders(user.id);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].body).toContain(late.title);
+  });
+
+  test('clock-change day', async () => {
+    // Clocks go forward on 28 Mar 2027: 09:05 UTC is 10:05 in the UK
+    const user = await talentUser();
+    await bookingAt(user.talentId, '2027-03-29T19:00:00Z');
+    await runReminders(new Date('2027-03-28T08:05:00Z'));
+    expect(await reminders(user.id)).toHaveLength(0);
+    await runReminders(new Date('2027-03-28T09:05:00Z'));
+    expect(await reminders(user.id)).toHaveLength(1);
+  });
+
+  test('task due tomorrow reminded at 09:00', async () => {
+    const user = await talentUser();
+    const subject = uniq('Send the mix');
+    await sql`INSERT INTO activities (type, subject, due_at, owner_user_id) VALUES ('task', ${subject}, '2027-04-08T16:00:00Z', ${user.id})`;
+    await sql`INSERT INTO activities (type, subject, due_at, owner_user_id, completed_at) VALUES ('task', 'done already', '2027-04-08T16:00:00Z', ${user.id}, NOW())`;
+    await runReminders(new Date('2027-04-07T08:05:00Z')); // 09:05 BST
+    await runReminders(new Date('2027-04-07T08:45:00Z'));
+    expect(await reminders(user.id)).toEqual([expect.objectContaining({ kind: 'task_due', title: 'Due tomorrow', body: subject, link: '/portal' })]);
+  });
+
+  test('notifications older than 90 days are deleted', async () => {
+    const user = await talentUser();
+    const [old] = await saveNotifications([user.id], aMessage());
+    const [recent] = await saveNotifications([user.id], aMessage());
+    await sql`UPDATE notifications SET created_at = NOW() - INTERVAL '91 days' WHERE id = ${old.id}`;
+    await runReminders(new Date('2027-05-01T15:00:00Z'));
+    expect((await sql`SELECT id FROM notifications WHERE user_id = ${user.id}`).map((r: any) => r.id)).toEqual([recent.id]);
   });
 });

@@ -94,7 +94,7 @@ export function bookingChanges(before: Booking | null, after: Booking): { talent
 }
 
 /** The day-before reminder; day = tomorrow's UK date (YYYY-MM-DD) */
-export function bookingReminder(b: Booking, day: string): NotificationMessage {
+export function bookingReminder(b: Pick<Booking, 'id' | 'title' | 'starts_at' | 'location' | 'call_time'>, day: string): NotificationMessage {
   const parts = [b.title, b.call_time ? `Call time ${b.call_time}` : `Starts ${ukTime(b.starts_at)}`];
   if (b.location) parts.push(b.location);
   return message({ kind: 'booking_reminder', title: 'Tomorrow', body: parts.join(' · '), link: BOOKINGS_LINK, dedupeKey: `booking_reminder:${b.id}:${day}` });
