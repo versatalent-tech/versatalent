@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 8 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 041 are on production; 042 (talent notifications) is waiting to be run. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
+_Last updated 8 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 042 are on production. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -16,7 +16,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
 
 ## 2. Check after the latest deploys
-- [ ] Talent notifications: run migration 042 on production, then add the push keys in Netlify (`docs/NOTIFICATIONS_SETUP.md`) and redeploy. Check the bell in the portal, switch on notifications on an Android phone and an iPhone (from the Home Screen), give a test to-do and change a test booking
+- [ ] Talent notifications (migration 042 on production 8 Nov 2026): add the push keys in Netlify (`docs/NOTIFICATIONS_SETUP.md`) and redeploy. Check the bell in the portal, switch on notifications on an Android phone and an iPhone (from the Home Screen), give a test to-do and change a test booking
 - [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day and Staff → Rewards, press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
 - [ ] Member pass with rewards closed: no reward points balance or rewards list; "Points this year" still shows. Admin → Rewards says points are building up for launch
@@ -40,6 +40,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 
 ## 4. Later
+- [ ] Notifications follow-ups from the review: switch off phone notifications when a talent signs out; tell talents when a cancelled booking is back on or a booking is un-shared; mark only the shown notifications read; re-subscribe phones after the push keys change; limit phones per talent
 - [ ] AI meeting notes (built, off): privacy notice line about Anthropic, add `ANTHROPIC_API_KEY` in Netlify (Functions scope), redeploy, test one draft
 - [ ] Meetings: audio recordings (needs a speech-to-text service), link meetings to bookings, share notes with talents
 - [ ] Prospecting v2: send through an email provider, open/reply tracking, one-click unsubscribe
@@ -65,6 +66,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Talent notifications: portal bell, phone push, reminders the day before (migration 042)
 - [x] Member pass always shows "Buy tickets with your card", with a note while nothing is on sale (PR #61)
 - [x] Checked on 5 Nov: the public pass hides points history, check-ins and the email from anyone not signed in as the team
 - [x] Door check-in and staff Rewards read cards on Android phones and tablets (Chrome's NFC), as the till already did; no Bridge or computer needed (PR #61)
