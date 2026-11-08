@@ -19,6 +19,25 @@ function vapid() {
   return publicKey && privateKey && subject ? { publicKey, privateKey, subject } : null;
 }
 
+/** Browsers' push services; devices can only be saved with one of these */
+const PUSH_HOSTS = ['fcm.googleapis.com', 'android.googleapis.com', '.push.services.mozilla.com', '.push.apple.com', '.notify.windows.com'];
+
+/**
+ * Only send to real push services, so a saved device can't point the server
+ * at any other address. The tests' pretend service is allowed through
+ * PUSH_TEST_ORIGIN, which only scripts/e2e.mjs sets.
+ */
+export function isPushEndpoint(endpoint: string): boolean {
+  const testOrigin = process.env.PUSH_TEST_ORIGIN;
+  if (testOrigin && endpoint.startsWith(`${testOrigin}/`)) return true;
+  try {
+    const url = new URL(endpoint);
+    return url.protocol === 'https:' && PUSH_HOSTS.some((h) => (h.startsWith('.') ? url.hostname.endsWith(h) : url.hostname === h));
+  } catch {
+    return false;
+  }
+}
+
 export function pushConfigured(): boolean {
   return vapid() !== null;
 }
@@ -34,7 +53,7 @@ export async function sendPush(
   payload: { title: string; body: string; link: string | null }
 ): Promise<'sent' | 'gone' | 'failed'> {
   const details = vapid();
-  if (!details) return 'failed';
+  if (!details || !isPushEndpoint(device.endpoint)) return 'failed';
   try {
     const request = webpush.generateRequestDetails(
       { endpoint: device.endpoint, keys: { p256dh: device.p256dh, auth: device.auth } },

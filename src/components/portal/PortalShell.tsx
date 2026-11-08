@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { CalendarDays, CalendarX, Gift, Home, LogOut, PoundSterling, UserRound } from "lucide-react";
+import { NotificationBell } from "@/components/portal/NotificationBell";
 
 const NAV = [
   { href: "/portal", label: "Home", icon: Home },
@@ -34,6 +35,7 @@ export function PortalShell({ talentName, children }: { talentName: string; chil
             <span className="hidden text-sm text-gray-300 sm:inline">Talent Portal</span>
           </Link>
           <div className="flex items-center gap-3 text-sm">
+            <NotificationBell />
             <span className="max-w-[10rem] truncate text-gray-300">{talentName}</span>
             <button onClick={signOut} className="flex items-center gap-1 text-gray-300 hover:text-gold" aria-label="Sign out">
               <LogOut className="h-4 w-4" />

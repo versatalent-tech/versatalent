@@ -236,6 +236,7 @@ async function main() {
     VAPID_PUBLIC_KEY: vapid.publicKey,
     VAPID_PRIVATE_KEY: vapid.privateKey,
     VAPID_SUBJECT: 'mailto:e2e@example.com',
+    PUSH_TEST_ORIGIN: 'http://127.0.0.1:4012',
     NEXT_TELEMETRY_DISABLED: '1',
   };
   delete env.ANTHROPIC_API_KEY; // AI notes stay off in tests

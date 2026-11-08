@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { createTalent, createTalentLogin, sql, uniq } from '../support/db';
+import { portalApi } from '../support/auth';
 import { pushDevice, pushRequests } from '../support/push';
 import {
   activeTalentUserIds,
@@ -90,5 +91,70 @@ test.describe('notify', () => {
     await sql`UPDATE users SET is_active = false WHERE id = ${user.id}`;
     await notifyTalent(user.talentId, aMessage());
     expect(await sql`SELECT id FROM notifications WHERE user_id = ${user.id}`).toHaveLength(0);
+  });
+});
+
+test.describe('Portal', () => {
+  async function seed(userId: string, count: number) {
+    for (let i = 0; i < count; i++) await saveNotifications([userId], aMessage());
+  }
+
+  test('bell shows unread count and clears on open', async ({ page }) => {
+    const user = await talentUser();
+    await seed(user.id, 3);
+    const portal = await portalApi(user.email, user.password);
+    await page.context().addCookies((await portal.storageState()).cookies);
+    await page.goto('/portal');
+
+    const bell = page.getByRole('button', { name: /Notifications/ });
+    await expect(bell).toContainText('3');
+    await bell.click();
+    await expect(page.getByText('New to-do')).toHaveCount(3);
+    await expect(bell).not.toContainText('3');
+    const list = await (await portal.get('/api/portal/notifications')).json();
+    expect(list.data.unread).toBe(0);
+    expect(list.data.items).toHaveLength(3);
+  });
+
+  test('badge shows 9+', async ({ page }) => {
+    const user = await talentUser();
+    await seed(user.id, 12);
+    const portal = await portalApi(user.email, user.password);
+    await page.context().addCookies((await portal.storageState()).cookies);
+    await page.goto('/portal');
+    await expect(page.getByRole('button', { name: /Notifications/ })).toContainText('9+');
+  });
+
+  test("talent can't read or mark another user's notifications or remove their device", async () => {
+    const a = await talentUser();
+    const b = await talentUser();
+    const [row] = await saveNotifications([a.id], aMessage());
+    const device = pushDevice(uniq('phone'));
+    await savePushDevice(a.id, { ...device, userAgent: 'e2e' });
+
+    const portalB = await portalApi(b.email, b.password);
+    expect((await (await portalB.get('/api/portal/notifications')).json()).data.items).toHaveLength(0);
+    await portalB.post('/api/portal/notifications/read', { data: { ids: [row.id] } });
+    const [stored] = await sql`SELECT read_at FROM notifications WHERE id = ${row.id}`;
+    expect(stored.read_at).toBeNull();
+
+    const removed = await portalB.delete('/api/portal/push', { data: { endpoint: device.endpoint } });
+    expect(removed.status()).toBe(404);
+    expect(await sql`SELECT id FROM push_subscriptions WHERE endpoint = ${device.endpoint}`).toHaveLength(1);
+  });
+
+  test('saving a device via the API stores it', async ({ request }) => {
+    const user = await talentUser();
+    const portal = await portalApi(user.email, user.password);
+    const device = pushDevice(uniq('phone'));
+    const saved = await portal.post('/api/portal/push', { data: { endpoint: device.endpoint, keys: { p256dh: device.p256dh, auth: device.auth } } });
+    expect(saved.ok()).toBe(true);
+    expect(await sql`SELECT user_id FROM push_subscriptions WHERE endpoint = ${device.endpoint}`).toEqual([{ user_id: user.id }]);
+    expect((await (await portal.get('/api/portal/push/key')).json()).data.key).toBeTruthy();
+    expect((await request.get('/api/portal/notifications')).status()).toBe(401);
+
+    // Only browsers' push services, so the server can't be pointed anywhere else
+    const elsewhere = await portal.post('/api/portal/push', { data: { endpoint: 'https://example.com/hook', keys: { p256dh: device.p256dh, auth: device.auth } } });
+    expect(elsewhere.status()).toBe(400);
   });
 });
