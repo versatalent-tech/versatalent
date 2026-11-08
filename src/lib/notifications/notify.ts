@@ -7,11 +7,13 @@
 import {
   activeTalentUserIds,
   deletePushDeviceByEndpoint,
+  filterTalentUsers,
   listPushDevices,
   markPushed,
   saveNotifications,
   touchPushDevice,
 } from '../db/repositories/notifications';
+import { taskAssigned } from './messages';
 import { pushConfigured, sendPush } from './push';
 import type { NotificationMessage } from './types';
 
@@ -43,6 +45,19 @@ export async function notify(userIds: string[], m: NotificationMessage): Promise
 export async function notifyTalent(talentId: string, m: NotificationMessage): Promise<void> {
   try {
     await notify(await activeTalentUserIds(talentId), m);
+  } catch (error) {
+    console.error('Notification failed:', error);
+  }
+}
+
+/** A task was given to someone other than the person adding it: tell them if they're a talent */
+export async function notifyTaskAssigned(
+  task: { id: string; subject: string; due_at: string | null; owner_user_id: string | null },
+  actorUserId: string | null
+): Promise<void> {
+  if (!task.owner_user_id || task.owner_user_id === actorUserId) return;
+  try {
+    await notify(await filterTalentUsers([task.owner_user_id]), taskAssigned(task));
   } catch (error) {
     console.error('Notification failed:', error);
   }

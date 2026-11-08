@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import { createTalent, createTalentLogin, sql, uniq } from '../support/db';
-import { portalApi } from '../support/auth';
+import { createTalent, createTalentLogin, createTeamUser, sql, uniq } from '../support/db';
+import { adminApi, portalApi } from '../support/auth';
 import { pushDevice, pushRequests } from '../support/push';
 import {
   activeTalentUserIds,
@@ -157,5 +157,46 @@ test.describe('Portal', () => {
     // Only browsers' push services, so the server can't be pointed anywhere else
     const elsewhere = await portal.post('/api/portal/push', { data: { endpoint: 'https://example.com/hook', keys: { p256dh: device.p256dh, auth: device.auth } } });
     expect(elsewhere.status()).toBe(400);
+  });
+});
+
+/** Notifications a user has, oldest first */
+async function notificationsFor(userId: string) {
+  return sql`SELECT kind, title, body, link FROM notifications WHERE user_id = ${userId} ORDER BY created_at, id`;
+}
+
+test.describe('Triggers', () => {
+  const dueTomorrow = () => new Date(Date.now() + 86_400_000).toISOString();
+
+  test('giving a task to a talent notifies them', async () => {
+    const user = await talentUser();
+    const admin = await adminApi();
+    const subject = uniq('Send the mix');
+    const created = await admin.post('/api/crm/activities', { data: { type: 'task', subject, due_at: dueTomorrow(), owner_user_id: user.id } });
+    expect(created.status(), await created.text()).toBe(201);
+    expect(await notificationsFor(user.id)).toEqual([expect.objectContaining({ kind: 'task_assigned', title: 'New to-do', link: '/portal' })]);
+    expect((await notificationsFor(user.id))[0].body).toContain(subject);
+  });
+
+  test('re-assigning notifies the new owner only', async () => {
+    const first = await talentUser();
+    const second = await talentUser();
+    const admin = await adminApi();
+    const created = await admin.post('/api/crm/activities', { data: { type: 'task', subject: uniq('Task'), due_at: dueTomorrow(), owner_user_id: first.id } });
+    const id = (await created.json()).data.id;
+    await admin.patch(`/api/crm/activities/${id}`, { data: { owner_user_id: second.id } });
+    expect(await notificationsFor(first.id)).toHaveLength(1);
+    expect(await notificationsFor(second.id)).toHaveLength(1);
+    // Editing anything else doesn't notify again
+    await admin.patch(`/api/crm/activities/${id}`, { data: { subject: uniq('Renamed') } });
+    expect(await notificationsFor(second.id)).toHaveLength(1);
+  });
+
+  test("a task for a road manager doesn't notify", async () => {
+    const roadManager = await createTeamUser('road_manager');
+    const admin = await adminApi();
+    const created = await admin.post('/api/crm/activities', { data: { type: 'task', subject: uniq('Van'), due_at: dueTomorrow(), owner_user_id: roadManager.id } });
+    expect(created.status(), await created.text()).toBe(201);
+    expect(await notificationsFor(roadManager.id)).toHaveLength(0);
   });
 });

@@ -3,6 +3,7 @@ import { crmContext, parseBody } from '@/lib/crm/route-helpers';
 import { activityUpdateSchema } from '@/lib/crm/schemas';
 import { deleteActivity, getActivity, isTaskAssignee, updateActivity } from '@/lib/db/repositories/crm';
 import { can } from '@/lib/auth/permissions';
+import { notifyTaskAssigned } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -21,8 +22,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (body.data.owner_user_id && !(await isTaskAssignee(ctx.scope, body.data.owner_user_id))) {
       return ApiErrors.BadRequest('Tasks can be given to the team, road managers and your talents with a portal login');
     }
+    const before = body.data.owner_user_id ? await getActivity(ctx.scope, id) : null;
     if (!(await updateActivity(ctx.scope, id, body.data))) return ApiErrors.NotFound('Activity');
-    return successResponse(await getActivity(ctx.scope, id), 'Saved');
+    const activity = await getActivity(ctx.scope, id);
+    // Given to someone new
+    if (before && activity?.type === 'task' && activity.owner && activity.owner.id !== before.owner?.id) {
+      await notifyTaskAssigned({ ...activity, owner_user_id: activity.owner.id }, ctx.actor.userId);
+    }
+    return successResponse(activity, 'Saved');
   } catch (error) {
     console.error('Error updating activity:', error);
     return ApiErrors.ServerError('Failed to save');

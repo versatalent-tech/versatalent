@@ -10,6 +10,7 @@ import {
   isTaskAssignee,
   listTasks,
 } from '@/lib/db/repositories/crm';
+import { notifyTaskAssigned } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -49,7 +50,11 @@ export async function POST(request: NextRequest) {
     }
 
     const id = await createActivity(ctx.actor, data);
-    return successResponse(await getActivity(ctx.scope, id), 'Saved', 201);
+    const activity = await getActivity(ctx.scope, id);
+    if (activity?.type === 'task') {
+      await notifyTaskAssigned({ ...activity, owner_user_id: activity.owner?.id ?? null }, ctx.actor.userId);
+    }
+    return successResponse(activity, 'Saved', 201);
   } catch (error) {
     console.error('Error creating activity:', error);
     return ApiErrors.ServerError('Failed to save');
