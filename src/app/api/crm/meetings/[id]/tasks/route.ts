@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { crmContext, parseBody } from '@/lib/crm/route-helpers';
 import { meetingTasksSchema } from '@/lib/crm/schemas';
 import { createTasksFromActionItems, getMeeting } from '@/lib/db/repositories/meetings';
+import { notifyTaskAssigned } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -20,7 +21,9 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   try {
     if (!(await getMeeting(ctx.scope, id))) return ApiErrors.NotFound('Meeting');
-    const created = await createTasksFromActionItems(ctx.actor, id, body.data.item_ids);
+    const tasks = await createTasksFromActionItems(ctx.actor, id, body.data.item_ids);
+    await Promise.allSettled(tasks.map((task) => notifyTaskAssigned(task, ctx.actor.userId)));
+    const created = tasks.length;
     const message = created === 0 ? 'Those action items are already tasks' : created === 1 ? '1 task added' : `${created} tasks added`;
     return successResponse(await getMeeting(ctx.scope, id), message);
   } catch (error) {

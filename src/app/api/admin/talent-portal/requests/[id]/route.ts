@@ -4,6 +4,8 @@ import { parseBody } from '@/lib/crm/route-helpers';
 import { reviewSchema } from '@/lib/portal/schemas';
 import { reviewProfileChange } from '@/lib/db/repositories/portal';
 import { logAudit } from '@/lib/db/repositories/audit-log';
+import { profileReviewed } from '@/lib/notifications/messages';
+import { notifyTalent } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -22,6 +24,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     await logAudit({ userId: auth.session.userId, name: auth.session.name }, `profile_${body.data.decision}`, 'talent', result.talent.id, {
       after: result.changes,
     });
+    await notifyTalent(result.talent.id, profileReviewed(body.data.decision === 'approved', body.data.note ?? null));
     return successResponse(result, body.data.decision === 'approved' ? 'Published' : 'Rejected');
   } catch (error) {
     console.error('Error reviewing profile request:', error);

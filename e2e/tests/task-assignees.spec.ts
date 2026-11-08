@@ -53,6 +53,8 @@ test.describe('Giving tasks to road managers and talents', () => {
     const portal = await portalApi(login.email, login.password);
     const todos = (await (await portal.get('/api/portal/tasks')).json()).data;
     expect(todos).toEqual([expect.objectContaining({ subject: 'Send your set list', source: null })]);
+    // ...and was told about it
+    expect(await sql`SELECT kind, body FROM notifications WHERE user_id = ${login.id}`).toEqual([{ kind: 'task_assigned', body: expect.stringContaining('Send your set list') }]);
     expect((await portal.patch(`/api/portal/tasks/${todos[0].id}`, { data: { completed: true } })).status()).toBe(200);
 
     // The team sees both as done

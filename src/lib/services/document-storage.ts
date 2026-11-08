@@ -17,7 +17,8 @@ function getDocumentStore() {
     return getStore({ name: STORE_NAME, consistency: 'strong' });
   } catch (error) {
     const isMissingEnv = error instanceof Error && error.name === 'MissingBlobsEnvironmentError';
-    if (isMissingEnv && process.env.NODE_ENV !== 'production') {
+    // The tests run a production build, so they opt in with E2E_LOCAL_DOCUMENTS (set only by scripts/e2e.mjs)
+    if (isMissingEnv && (process.env.NODE_ENV !== 'production' || process.env.E2E_LOCAL_DOCUMENTS === '1')) {
       return null;
     }
     throw error;

@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: 'Privacy Notice | VersaTalent' };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Notice" updated="October 2026">
+    <LegalPage title="Privacy Notice" updated="November 2026">
       <p>
         This notice explains how VersaTalent (&quot;we&quot;, &quot;us&quot;) uses personal information when you join our VIP
         programme, buy tickets, come to our events, buy from our bars and tills, or contact us. We are the controller of this information.
@@ -21,6 +21,7 @@ export default function PrivacyPage() {
         <li><strong>Messages:</strong> anything you send through our website forms or by email.</li>
         <li><strong>Referrals:</strong> if you join with a friend&apos;s code, we record that they referred you. They see how many friends joined and came to an event, not who.</li>
         <li><strong>Talents&apos; connected Instagram accounts:</strong> if a talent we represent connects their Instagram professional account, we receive their username, profile picture, follower count, their posts and reels from the last 90 days with each one&apos;s caption, and the figures Instagram provides for them (views, reach, likes, comments, saves, shares, follows and profile visits). We never ask for, and can&apos;t access, their messages or the text of comments, and we can&apos;t post anything.</li>
+        <li><strong>Talents&apos; notifications:</strong> the notifications we show a talent in their portal (for example a new booking or to-do), and, if they switch on notifications on a phone or browser, the push address its push service gives us for that device.</li>
       </ul>
 
       <h2>Why we use it, and our lawful basis</h2>
@@ -31,6 +32,7 @@ export default function PrivacyPage() {
         <li><strong>To check you&apos;re 18 or over</strong>, and to keep records we&apos;re required to keep (for example payment records for tax): legal obligation.</li>
         <li><strong>To prevent fraud and misuse, keep our systems secure and improve the programme</strong>: our legitimate interests.</li>
         <li><strong>To see how our talents&apos; Instagram posts perform</strong> and plan content and bookings with them: the talent&apos;s consent, given when they connect, which they can withdraw at any time by disconnecting in their portal or removing our access in Instagram.</li>
+        <li><strong>To tell our talents about their bookings, to-dos, documents and payments</strong> in their portal, and on their phone if they switch that on: to perform our agreement with them. Phone notifications are off until the talent turns them on, and they can turn them off at any time in the portal or in their phone&apos;s settings.</li>
         <li><strong>To send you news and offers</strong> by email, text or post: only with your consent for each channel, which you can withdraw at any time.</li>
         <li><strong>To tell you about something you&apos;ve paid for</strong>, such as your Founding Membership ending: to perform our contract with you.</li>
       </ul>
@@ -39,6 +41,7 @@ export default function PrivacyPage() {
       <ul>
         <li>Service providers who run our systems for us under contract: Netlify (website hosting), Neon (database hosting) and SumUp (payments).</li>
         <li>Postal services, which see the name and address on your card&apos;s envelope.</li>
+        <li>The push service of a talent&apos;s phone or browser (Google, Apple, Mozilla or Microsoft), which delivers each phone notification; the notification&apos;s text is encrypted so only the device can read it.</li>
         <li>Authorities, where the law requires it.</li>
       </ul>
       <p>We don&apos;t sell your information.</p>
@@ -56,6 +59,7 @@ export default function PrivacyPage() {
         <li>Applications that are never paid for: up to 6 months.</li>
         <li>Ticket orders: 2 years after the event for the buyer&apos;s details; unpaid orders up to 6 months; payment records 6 years.</li>
         <li>Marketing choices: until you change them.</li>
+        <li>Talents&apos; notifications: 90 days. A phone&apos;s push address: until notifications are turned off on it, or its push service tells us it&apos;s no longer in use.</li>
         <li>Connected Instagram accounts: the access is deleted as soon as the account is disconnected; figures already collected are kept while we represent the talent, and deleted straight away if they ask us or Meta to delete their data.</li>
       </ul>
 

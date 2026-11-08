@@ -23,6 +23,7 @@ import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import webpush from 'web-push';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const NEON_API = 'https://console.neon.tech/api/v2';
@@ -214,6 +215,7 @@ async function main() {
   }
 
   // Throwaway values for this run only
+  const vapid = webpush.generateVAPIDKeys();
   const env = {
     ...process.env,
     DATABASE_URL: databaseUrl,
@@ -230,6 +232,13 @@ async function main() {
     INSTAGRAM_APP_SECRET: randomBytes(24).toString('hex'),
     INSTAGRAM_TOKEN_KEY: randomBytes(32).toString('base64'),
     INSTAGRAM_SYNC_INLINE: '1',
+    // Phone push goes to the pretend push service (e2e/mocks/push.mjs), with keys for this run
+    VAPID_PUBLIC_KEY: vapid.publicKey,
+    VAPID_PRIVATE_KEY: vapid.privateKey,
+    VAPID_SUBJECT: 'mailto:e2e@example.com',
+    PUSH_TEST_ORIGIN: 'http://127.0.0.1:4012',
+    // Uploaded documents go to the git-ignored .private-uploads folder
+    E2E_LOCAL_DOCUMENTS: '1',
     NEXT_TELEMETRY_DISABLED: '1',
   };
   delete env.ANTHROPIC_API_KEY; // AI notes stay off in tests

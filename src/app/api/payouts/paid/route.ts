@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { bookingContext } from '@/lib/bookings/route-helpers';
 import { parseBody } from '@/lib/crm/route-helpers';
 import { markPayoutsPaid } from '@/lib/db/repositories/bookings';
+import { notifyPayouts } from '@/lib/notifications/notify';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
         after: { talent: p.talent_name, paid_cents: p.paid_cents, currency: p.currency, paid_on: paidOn, reference: body.data.reference ?? null },
       });
     }
+    await notifyPayouts(paid);
     const skipped = body.data.booking_ids!.length - paid.length;
     return successResponse(
       { paid, skipped },

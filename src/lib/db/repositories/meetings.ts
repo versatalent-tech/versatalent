@@ -221,7 +221,12 @@ export async function deleteMeeting(id: string): Promise<void> {
  * One statement: the meeting row is locked, so two clicks at once can't make
  * the same task twice. Returns how many tasks were created.
  */
-export async function createTasksFromActionItems(actor: CrmActor, meetingId: string, itemIds: string[]): Promise<number> {
+/** The tasks made (none for items that were already tasks) */
+export async function createTasksFromActionItems(
+  actor: CrmActor,
+  meetingId: string,
+  itemIds: string[]
+): Promise<{ id: string; subject: string; due_at: string | null; owner_user_id: string | null }[]> {
   const rows = await sql`
     WITH m AS (
       SELECT id, title, deal_id, organisation_id, starts_at, action_items
@@ -243,7 +248,7 @@ export async function createTasksFromActionItems(actor: CrmActor, meetingId: str
         COALESCE(NULLIF(items.item->>'owner_user_id', '')::uuid, ${actor.userId}::uuid),
         ${actor.userId}, ${actor.name}
       FROM items, m
-      RETURNING id
+      RETURNING id, subject, due_at, owner_user_id
     )
     UPDATE meetings SET
       action_items = (
@@ -256,7 +261,12 @@ export async function createTasksFromActionItems(actor: CrmActor, meetingId: str
       ),
       updated_at = NOW()
     WHERE id = ${meetingId} AND EXISTS (SELECT 1 FROM items)
-    RETURNING (SELECT count(*) FROM inserted)::int AS created
+    RETURNING (SELECT COALESCE(json_agg(inserted), '[]'::json) FROM inserted) AS created
   `;
-  return rows[0]?.created ?? 0;
+  return (rows[0]?.created ?? []).map((t: any) => ({
+    id: t.id,
+    subject: t.subject,
+    due_at: t.due_at ? new Date(t.due_at).toISOString() : null,
+    owner_user_id: t.owner_user_id,
+  }));
 }

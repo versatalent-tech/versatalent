@@ -13,6 +13,7 @@ import {
 } from '@/lib/db/repositories/bookings';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can } from '@/lib/auth/permissions';
+import { notifyBookingChanges } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     const id = await createBooking(ctx.actor, data);
     await logAudit(ctx.actor, 'create', 'booking', id, { after: { title: data.title, status: data.status, starts_at: data.starts_at } });
+    await notifyBookingChanges(null, await getBooking(ctx.scope, true, id));
     return successResponse(await getBooking(ctx.scope, ctx.withMoney, id), 'Booking created', 201);
   } catch (error) {
     console.error('Error creating booking:', error);
