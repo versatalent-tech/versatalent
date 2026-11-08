@@ -359,11 +359,13 @@ test.describe('Reminders', () => {
     expect(sent[0].body).toBe(`${gig.title} · Call time 19:00 · Leeds`);
   });
 
-  test('not sent at 11:00', async () => {
+  test('a missed 10:00 run is caught up at 11:00, but not later', async () => {
     const user = await talentUser();
     await bookingAt(user.talentId, '2027-02-11T20:00:00Z');
-    await runReminders(new Date('2027-02-10T11:05:00Z'));
+    await runReminders(new Date('2027-02-10T12:05:00Z'));
     expect(await reminders(user.id)).toHaveLength(0);
+    await runReminders(new Date('2027-02-10T11:05:00Z'));
+    expect(await reminders(user.id)).toHaveLength(1);
   });
 
   test("booking at 23:30 UK tomorrow is reminded; one at 00:30 the day after isn't", async () => {
@@ -403,5 +405,38 @@ test.describe('Reminders', () => {
     await sql`UPDATE notifications SET created_at = NOW() - INTERVAL '91 days' WHERE id = ${old.id}`;
     await runReminders(new Date('2027-05-01T15:00:00Z'));
     expect((await sql`SELECT id FROM notifications WHERE user_id = ${user.id}`).map((r: any) => r.id)).toEqual([recent.id]);
+  });
+});
+
+test.describe('Notifications never break or slow a save', () => {
+  async function finishedBooking(talentId: string, currency = 'GBP') {
+    const booking = await createBooking(talentId, { status: 'completed', endedDaysAgo: 3 });
+    await sql`UPDATE bookings SET fee_cents = 10000, currency = ${currency}, shared_with_talent = true WHERE id = ${booking.id}`;
+    return booking.id;
+  }
+
+  test('a payout whose notification fails is still recorded, and the others are told', async () => {
+    const broken = await talentUser();
+    const fine = await talentUser();
+    const ids = [await finishedBooking(broken.talentId, 'NOT-A-CURRENCY'), await finishedBooking(fine.talentId)];
+    const admin = await adminApi();
+    const res = await admin.post('/api/payouts/paid', { data: { booking_ids: ids, paid_on: '2026-11-05' } });
+    expect(res.status(), await res.text()).toBe(200);
+    expect(await sql`SELECT id FROM bookings WHERE id = ANY(${ids}::uuid[]) AND talent_paid_at IS NOT NULL`).toHaveLength(2);
+    await expect.poll(async () => (await notificationsFor(fine.id)).length).toBe(1);
+  });
+
+  test('several talents with slow phones don\'t hold up marking payouts paid', async () => {
+    const users = [await talentUser(), await talentUser(), await talentUser()];
+    const ids: string[] = [];
+    for (const user of users) {
+      await addDevice(user.id, uniq('slow-x'));
+      ids.push(await finishedBooking(user.talentId));
+    }
+    const admin = await adminApi();
+    const started = Date.now();
+    const res = await admin.post('/api/payouts/paid', { data: { booking_ids: ids, paid_on: '2026-11-05' } });
+    expect(res.status()).toBe(200);
+    expect(Date.now() - started).toBeLessThan(8_000);
   });
 });

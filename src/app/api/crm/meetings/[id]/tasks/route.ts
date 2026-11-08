@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   try {
     if (!(await getMeeting(ctx.scope, id))) return ApiErrors.NotFound('Meeting');
     const tasks = await createTasksFromActionItems(ctx.actor, id, body.data.item_ids);
-    for (const task of tasks) await notifyTaskAssigned(task, ctx.actor.userId);
+    await Promise.allSettled(tasks.map((task) => notifyTaskAssigned(task, ctx.actor.userId)));
     const created = tasks.length;
     const message = created === 0 ? 'Those action items are already tasks' : created === 1 ? '1 task added' : `${created} tasks added`;
     return successResponse(await getMeeting(ctx.scope, id), message);

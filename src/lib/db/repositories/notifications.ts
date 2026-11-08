@@ -115,6 +115,13 @@ export async function filterTalentUsers(userIds: string[]): Promise<string[]> {
   return rows.map((r: any) => r.id);
 }
 
+/** Of these bookings, the ones shared with their talent */
+export async function sharedBookingIds(bookingIds: string[]): Promise<Set<string>> {
+  if (bookingIds.length === 0) return new Set();
+  const rows = await sql`SELECT id FROM bookings WHERE id = ANY(${bookingIds}::uuid[]) AND shared_with_talent`;
+  return new Set(rows.map((r: any) => r.id));
+}
+
 /** The talent who sees a booking's documents: only while the booking is shared with them */
 export async function sharedBookingTalentId(bookingId: string): Promise<string | null> {
   const rows = await sql`SELECT talent_id FROM bookings WHERE id = ${bookingId} AND shared_with_talent`;

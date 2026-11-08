@@ -11,11 +11,12 @@ import {
   listPushDevices,
   markPushed,
   saveNotifications,
+  sharedBookingIds,
   sharedBookingTalentId,
   touchPushDevice,
 } from '../db/repositories/notifications';
 import type { Booking } from '../bookings/types';
-import { bookingChanges, documentShared, taskAssigned } from './messages';
+import { bookingChanges, documentShared, payoutPaid, taskAssigned } from './messages';
 import { pushConfigured, sendPush } from './push';
 import type { NotificationMessage } from './types';
 
@@ -68,7 +69,25 @@ export async function notifyTaskAssigned(
 /** A booking was created (before = null) or saved: tell the talents it affects */
 export async function notifyBookingChanges(before: Booking | null, after: Booking | null): Promise<void> {
   if (!after) return;
-  for (const { talentId, message } of bookingChanges(before, after)) await notifyTalent(talentId, message);
+  try {
+    await Promise.allSettled(bookingChanges(before, after).map(({ talentId, message }) => notifyTalent(talentId, message)));
+  } catch (error) {
+    console.error('Notification failed:', error);
+  }
+}
+
+/** Payouts recorded: tell each talent, for bookings they can see in the portal, all at once */
+export async function notifyPayouts(
+  paid: { id: string; title: string; talent_id: string; paid_cents: number; currency: string; paid_at: string }[]
+): Promise<void> {
+  try {
+    const shared = await sharedBookingIds(paid.map((p) => p.id));
+    await Promise.allSettled(
+      paid.filter((p) => shared.has(p.id)).map(async (p) => notifyTalent(p.talent_id, payoutPaid(p)))
+    );
+  } catch (error) {
+    console.error('Notification failed:', error);
+  }
 }
 
 /** A document became visible to a talent: on their profile, or on a booking shared with them */

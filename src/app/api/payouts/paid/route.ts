@@ -3,9 +3,7 @@ import { z } from 'zod';
 import { bookingContext } from '@/lib/bookings/route-helpers';
 import { parseBody } from '@/lib/crm/route-helpers';
 import { markPayoutsPaid } from '@/lib/db/repositories/bookings';
-import { sharedBookingTalentId } from '@/lib/db/repositories/notifications';
-import { payoutPaid } from '@/lib/notifications/messages';
-import { notifyTalent } from '@/lib/notifications/notify';
+import { notifyPayouts } from '@/lib/notifications/notify';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 
@@ -38,9 +36,8 @@ export async function POST(request: NextRequest) {
       await logAudit(ctx.actor, 'talent_paid', 'booking', p.id, {
         after: { talent: p.talent_name, paid_cents: p.paid_cents, currency: p.currency, paid_on: paidOn, reference: body.data.reference ?? null },
       });
-      // Only for bookings the talent can see in the portal
-      if (await sharedBookingTalentId(p.id)) await notifyTalent(p.talent_id, payoutPaid(p));
     }
+    await notifyPayouts(paid);
     const skipped = body.data.booking_ids!.length - paid.length;
     return successResponse(
       { paid, skipped },

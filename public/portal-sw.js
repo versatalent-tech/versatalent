@@ -19,6 +19,9 @@ self.addEventListener('push', (event) => {
   );
 });
 
+// Take over open portal tabs straight away, so tapping a notification can move them to its page
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const link = new URL((event.notification.data && event.notification.data.link) || '/portal', self.location.origin);
@@ -27,8 +30,13 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
       const open = windows.find((w) => new URL(w.url).pathname.startsWith('/portal'));
-      if (open) return open.focus().then((w) => (w ? w.navigate(target) : self.clients.openWindow(target)));
-      return self.clients.openWindow(target);
+      if (!open) return self.clients.openWindow(target);
+      // navigate() fails for a tab this worker doesn't control yet: open a new one instead
+      return open
+        .focus()
+        .then((w) => (w ? w.navigate(target) : null))
+        .then((w) => w || self.clients.openWindow(target))
+        .catch(() => self.clients.openWindow(target));
     })
   );
 });
