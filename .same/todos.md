@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 5 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 041 are on production. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
+_Last updated 8 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 041 are on production; 042 (talent notifications) is waiting to be run. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -16,6 +16,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
 
 ## 2. Check after the latest deploys
+- [ ] Talent notifications: run migration 042 on production, then add the push keys in Netlify (`docs/NOTIFICATIONS_SETUP.md`) and redeploy. Check the bell in the portal, switch on notifications on an Android phone and an iPhone (from the Home Screen), give a test to-do and change a test booking
 - [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day and Staff → Rewards, press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
 - [ ] Member pass with rewards closed: no reward points balance or rewards list; "Points this year" still shows. Admin → Rewards says points are building up for launch
@@ -51,7 +52,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Tickets: scan a QR code at the door instead of the name list; per-event age limit (18+) on the form
 - [ ] Tickets: discount codes, member presale (48-hour early access benefit) and member-only ticket types
 - [ ] Tickets: link ticket buyers to CRM contacts / newsletter when they agree to marketing
-- [ ] Tasks: email or text people when they're given a task (needs the email provider)
+- [ ] Notifications by email, for talents who don't switch on phone notifications (needs the email provider); notifications for road managers and the team
 - [ ] Talent portal logins switched off for Claudio Costa and Joao Rodolfo: switch them on if they should get tasks or see bookings
 - [ ] Card payments: Solo Lite works through the SumUp app (till → "SumUp app" + transaction code); a SumUp Solo would let the till send amounts straight to the reader
 
