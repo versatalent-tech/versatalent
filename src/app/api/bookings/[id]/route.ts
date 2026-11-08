@@ -8,6 +8,7 @@ import { documentFileKeys } from '@/lib/db/repositories/documents';
 import { deleteDocumentFiles } from '@/lib/services/document-storage';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can } from '@/lib/auth/permissions';
+import { notifyBookingChanges } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -85,6 +86,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       before: { status: before.status, starts_at: before.starts_at, fee_cents: before.money?.fee_cents ?? null },
       after: after && { status: after.status, starts_at: after.starts_at, fee_cents: after.money?.fee_cents ?? null },
     });
+    await notifyBookingChanges(before, after);
     return successResponse(await getBooking(ctx.scope, ctx.withMoney, id), 'Booking updated');
   } catch (error) {
     console.error('Error updating booking:', error);

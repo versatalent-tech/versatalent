@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import { createTalent, createTalentLogin, createTeamUser, sql, uniq } from '../support/db';
+import { createOrganisation, createTalent, createTalentLogin, createTeamUser, sql, uniq } from '../support/db';
 import { adminApi, portalApi } from '../support/auth';
 import { pushDevice, pushRequests } from '../support/push';
 import {
@@ -198,5 +198,68 @@ test.describe('Triggers', () => {
     const created = await admin.post('/api/crm/activities', { data: { type: 'task', subject: uniq('Van'), due_at: dueTomorrow(), owner_user_id: roadManager.id } });
     expect(created.status(), await created.text()).toBe(201);
     expect(await notificationsFor(roadManager.id)).toHaveLength(0);
+  });
+});
+
+test.describe('Booking triggers', () => {
+  /** A booking made through the admin API, far enough ahead not to clash */
+  async function newBooking(talentId: string, extra: Record<string, unknown> = {}) {
+    const admin = await adminApi();
+    const start = new Date(Date.now() + (30 + Math.random() * 300) * 86_400_000);
+    start.setUTCHours(20, 0, 0, 0);
+    const res = await admin.post('/api/bookings', {
+      data: { talent_id: talentId, title: uniq('E2E Gig'), starts_at: start.toISOString(), ends_at: new Date(start.getTime() + 4 * 3_600_000).toISOString(), force: true, ...extra },
+    });
+    expect(res.status(), await res.text()).toBe(201);
+    const booking = (await res.json()).data;
+    const patch = async (data: Record<string, unknown>) => {
+      const r = await admin.patch(`/api/bookings/${booking.id}`, { data: { force: true, ...data } });
+      expect(r.status(), await r.text()).toBe(200);
+    };
+    return { booking, patch };
+  }
+
+  test('unshared booking: nothing; sharing it: one "New booking"', async () => {
+    const user = await talentUser();
+    const { booking, patch } = await newBooking(user.talentId, { shared_with_talent: false });
+    await patch({ status: 'confirmed' });
+    expect(await notificationsFor(user.id)).toHaveLength(0);
+    await patch({ shared_with_talent: true });
+    expect(await notificationsFor(user.id)).toEqual([expect.objectContaining({ kind: 'booking_shared', title: 'New booking', link: '/portal/bookings' })]);
+    expect((await notificationsFor(user.id))[0].body).toContain(booking.title);
+  });
+
+  test('confirm, move, cancel: one each, with the right titles', async () => {
+    const user = await talentUser();
+    const { booking, patch } = await newBooking(user.talentId);
+    await patch({ status: 'confirmed' });
+    await patch({ location: 'Lisbon', call_time: '19:30' });
+    await patch({ brief: 'Bring the long cables' });
+    await patch({ status: 'cancelled' });
+    const titles = (await notificationsFor(user.id)).map((n: any) => n.title);
+    expect(titles).toEqual(['New booking', 'Booking confirmed', 'Booking changed', 'Booking cancelled']);
+    const changed = (await notificationsFor(user.id))[2];
+    expect(changed.body).toContain(booking.title);
+    expect(changed.body).toContain('New location: Lisbon');
+    expect(changed.body).toContain('New call time: 19:30');
+  });
+
+  test('moving a booking to another talent', async () => {
+    const first = await talentUser();
+    const second = await talentUser();
+    const { patch } = await newBooking(first.talentId);
+    await patch({ talent_id: second.talentId });
+    expect((await notificationsFor(first.id)).map((n: any) => n.title)).toEqual(['New booking', 'Booking cancelled']);
+    expect((await notificationsFor(second.id)).map((n: any) => n.title)).toEqual(['New booking']);
+  });
+
+  test('client name only when allowed', async () => {
+    const hidden = await talentUser();
+    const shown = await talentUser();
+    const client = await createOrganisation(uniq('E2E Secret Client'));
+    await newBooking(hidden.talentId, { organisation_id: client.id });
+    await newBooking(shown.talentId, { organisation_id: client.id, client_visible_to_talent: true });
+    expect((await notificationsFor(hidden.id))[0].body).not.toContain('E2E Secret Client');
+    expect((await notificationsFor(shown.id))[0].body).toContain('E2E Secret Client');
   });
 });

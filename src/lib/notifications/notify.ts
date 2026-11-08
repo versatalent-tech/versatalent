@@ -13,7 +13,8 @@ import {
   saveNotifications,
   touchPushDevice,
 } from '../db/repositories/notifications';
-import { taskAssigned } from './messages';
+import type { Booking } from '../bookings/types';
+import { bookingChanges, taskAssigned } from './messages';
 import { pushConfigured, sendPush } from './push';
 import type { NotificationMessage } from './types';
 
@@ -61,4 +62,10 @@ export async function notifyTaskAssigned(
   } catch (error) {
     console.error('Notification failed:', error);
   }
+}
+
+/** A booking was created (before = null) or saved: tell the talents it affects */
+export async function notifyBookingChanges(before: Booking | null, after: Booking | null): Promise<void> {
+  if (!after) return;
+  for (const { talentId, message } of bookingChanges(before, after)) await notifyTalent(talentId, message);
 }
