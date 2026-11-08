@@ -237,6 +237,8 @@ async function main() {
     VAPID_PRIVATE_KEY: vapid.privateKey,
     VAPID_SUBJECT: 'mailto:e2e@example.com',
     PUSH_TEST_ORIGIN: 'http://127.0.0.1:4012',
+    // Uploaded documents go to the git-ignored .private-uploads folder
+    E2E_LOCAL_DOCUMENTS: '1',
     NEXT_TELEMETRY_DISABLED: '1',
   };
   delete env.ANTHROPIC_API_KEY; // AI notes stay off in tests

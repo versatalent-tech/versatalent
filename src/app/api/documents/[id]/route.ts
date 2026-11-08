@@ -7,6 +7,7 @@ import { deleteDocument, getDocumentRow, updateDocument } from '@/lib/db/reposit
 import { deleteDocumentFiles, readDocumentFile } from '@/lib/services/document-storage';
 import { logAudit } from '@/lib/db/repositories/audit-log';
 import { parseBody } from '@/lib/crm/route-helpers';
+import { notifyDocumentShared } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -95,6 +96,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         delete_after: updated.delete_after,
       },
     });
+    if (updated?.visible_to_talent && !doc.visible_to_talent) await notifyDocumentShared(updated);
     return successResponse(updated, 'Saved');
   } catch (error) {
     console.error('Error updating document:', error);

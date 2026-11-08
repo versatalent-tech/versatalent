@@ -114,3 +114,9 @@ export async function filterTalentUsers(userIds: string[]): Promise<string[]> {
   `;
   return rows.map((r: any) => r.id);
 }
+
+/** The talent who sees a booking's documents: only while the booking is shared with them */
+export async function sharedBookingTalentId(bookingId: string): Promise<string | null> {
+  const rows = await sql`SELECT talent_id FROM bookings WHERE id = ${bookingId} AND shared_with_talent`;
+  return rows[0]?.talent_id ?? null;
+}

@@ -510,7 +510,7 @@ export async function markPayoutsPaid(
   bookingIds: string[],
   paidOn: string, // YYYY-MM-DD, UK date
   reference: string | null
-): Promise<{ id: string; title: string; talent_name: string; paid_cents: number; currency: string }[]> {
+): Promise<{ id: string; title: string; talent_id: string; talent_name: string; paid_cents: number; currency: string; paid_at: string }[]> {
   const rows = await sql`
     UPDATE bookings b SET
       talent_paid_at = (${paidOn}::date + TIME '12:00') AT TIME ZONE ${AGENCY_TIME_ZONE},
@@ -522,14 +522,16 @@ export async function markPayoutsPaid(
       AND ${talentVisible(scope, 'b.talent_id')}
       AND b.talent_paid_at IS NULL AND b.fee_cents IS NOT NULL
       AND b.status IN ('confirmed', 'completed') AND b.ends_at <= NOW()
-    RETURNING b.id, b.title, b.talent_paid_cents, b.currency, (SELECT name FROM talents WHERE id = b.talent_id) AS talent_name
+    RETURNING b.id, b.title, b.talent_id, b.talent_paid_cents, b.talent_paid_at, b.currency, (SELECT name FROM talents WHERE id = b.talent_id) AS talent_name
   `;
   return rows.map((row: any) => ({
     id: row.id,
     title: row.title,
+    talent_id: row.talent_id,
     talent_name: row.talent_name,
     paid_cents: Number(row.talent_paid_cents),
     currency: row.currency,
+    paid_at: new Date(row.talent_paid_at).toISOString(),
   }));
 }
 

@@ -14,6 +14,7 @@ import { createDocument, listBookingDocuments, listDealDocuments, listTalentDocu
 import { getBookingScope } from '@/lib/db/repositories/bookings';
 import { deleteDocumentFiles, saveDocumentFile } from '@/lib/services/document-storage';
 import { logAudit } from '@/lib/db/repositories/audit-log';
+import { notifyDocumentShared } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
       await logAudit({ userId: session.userId, name: session.name }, 'upload', 'document', id, {
         after: { filename, kind, ...owner, visible_to_talent: visibleToTalent, admin_only: adminOnly },
       });
+      if (document.visible_to_talent) await notifyDocumentShared(document);
       return successResponse(document, 'Uploaded', 201);
     } catch (error) {
       await deleteDocumentFiles([blobKey]);

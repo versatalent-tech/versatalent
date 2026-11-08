@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import { createOrganisation, createTalent, createTalentLogin, createTeamUser, sql, uniq } from '../support/db';
+import { createBooking, createOrganisation, createTalent, createTalentLogin, createTeamUser, sql, uniq } from '../support/db';
 import { adminApi, portalApi } from '../support/auth';
 import { pushDevice, pushRequests } from '../support/push';
 import {
@@ -261,5 +261,72 @@ test.describe('Booking triggers', () => {
     await newBooking(shown.talentId, { organisation_id: client.id, client_visible_to_talent: true });
     expect((await notificationsFor(hidden.id))[0].body).not.toContain('E2E Secret Client');
     expect((await notificationsFor(shown.id))[0].body).toContain('E2E Secret Client');
+  });
+});
+
+test.describe('Profile, document and payout triggers', () => {
+  async function upload(owner: Record<string, string>, visible: boolean, filename = `${uniq('rider')}.pdf`) {
+    const admin = await adminApi();
+    const res = await admin.post('/api/documents', {
+      multipart: {
+        ...owner,
+        kind: 'rider',
+        visible_to_talent: String(visible),
+        file: { name: filename, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 e2e') },
+      },
+    });
+    expect(res.status(), await res.text()).toBe(201);
+    return { id: (await res.json()).data.id as string, filename, admin };
+  }
+
+  test('approved and rejected profile changes notify', async () => {
+    const user = await talentUser();
+    const portal = await portalApi(user.email, user.password);
+    const admin = await adminApi();
+    for (const decision of ['rejected', 'approved'] as const) {
+      const proposed = await portal.post('/api/portal/profile', { data: { changes: { tagline: uniq('New tagline') } } });
+      expect(proposed.status(), await proposed.text()).toBeLessThan(300);
+      const [request] = await sql`SELECT id FROM talent_profile_changes WHERE talent_id = ${user.talentId} AND status = 'pending'`;
+      const reviewed = await admin.post(`/api/admin/talent-portal/requests/${request.id}`, { data: { decision, note: decision === 'rejected' ? 'Too long' : null } });
+      expect(reviewed.status(), await reviewed.text()).toBe(200);
+    }
+    expect((await notificationsFor(user.id)).map((n: any) => [n.title, n.body, n.link])).toEqual([
+      ['Profile change not approved', 'Too long', '/portal/profile'],
+      ['Profile change approved', 'Your changes are now on your profile.', '/portal/profile'],
+    ]);
+  });
+
+  test("document made visible notifies once; a hidden one doesn't; one on an unshared booking doesn't", async () => {
+    const user = await talentUser();
+    const hidden = await upload({ talentId: user.talentId }, false);
+    expect(await notificationsFor(user.id)).toHaveLength(0);
+    await hidden.admin.patch(`/api/documents/${hidden.id}`, { data: { visible_to_talent: true } });
+    await hidden.admin.patch(`/api/documents/${hidden.id}`, { data: { kind: 'other' } });
+    expect(await notificationsFor(user.id)).toEqual([expect.objectContaining({ kind: 'document_shared', title: 'New document', body: hidden.filename, link: '/portal/profile' })]);
+
+    const booking = await createBooking(user.talentId, { status: 'confirmed', startsInDays: 20 });
+    await sql`UPDATE bookings SET shared_with_talent = false WHERE id = ${booking.id}`;
+    await upload({ bookingId: booking.id }, true);
+    expect(await notificationsFor(user.id)).toHaveLength(1);
+    await sql`UPDATE bookings SET shared_with_talent = true WHERE id = ${booking.id}`;
+    const onBooking = await upload({ bookingId: booking.id }, true);
+    const all = await notificationsFor(user.id);
+    expect(all).toHaveLength(2);
+    expect(all[1]).toEqual(expect.objectContaining({ body: onBooking.filename, link: '/portal/bookings' }));
+  });
+
+  test('payout notifies with the net amount; marking the same booking paid again after clearing gives a second notification', async () => {
+    const user = await talentUser();
+    const booking = await createBooking(user.talentId, { status: 'completed', endedDaysAgo: 3 });
+    await sql`UPDATE bookings SET fee_cents = 20000, commission_percent = 25, shared_with_talent = true WHERE id = ${booking.id}`;
+    const admin = await adminApi();
+    const pay = (paid_on: string) => admin.post('/api/payouts/paid', { data: { booking_ids: [booking.id], paid_on } });
+    expect((await pay('2026-11-05')).status()).toBe(200);
+    expect(await notificationsFor(user.id)).toEqual([expect.objectContaining({ kind: 'payout_paid', title: 'Payment sent', link: '/portal/earnings' })]);
+    expect((await notificationsFor(user.id))[0].body).toMatch(/^£150\.00 for /);
+
+    expect((await admin.delete(`/api/payouts/${booking.id}`)).status()).toBe(200);
+    expect((await pay('2026-11-06')).status()).toBe(200);
+    expect(await notificationsFor(user.id)).toHaveLength(2);
   });
 });

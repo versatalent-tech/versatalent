@@ -11,10 +11,11 @@ import {
   listPushDevices,
   markPushed,
   saveNotifications,
+  sharedBookingTalentId,
   touchPushDevice,
 } from '../db/repositories/notifications';
 import type { Booking } from '../bookings/types';
-import { bookingChanges, taskAssigned } from './messages';
+import { bookingChanges, documentShared, taskAssigned } from './messages';
 import { pushConfigured, sendPush } from './push';
 import type { NotificationMessage } from './types';
 
@@ -68,4 +69,14 @@ export async function notifyTaskAssigned(
 export async function notifyBookingChanges(before: Booking | null, after: Booking | null): Promise<void> {
   if (!after) return;
   for (const { talentId, message } of bookingChanges(before, after)) await notifyTalent(talentId, message);
+}
+
+/** A document became visible to a talent: on their profile, or on a booking shared with them */
+export async function notifyDocumentShared(doc: { booking_id: string | null; talent_id: string | null; filename: string }): Promise<void> {
+  try {
+    const talentId = doc.talent_id ?? (doc.booking_id ? await sharedBookingTalentId(doc.booking_id) : null);
+    if (talentId) await notifyTalent(talentId, documentShared(doc));
+  } catch (error) {
+    console.error('Notification failed:', error);
+  }
 }
