@@ -7,7 +7,9 @@ import { deleteBooking, getBooking, updateBooking } from '@/lib/db/repositories/
 import { documentFileKeys } from '@/lib/db/repositories/documents';
 import { deleteDocumentFiles } from '@/lib/services/document-storage';
 import { logAudit } from '@/lib/db/repositories/audit-log';
-import { can } from '@/lib/auth/permissions';
+import { can, needsFeeApproval } from '@/lib/auth/permissions';
+import { requestFeeChange } from '@/lib/db/repositories/fee-requests';
+import type { FeeMoney } from '@/lib/bookings/types';
 import { notifyBookingChanges } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
@@ -62,6 +64,19 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const before = await getBooking(ctx.scope, true, id);
     if (!before) return ApiErrors.NotFound('Booking');
 
+    // A manager's change to the money waits for approval; the rest of the save applies
+    let heldMoney: FeeMoney | null = null;
+    if (needsFeeApproval(role) && (['fee_cents', 'commission_percent', 'currency'] as const).some((f) => f in changes)) {
+      heldMoney = {
+        fee_cents: 'fee_cents' in changes ? (changes.fee_cents ?? null) : (before.money?.fee_cents ?? null),
+        commission_percent: 'commission_percent' in changes ? (changes.commission_percent ?? null) : (before.money?.commission_percent ?? null),
+        currency: changes.currency ?? before.money?.currency ?? 'GBP',
+      };
+      delete changes.fee_cents;
+      delete changes.commission_percent;
+      delete changes.currency;
+    }
+
     const problem = await checkBookingLinks(ctx, changes);
     if (problem) return ApiErrors.BadRequest(problem);
 
@@ -87,7 +102,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       after: after && { status: after.status, starts_at: after.starts_at, fee_cents: after.money?.fee_cents ?? null },
     });
     await notifyBookingChanges(before, after);
-    return successResponse(await getBooking(ctx.scope, ctx.withMoney, id), 'Booking updated');
+    const feeRequest = heldMoney ? await requestFeeChange(id, ctx.actor.userId, heldMoney) : null;
+    return successResponse(
+      { ...(await getBooking(ctx.scope, ctx.withMoney, id)), ...(heldMoney ? { fee_request: feeRequest } : {}) },
+      feeRequest ? 'Saved. The fee change is waiting for approval.' : 'Booking updated'
+    );
   } catch (error) {
     console.error('Error updating booking:', error);
     return ApiErrors.ServerError('Failed to update booking');

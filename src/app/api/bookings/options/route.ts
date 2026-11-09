@@ -52,6 +52,7 @@ export async function GET() {
         rates: can(role, 'rates.manage'),
         payouts: can(role, 'payouts.manage'),
         teamPayouts: can(role, 'payouts.team'),
+        feeApprovals: can(role, 'fees.approve'),
         delete: can(role, 'crm.delete'),
       },
       hasPersonalAccount: Boolean(ctx.session.userId),
