@@ -14,7 +14,7 @@ function invalidRuleValue(actionType: string, value: number): string | null {
 }
 
 // GET all point rules
-export async function GET(request: NextRequest) {
+export async function GET() {
   const denied = await requireAdmin();
   if (denied) return denied;
 

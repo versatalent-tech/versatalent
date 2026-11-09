@@ -6,7 +6,7 @@ import Image from "next/image";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Clock, Users, Search, Filter } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, Search } from "lucide-react";
 import type { Event } from "@/lib/db/types";
 import type { Talent } from "@/lib/data/talents";
 

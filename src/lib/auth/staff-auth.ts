@@ -5,7 +5,7 @@ import { getCurrentSession } from '@/lib/middleware/auth';
  * Staff Auth Middleware
  * Checks if user is authenticated as staff or admin
  */
-export async function checkStaffAuth(request: NextRequest): Promise<{
+export async function checkStaffAuth(): Promise<{
   authorized: boolean;
   userId?: string;
   role?: string;
@@ -51,7 +51,7 @@ export function withStaffAuth<T = unknown>(
 ) {
   return async (request: NextRequest, context?: T): Promise<Response> => {
     try {
-      const authCheck = await checkStaffAuth(request);
+      const authCheck = await checkStaffAuth();
 
       if (!authCheck.authorized) {
         return NextResponse.json(

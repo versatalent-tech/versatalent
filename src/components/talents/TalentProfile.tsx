@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import type { Talent } from "@/lib/data/talents";
 import { PortfolioSection } from "./PortfolioSection";
-import { HeroSection } from "./HeroSection";
 import { IndustryDetailsDisplay } from "./IndustryDetailsDisplay";
 import { BookTalent, type EnquirySource } from "./BookTalent";
 import { InstagramSection } from "@/components/instagram/InstagramSection";
@@ -189,7 +188,7 @@ export function TalentProfile({ talent, source = "website" }: TalentProfileProps
             >
               <h2 className="text-xl font-semibold text-foreground mb-4">Skills & Specialties</h2>
               <div className="flex flex-wrap gap-2">
-                {talent.skills.map((skill, index) => (
+                {talent.skills.map((skill) => (
                   <div
                     key={skill}
                   >

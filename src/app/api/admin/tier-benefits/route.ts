@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getAllTierBenefits,
   getBenefitsByTier,
-  createTierBenefit,
-  getBenefitsCountByTier
+  createTierBenefit
 } from '@/lib/db/repositories/vip-tier-benefits';
 import type { CreateTierBenefitRequest, VIPTier } from '@/lib/db/types';
 import { withAdminAuth } from '@/lib/middleware/auth';

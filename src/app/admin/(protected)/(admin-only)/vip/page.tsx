@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, ShoppingCart, TrendingUp, Settings, Award } from "lucide-react";
+import { Trophy, ShoppingCart, Settings, Award } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { DynamicLoader, InlineLoader } from "@/components/admin/DynamicLoader";
+import { InlineLoader } from "@/components/admin/DynamicLoader";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 // Dynamically import heavy components to reduce initial bundle size
 const VIPMembershipsManager = dynamic(

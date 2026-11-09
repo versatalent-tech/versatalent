@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Grid, List, Star } from "lucide-react";
+import { Grid, List } from "lucide-react";
 import type { PortfolioItem } from "@/lib/data/talents";
 
 interface FilterTabsProps {

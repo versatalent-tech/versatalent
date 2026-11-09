@@ -9,8 +9,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  } from "@/components/ui/select";
 import { Trophy, Target, Users, ArrowRight, X, Scale, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -40,11 +39,13 @@ function StatBar({ label, value1, value2, max }: { label: string; value1: number
         <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden flex justify-end">
           <div
             className={`h-full ${winner === 1 ? 'bg-green-500' : 'bg-blue-400'}`}
+            style={{ width: `${pct1}%` }}
           />
         </div>
         <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
           <div
             className={`h-full ${winner === 2 ? 'bg-green-500' : 'bg-orange-400'}`}
+            style={{ width: `${pct2}%` }}
           />
         </div>
       </div>

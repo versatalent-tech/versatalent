@@ -6,15 +6,11 @@ import { requireAdmin } from '@/lib/middleware/auth';
 import { POS_CURRENCY } from '@/lib/utils/formatting';
 
 // GET all consumptions (admin)
-export async function GET(request: NextRequest) {
+export async function GET() {
   const denied = await requireAdmin();
   if (denied) return denied;
 
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('user_id');
-
-    // If user_id is provided, we'd need to filter (implement if needed)
     const consumptions = await getAllVIPConsumptions();
 
     return NextResponse.json(consumptions);

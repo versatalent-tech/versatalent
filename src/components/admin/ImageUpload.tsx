@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import NextImage from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, X, Loader2, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
@@ -9,11 +10,10 @@ import { processImageUrl } from "@/lib/utils/image-url";
 interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
-  onRemove?: () => void;
   type?: 'event' | 'talent' | 'portfolio';
 }
 
-export function ImageUpload({ value, onChange, onRemove, type = 'event' }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, type = 'event' }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [optimizing, setOptimizing] = useState(false);
@@ -153,34 +153,6 @@ export function ImageUpload({ value, onChange, onRemove, type = 'event' }: Image
     }
   };
 
-  const handleRemove = async () => {
-    if (!value) return;
-
-    // Extract filename from URL
-    const filename = value.split('/').pop();
-
-    try {
-      // Determine file prefix based on type
-      const prefixes = {
-        event: 'event-',
-        talent: 'talent-',
-        portfolio: 'portfolio-',
-      };
-
-      // Only attempt to delete if it's an uploaded file with correct prefix
-      if (filename && filename.startsWith(prefixes[type])) {
-        await fetch(`/api/upload?filename=${filename}&type=${type}`, {
-          method: 'DELETE',
-        });
-      }
-    } catch (err) {
-      console.error('Error removing image:', err);
-    }
-
-    onChange('');
-    if (onRemove) onRemove();
-  };
-
   return (
     <div className="space-y-4">
       {/* URL Input - Primary option */}
@@ -293,9 +265,12 @@ export function ImageUpload({ value, onChange, onRemove, type = 'event' }: Image
             </Button>
           </div>
           <div className="relative w-full bg-gray-100 rounded-lg overflow-hidden border-2 border-green-200">
-            <img
+            <NextImage
               src={value}
               alt="Preview"
+              width={0}
+              height={0}
+              sizes="100vw"
               className="w-full h-auto object-contain max-h-64"
               onError={() => setError('Failed to load image from URL. Please check the URL is correct.')}
             />

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  Download,
   Printer,
   Server,
   Database,
@@ -21,8 +20,6 @@ import {
 } from "lucide-react";
 
 export default function ArchitecturePage() {
-  const [isPrintMode, setIsPrintMode] = useState(false);
-
   const handlePrint = () => {
     window.print();
   };
@@ -55,7 +52,7 @@ export default function ArchitecturePage() {
       {/* Action Bar - Hidden in Print */}
       <div className="no-print fixed top-0 left-0 right-0 bg-black text-white z-50 py-3 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/images/versatalent-new-logo.png" alt="VersaTalent" className="h-8" />
+          <Image src="/images/versatalent-new-logo.png" alt="VersaTalent" width={500} height={500} className="h-8 w-auto" />
           <span className="font-semibold">System Architecture Document</span>
         </div>
         <div className="flex items-center gap-3">
@@ -83,10 +80,12 @@ export default function ArchitecturePage() {
         <section className="page min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-12 print:min-h-[90vh]">
           <div className="text-center max-w-4xl">
             <div className="mb-8">
-              <img
+              <Image
                 src="/images/versatalent-new-logo.png"
                 alt="VersaTalent"
-                className="h-20 mx-auto mb-6"
+                width={500}
+                height={500}
+                className="h-20 w-auto mx-auto mb-6"
               />
             </div>
             <h1 className="text-5xl font-bold mb-4">
@@ -560,10 +559,12 @@ export default function ArchitecturePage() {
         {/* Contact Page */}
         <section className="page print-break min-h-[50vh] flex flex-col justify-center items-center bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-12">
           <div className="text-center max-w-2xl">
-            <img
+            <Image
               src="/images/versatalent-new-logo.png"
               alt="VersaTalent"
-              className="h-16 mx-auto mb-8"
+              width={500}
+              height={500}
+              className="h-16 w-auto mx-auto mb-8"
             />
             <h2 className="text-3xl font-bold mb-4">Ready to Partner?</h2>
             <p className="text-gray-400 mb-8">
