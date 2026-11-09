@@ -17,6 +17,7 @@ import {
   summariseOwedPayouts,
 } from '@/lib/db/repositories/bookings';
 import { summariseOwedStaffShares } from '@/lib/db/repositories/staff-shares';
+import { countPendingFeeRequests } from '@/lib/db/repositories/fee-requests';
 import { formatCurrency } from '@/lib/utils/formatting';
 import { sql } from '@/lib/db/client';
 import { countCardRequests } from '@/lib/db/repositories/membership';
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview, expiringDocs, teamOwed] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview, expiringDocs, teamOwed, feeRequests] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
         ? listExpiringDocuments(bookingScope, EXPIRY_WARNING_DAYS, session.role === 'admin').catch(() => [])
         : Promise.resolve([]),
       can(session.role, 'payouts.team') ? summariseOwedStaffShares() : Promise.resolve({ count: 0, totals: [] }),
+      can(session.role, 'fees.approve') ? countPendingFeeRequests() : Promise.resolve(0),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -95,6 +97,15 @@ export async function GET(request: NextRequest) {
         label: `${plural(owed.count, 'finished job')} not paid to the talent yet`,
         detail: `${owed.totals.map((t) => formatCurrency(t.cents, t.currency)).join(' + ')} owed in total.`,
         href: '/admin/bookings/payouts',
+      });
+    }
+    if (feeRequests > 0) {
+      bookingItems.push({
+        key: 'fee-requests',
+        severity: 'medium',
+        label: `${plural(feeRequests, 'fee change')} waiting for approval`,
+        detail: "Managers' changes to fees or commission.",
+        href: '/admin/bookings/fee-approvals',
       });
     }
     if (teamOwed.count > 0) {

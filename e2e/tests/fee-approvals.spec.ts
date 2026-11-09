@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
 import { createTalent, createTalentLogin, createTeamUser, sql, uniq } from '../support/db';
 import { adminApi, teamApi } from '../support/auth';
 
@@ -184,5 +184,72 @@ test.describe('Deciding', () => {
     const road = await createTeamUser('road_manager', [talent.id]);
     const roadApi = await teamApi(road.email, road.password);
     expect((await roadApi.get(`/api/bookings/${bookingId}/fee-request`)).status()).toBe(403);
+  });
+});
+
+test.describe('Screens', () => {
+  async function signIn(page: Page, api: APIRequestContext) {
+    await page.context().addCookies((await api.storageState()).cookies);
+  }
+  /** An upcoming booking (so it's in the calendar's list view), £1,000 at 20% */
+  async function upcoming() {
+    const ctx = await setup();
+    const title = uniq('E2E Fee dialog');
+    const { data } = await apiBooking(ctx.admin, ctx.talent.id, {
+      title,
+      starts_at: new Date(Date.now() + 2 * DAY).toISOString(),
+      ends_at: new Date(Date.now() + 2 * DAY + 3_600_000).toISOString(),
+    });
+    return { ...ctx, title, upcomingId: data.id };
+  }
+  async function openInList(page: Page, title: string) {
+    await page.goto('/admin/bookings');
+    await page.getByRole('button', { name: 'list', exact: true }).click();
+    await page.getByText(title).click();
+    return page.getByRole('dialog');
+  }
+
+  test('a manager sees their change waiting in the booking dialog', async ({ page }) => {
+    const { managerApi, title } = await upcoming();
+    await signIn(page, managerApi);
+    const dialog = await openInList(page, title);
+    await dialog.getByPlaceholder('0', { exact: true }).first().fill('1200');
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(dialog.getByText('Saved. The fee change is waiting for approval.')).toBeVisible();
+    await expect(dialog.getByText(/£1,000 → £1,200/)).toBeVisible();
+  });
+
+  test('an admin approves from the booking dialog', async ({ page }) => {
+    const { admin, managerApi, title, upcomingId } = await upcoming();
+    await managerApi.patch(`/api/bookings/${upcomingId}`, { data: { fee_cents: 120_000 } });
+    await signIn(page, admin);
+    const dialog = await openInList(page, title);
+    await expect(dialog.getByText(/waiting for approval/)).toBeVisible();
+    await dialog.getByRole('button', { name: 'Approve' }).click();
+    await expect(dialog.getByText('Fee change approved')).toBeVisible();
+    expect((await bookingMoney(upcomingId)).fee_cents).toBe(120_000);
+  });
+
+  test('an admin approves from Fee approvals', async ({ page }) => {
+    const { admin, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 130_000 } });
+    const [{ title }] = await sql`SELECT title FROM bookings WHERE id = ${bookingId}`;
+    await signIn(page, admin);
+    await page.goto('/admin/bookings/fee-approvals');
+    const row = page.locator('li', { hasText: title });
+    await expect(row.getByText(/Requested: £1,300/)).toBeVisible();
+    await row.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.locator('li', { hasText: title })).toHaveCount(0);
+    expect((await bookingMoney(bookingId)).fee_cents).toBe(130_000);
+  });
+
+  test('the dashboard counts waiting fee changes', async () => {
+    const { admin, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    const [{ n }] = await sql`SELECT count(*)::int AS n FROM booking_fee_requests WHERE status = 'pending'`;
+    const body = await (await admin.get('/api/admin/dashboard')).json();
+    const item = body.data.attention.find((a: { key: string }) => a.key === 'fee-requests');
+    expect(item?.href).toBe('/admin/bookings/fee-approvals');
+    expect(item?.label).toContain(String(n));
   });
 });

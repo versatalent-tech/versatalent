@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CRM_CURRENCIES } from "@/lib/crm/types";
+import { FeeRequestBox } from "./FeeRequestBox";
 import { BOOKING_STATUSES, TALENT_RESPONSES, commissionCents, netCents, payoutState, type Booking, type BookingStatus, type Clash } from "@/lib/bookings/types";
 import { Field, errorMessage, formatMoney, parseMoney, selectClass } from "@/components/crm/shared";
 import { DocumentsPanel } from "@/components/documents/DocumentsPanel";
@@ -26,6 +27,7 @@ export interface BookingOptions {
     rates: boolean;
     payouts: boolean;
     teamPayouts: boolean;
+    feeApprovals: boolean;
     delete: boolean;
   };
   hasPersonalAccount: boolean;
@@ -143,6 +145,8 @@ export function BookingDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clashes, setClashes] = useState<Clash[] | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [feeRefresh, setFeeRefresh] = useState(0);
   const logisticsOnly = !options.can.edit;
 
   useEffect(() => {
@@ -150,6 +154,7 @@ export function BookingDialog({
     setForm(initialForm(booking, defaults, options));
     setError(null);
     setClashes(null);
+    setNotice(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, booking]);
 
@@ -228,6 +233,12 @@ export function BookingDialog({
       }
       if (!response.ok || !body.success) throw new Error(body.error || "Failed to save");
       onSaved();
+      // A manager's fee change waits for approval: stay open so they see it waiting
+      if (booking && body.data?.fee_request?.status === "pending") {
+        setNotice(body.message);
+        setFeeRefresh((n) => n + 1);
+        return;
+      }
       onOpenChange(false);
     } catch (err) {
       setError(errorMessage(err));
@@ -415,6 +426,31 @@ export function BookingDialog({
 
           {!readOnly && options.can.fees && (
             <div className="space-y-3 rounded border p-3">
+              {notice && <p className="rounded border border-green-200 bg-green-50 p-2 text-sm text-green-900">{notice}</p>}
+              {booking && (
+                <FeeRequestBox
+                  bookingId={booking.id}
+                  current={{
+                    fee_cents: booking.money?.fee_cents ?? null,
+                    commission_percent: booking.money?.commission_percent ?? null,
+                    currency: booking.money?.currency ?? "GBP",
+                  }}
+                  canApprove={options.can.feeApprovals}
+                  refreshKey={feeRefresh}
+                  onDecided={(request) => {
+                    // Approved: show the new money, so saving the form again doesn't put the old fee back
+                    if (request.status === "approved") {
+                      setForm((f) => ({
+                        ...f,
+                        fee: request.fee_cents != null ? String(request.fee_cents / 100) : "",
+                        commission: request.commission_percent != null ? String(request.commission_percent) : "",
+                        currency: request.currency,
+                      }));
+                    }
+                    onSaved();
+                  }}
+                />
+              )}
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field label="Fee (client pays)">
                   <div className="flex gap-2">
