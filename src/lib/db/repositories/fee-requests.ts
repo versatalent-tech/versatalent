@@ -1,4 +1,5 @@
 import { sql } from '../client';
+import { updateBooking, type BookingActor } from './bookings';
 import type { FeeMoney, FeeRequest, FeeRequestStatus } from '@/lib/bookings/types';
 
 // ---------------------------------------------------------------------------
@@ -62,4 +63,100 @@ export async function requestFeeChange(bookingId: string, userId: string | null,
     RETURNING id
   `;
   return getFeeRequest(rows[0].id);
+}
+
+/** The booking's waiting request, else its latest decision from the last 30 days */
+export async function latestFeeRequest(bookingId: string): Promise<FeeRequest | null> {
+  const rows = await sql`
+    ${requestSelect()}
+    WHERE r.booking_id = ${bookingId}
+      AND (r.status = 'pending' OR (r.status IN ('approved', 'rejected') AND r.decided_at > NOW() - INTERVAL '30 days'))
+    ORDER BY (r.status = 'pending') DESC, r.decided_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ? mapRequest(rows[0]) : null;
+}
+
+export type PendingFeeRequest = FeeRequest & { booking_title: string; talent_name: string; starts_at: string; current: FeeMoney };
+
+/** Waiting requests with each booking's money now (oldest first) */
+export async function listPendingFeeRequests(): Promise<PendingFeeRequest[]> {
+  const rows = await sql`
+    SELECT r.*, u.name AS requested_by_name, b.title AS booking_title, t.name AS talent_name, b.starts_at,
+      b.fee_cents AS current_fee_cents, b.commission_percent AS current_commission_percent, b.currency AS current_currency
+    FROM booking_fee_requests r
+    JOIN bookings b ON b.id = r.booking_id
+    JOIN talents t ON t.id = b.talent_id
+    LEFT JOIN users u ON u.id = r.requested_by
+    WHERE r.status = 'pending'
+    ORDER BY r.updated_at
+    LIMIT 500
+  `;
+  return rows.map((row: any) => ({
+    ...mapRequest(row),
+    booking_title: row.booking_title,
+    talent_name: row.talent_name,
+    starts_at: new Date(row.starts_at).toISOString(),
+    current: {
+      fee_cents: row.current_fee_cents === null ? null : Number(row.current_fee_cents),
+      commission_percent: percent(row.current_commission_percent),
+      currency: row.current_currency,
+    },
+  }));
+}
+
+export async function countPendingFeeRequests(): Promise<number> {
+  const rows = await sql`SELECT COUNT(*) AS n FROM booking_fee_requests WHERE status = 'pending'`;
+  return Number(rows[0].n);
+}
+
+/**
+ * Approve (apply the requested money to the booking through the normal update,
+ * so talent pay and staff shares follow) or reject a waiting request. Returns
+ * the decided request, with the booking's money before, or null when it isn't waiting.
+ */
+export async function decideFeeRequest(
+  id: string,
+  actor: BookingActor,
+  decision: 'approve' | 'reject',
+  note: string | null
+): Promise<{ request: FeeRequest; before: FeeMoney } | null> {
+  const [row] = await sql`
+    SELECT r.*, b.fee_cents AS current_fee_cents, b.commission_percent AS current_commission_percent, b.currency AS current_currency
+    FROM booking_fee_requests r JOIN bookings b ON b.id = r.booking_id
+    WHERE r.id = ${id} AND r.status = 'pending'
+  `;
+  if (!row) return null;
+  const before: FeeMoney = {
+    fee_cents: row.current_fee_cents === null ? null : Number(row.current_fee_cents),
+    commission_percent: percent(row.current_commission_percent),
+    currency: row.current_currency,
+  };
+  if (decision === 'approve') {
+    await updateBooking({ all: true, talentIds: [] }, actor, row.booking_id, {
+      fee_cents: row.fee_cents === null ? null : Number(row.fee_cents),
+      commission_percent: percent(row.commission_percent),
+      currency: row.currency,
+    });
+  }
+  const decided = await sql`
+    UPDATE booking_fee_requests
+    SET status = ${decision === 'approve' ? 'approved' : 'rejected'}, decided_by = ${actor.userId}, decided_at = NOW(),
+      decision_note = ${note}, updated_at = NOW()
+    WHERE id = ${id} AND status = 'pending'
+    RETURNING id
+  `;
+  if (decided.length === 0) return null;
+  const request = await getFeeRequest(id);
+  return request ? { request, before } : null;
+}
+
+/** Withdraw the booking's waiting request; false when there's none */
+export async function withdrawFeeRequest(bookingId: string): Promise<FeeRequest | null> {
+  const rows = await sql`
+    UPDATE booking_fee_requests SET status = 'withdrawn', updated_at = NOW()
+    WHERE booking_id = ${bookingId} AND status = 'pending'
+    RETURNING id
+  `;
+  return rows[0] ? getFeeRequest(rows[0].id) : null;
 }

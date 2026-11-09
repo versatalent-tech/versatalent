@@ -103,3 +103,86 @@ test.describe('Held changes', () => {
     expect(await requestsFor(bookingId)).toEqual([]);
   });
 });
+
+test.describe('Deciding', () => {
+  async function pendingId(bookingId: string): Promise<string> {
+    const [row] = await sql`SELECT id FROM booking_fee_requests WHERE booking_id = ${bookingId} AND status = 'pending'`;
+    return row.id;
+  }
+  const decide = (api: APIRequestContext, id: string, decision: 'approve' | 'reject', note?: string) =>
+    api.post(`/api/bookings/fee-requests/${id}`, { data: { decision, ...(note ? { note } : {}) } });
+
+  test('approving applies the values and unpaid shares follow', async () => {
+    const { admin, manager, managerApi, bookingId } = await setup();
+    await sql`UPDATE users SET share_percent = 10 WHERE id = ${manager.id}`;
+    await sql`INSERT INTO booking_staff_shares (booking_id, user_id, share_percent) VALUES (${bookingId}, ${manager.id}, 10)`;
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 200_000 } });
+    const id = await pendingId(bookingId);
+    const response = await decide(admin, id, 'approve');
+    expect(response.status(), await response.text()).toBe(200);
+    expect((await bookingMoney(bookingId)).fee_cents).toBe(200_000);
+    const owed = (await (await admin.get('/api/payouts/team?view=owed')).json()).data;
+    expect(owed.find((s: { booking_id: string }) => s.booking_id === bookingId)?.amount_cents).toBe(4000);
+    expect((await requestsFor(bookingId)).map((r) => r.status)).toEqual(['approved']);
+  });
+
+  test('approving twice: the second is 404', async () => {
+    const { admin, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    const id = await pendingId(bookingId);
+    expect((await decide(admin, id, 'approve')).status()).toBe(200);
+    expect((await decide(admin, id, 'approve')).status()).toBe(404);
+  });
+
+  test('rejecting leaves the booking and shows the note', async () => {
+    const { admin, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    expect((await decide(admin, await pendingId(bookingId), 'reject', 'Too high')).status()).toBe(200);
+    expect((await bookingMoney(bookingId)).fee_cents).toBe(100_000);
+    const latest = (await (await managerApi.get(`/api/bookings/${bookingId}/fee-request`)).json()).data;
+    expect(latest).toMatchObject({ status: 'rejected', decision_note: 'Too high' });
+  });
+
+  test('the list shows current and requested values', async () => {
+    const { admin, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    await admin.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 110_000 } });
+    const list = (await (await admin.get('/api/bookings/fee-requests')).json()).data;
+    const item = list.find((r: { booking_id: string }) => r.booking_id === bookingId);
+    expect(item).toMatchObject({ fee_cents: 120_000, current: { fee_cents: 110_000, commission_percent: 20, currency: 'GBP' } });
+    expect(item.talent_name).toBeTruthy();
+  });
+
+  test('managers can’t approve, even their own', async () => {
+    const { managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    expect((await managerApi.get('/api/bookings/fee-requests')).status()).toBe(403);
+    expect((await decide(managerApi, await pendingId(bookingId), 'approve')).status()).toBe(403);
+    expect((await bookingMoney(bookingId)).fee_cents).toBe(100_000);
+  });
+
+  test('the manager can withdraw', async () => {
+    const { managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    expect((await managerApi.delete(`/api/bookings/${bookingId}/fee-request`)).status()).toBe(200);
+    expect((await requestsFor(bookingId)).map((r) => r.status)).toEqual(['withdrawn']);
+    expect((await managerApi.delete(`/api/bookings/${bookingId}/fee-request`)).status()).toBe(404);
+  });
+
+  test('deleting the booking removes its requests', async () => {
+    const { admin, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    expect((await admin.delete(`/api/bookings/${bookingId}`)).status()).toBe(200);
+    const response = await admin.get('/api/bookings/fee-requests');
+    expect(response.status()).toBe(200);
+    expect((await response.json()).data.find((r: { booking_id: string }) => r.booking_id === bookingId)).toBeUndefined();
+  });
+
+  test('road managers can’t see a booking’s fee request', async () => {
+    const { talent, managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    const road = await createTeamUser('road_manager', [talent.id]);
+    const roadApi = await teamApi(road.email, road.password);
+    expect((await roadApi.get(`/api/bookings/${bookingId}/fee-request`)).status()).toBe(403);
+  });
+});
