@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { endOfToday, isPast } from "date-fns";
-import { CheckSquare, Loader2 } from "lucide-react";
+import { CheckSquare, Loader2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Activity } from "@/lib/crm/types";
 import { CrmShell, api, errorMessage, useCrmOptions } from "@/components/crm/shared";
 import { TaskCheck, dueLabel } from "@/components/crm/Timeline";
+import { TaskDialog } from "@/components/crm/TaskDialog";
 
 type Who = "me" | "all";
 
@@ -45,6 +47,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,8 +83,21 @@ export default function TasksPage() {
           {who === "me" ? "My" : "Team"} <span className="text-gold">Tasks</span>
         </>
       }
-      subtitle="Follow-ups from deals and clients. Add tasks from a deal or client page."
+      subtitle="Follow-ups and to-dos for you, the team, road managers and talents."
+      actions={
+        <Button onClick={() => setAdding(true)} className="bg-gold text-black hover:bg-gold/90">
+          <Plus className="mr-2 h-4 w-4" />
+          New task
+        </Button>
+      }
     >
+      <TaskDialog
+        open={adding}
+        onOpenChange={setAdding}
+        options={options}
+        // Someone else's task only shows under "Everyone's"
+        onSaved={(owner) => (owner && owner !== options.me && who === "me" ? setWho("all") : load())}
+      />
       <div className="mb-4 flex items-center gap-3">
         <div className="flex self-start rounded-md border bg-white p-0.5 text-sm">
           {(["me", "all"] as const).map((value) => (
@@ -102,7 +118,7 @@ export default function TasksPage() {
       {!loading && tasks.length === 0 ? (
         <div className="rounded-lg border bg-white p-12 text-center text-gray-500">
           <CheckSquare className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-          No tasks. Add one from a deal or client to schedule a follow-up.
+          No tasks. Use New task to add one.
         </div>
       ) : (
         <div className="space-y-6">

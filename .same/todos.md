@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 043 are on production. Tests: `npm run test:e2e` (128 tests, also run on GitHub for every PR)._
+_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 043 are on production. Tests: `npm run test:e2e` (131 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -63,6 +63,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Tasks on their own: CRM → Tasks → New task, for anyone (team, road managers, talents with a portal login), optionally linked to a client or deal
 - [x] Team payouts: managers and road managers earn a share of the agency's commission on their talents' bookings; rates, Payouts → Team, and "Your earnings" on their dashboard (migration 043)
 - [x] Housekeeping: no lint warnings left (unused code removed, admin images use Next.js `Image`); the talent compare bars now show the real proportions
 - [x] Talent notifications: portal bell, phone push, reminders the day before (migration 042)
