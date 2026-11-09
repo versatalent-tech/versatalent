@@ -307,3 +307,60 @@ test.describe('Team payouts', () => {
     expect((await api.delete(`/api/payouts/team/${id}/${person.id}`)).status()).toBe(403);
   });
 });
+
+test.describe('Your earnings', () => {
+  type Earning = { booking_id: string; amount_cents: number; paid_at: string | null };
+  type Earnings = { owed: Earning[]; paid: Earning[]; upcoming: Earning[] };
+
+  async function earnings(email: string, password: string): Promise<{ status: number; body: any }> {
+    const api = await teamApi(email, password);
+    const response = await api.get('/api/earnings/mine');
+    return { status: response.status(), body: await response.json() };
+  }
+
+  async function twoPeople() {
+    const admin = await adminApi();
+    const talent = await createTalent();
+    const manager = await createTeamUser('manager', [talent.id]);
+    const road = await createTeamUser('road_manager', [talent.id]);
+    await setRate(manager.id, 10);
+    await setRate(road.id, 5);
+    return { admin, talent, manager, road };
+  }
+
+  test('each person sees only their own shares', async () => {
+    const { admin, talent, manager, road } = await twoPeople();
+    const id = await apiBooking(admin, talent.id);
+    const mine = (await earnings(manager.email, manager.password)).body.data as Earnings;
+    const theirs = (await earnings(road.email, road.password)).body.data as Earnings;
+    expect(mine.owed.filter((e) => e.booking_id === id).map((e) => e.amount_cents)).toEqual([2000]);
+    expect(theirs.owed.filter((e) => e.booking_id === id).map((e) => e.amount_cents)).toEqual([1000]);
+  });
+
+  test('no fee, commission or rate in the response', async () => {
+    const { admin, talent, manager, road } = await twoPeople();
+    await apiBooking(admin, talent.id);
+    const text = JSON.stringify((await earnings(road.email, road.password)).body);
+    for (const word of ['fee', 'commission', 'share_percent', 'person_name']) expect(text).not.toContain(word);
+    const [other] = await sql`SELECT name FROM users WHERE id = ${manager.id}`;
+    expect(text).not.toContain(other.name);
+  });
+
+  test('paid and upcoming are listed', async () => {
+    const { admin, talent, manager } = await twoPeople();
+    const paid = await apiBooking(admin, talent.id);
+    const later = await apiBooking(admin, talent.id, { starts_at: new Date(Date.now() + 4 * DAY).toISOString(), ends_at: new Date(Date.now() + 4 * DAY + 3_600_000).toISOString() });
+    const response = await admin.post('/api/payouts/team/paid', { data: { shares: [{ booking_id: paid, user_id: manager.id }], paid_on: new Date().toISOString().slice(0, 10) } });
+    expect(response.status()).toBe(200);
+    const data = (await earnings(manager.email, manager.password)).body.data as Earnings;
+    expect(data.paid.find((e) => e.booking_id === paid)).toMatchObject({ amount_cents: 2000 });
+    expect(data.paid.find((e) => e.booking_id === paid)?.paid_at).toBeTruthy();
+    expect(data.upcoming.find((e) => e.booking_id === later)).toMatchObject({ amount_cents: 2000, paid_at: null });
+    expect(data.owed.find((e) => e.booking_id === paid || e.booking_id === later)).toBeUndefined();
+  });
+
+  test('admins get 403', async () => {
+    const api = await adminApi();
+    expect((await api.get('/api/earnings/mine')).status()).toBe(403);
+  });
+});

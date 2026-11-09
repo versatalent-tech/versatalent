@@ -1,5 +1,5 @@
 import { sql } from '../client';
-import { AGENCY_TIME_ZONE, type EarnerRole, type StaffShare, type TeamRate } from '@/lib/bookings/types';
+import { AGENCY_TIME_ZONE, type EarnerRole, type MyEarning, type StaffShare, type TeamRate } from '@/lib/bookings/types';
 
 // ---------------------------------------------------------------------------
 // Managers' and road managers' shares of the agency's commission
@@ -207,4 +207,47 @@ export async function summariseOwedStaffShares(): Promise<{ count: number; total
     count: rows.reduce((sum: number, row: any) => sum + Number(row.n), 0),
     totals: rows.map((row: any) => ({ currency: row.currency, cents: Number(row.cents) })),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Your earnings (managers and road managers)
+// ---------------------------------------------------------------------------
+
+/** One person's own shares: owed, paid in the last 120 days, and coming up. Never the fee, commission or rate */
+export async function listMyEarnings(userId: string): Promise<{ owed: MyEarning[]; paid: MyEarning[]; upcoming: MyEarning[] }> {
+  const rows = await sql`
+    SELECT s.booking_id, b.title AS booking_title, t.name AS talent_name, b.starts_at, b.ends_at, b.currency,
+      COALESCE(s.paid_cents, ${shareAmount()}) AS amount_cents, s.paid_at,
+      CASE
+        WHEN s.paid_at IS NOT NULL THEN 'paid'
+        WHEN ${owedShare()} THEN 'owed'
+        ELSE 'upcoming'
+      END AS state
+    FROM booking_staff_shares s
+    JOIN bookings b ON b.id = s.booking_id
+    JOIN talents t ON t.id = b.talent_id
+    WHERE s.user_id = ${userId}
+      AND (
+        s.paid_at > NOW() - INTERVAL '120 days'
+        OR (s.paid_at IS NULL AND b.status <> 'cancelled' AND ${shareAmount()} > 0
+            AND (b.ends_at > NOW() OR b.status IN ('confirmed', 'completed')))
+      )
+    ORDER BY b.starts_at
+    LIMIT 500
+  `;
+  const result = { owed: [] as MyEarning[], paid: [] as MyEarning[], upcoming: [] as MyEarning[] };
+  for (const row of rows as any[]) {
+    result[row.state as keyof typeof result].push({
+      booking_id: row.booking_id,
+      booking_title: row.booking_title,
+      talent_name: row.talent_name,
+      starts_at: new Date(row.starts_at).toISOString(),
+      ends_at: new Date(row.ends_at).toISOString(),
+      currency: row.currency,
+      amount_cents: Number(row.amount_cents),
+      paid_at: row.paid_at ? new Date(row.paid_at).toISOString() : null,
+    });
+  }
+  result.paid.sort((a, b) => b.paid_at!.localeCompare(a.paid_at!));
+  return result;
 }
