@@ -11,7 +11,6 @@ import { POINT_SOURCE_LABELS } from "@/lib/loyalty/types";
 import type { EventOnSale } from "@/lib/tickets/types";
 import type { TierProgress } from "@/lib/vip-tier-rules";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Check,
@@ -19,9 +18,7 @@ import {
   Calendar,
   Award,
   Loader2,
-  TrendingUp,
   Trophy,
-  ShoppingCart,
   History,
   ArrowUp,
   ArrowDown,
@@ -61,14 +58,6 @@ interface PointsLog {
   created_at: string;
 }
 
-interface Consumption {
-  id: string;
-  amount: number;
-  currency: string;
-  description: string;
-  created_at: string;
-}
-
 interface CheckIn {
   id: string;
   source: string;
@@ -91,7 +80,6 @@ export default function VIPPassPage() {
   const [vipUser, setVipUser] = useState<VIPUser | null>(null);
   const [membership, setMembership] = useState<VIPMembership | null>(null);
   const [pointsLog, setPointsLog] = useState<PointsLog[]>([]);
-  const [consumptions, setConsumptions] = useState<Consumption[]>([]);
   const [checkins, setCheckins] = useState<CheckIn[]>([]);
   const [benefits, setBenefits] = useState<TierBenefit[]>([]);
   // Points history and check-ins are for the team only until members can sign in
@@ -129,9 +117,6 @@ export default function VIPPassPage() {
           setPointsLog(pointsData);
           setHistoryVisible(true);
         }
-
-        // Fetch consumptions (would need to create this endpoint)
-        // For now, we'll leave it empty
 
         // Fetch check-ins
         const checkinsResponse = await fetch(`/api/nfc/checkins?user_id=${params.id}`);

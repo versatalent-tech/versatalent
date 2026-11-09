@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useInView } from "react-intersection-observer";
 import Masonry from "react-masonry-css";
@@ -10,10 +10,6 @@ import {
   Award,
   Calendar,
   MapPin,
-  User,
-  Building,
-  Eye,
-  Heart,
   Download,
   Share2
 } from "lucide-react";
@@ -183,7 +179,6 @@ function GridItem({ item, index, onClick, viewMode }: GridItemProps) {
 export function MasonryGrid({ items, onItemClick, viewMode }: MasonryGridProps) {
   const [loadedCount, setLoadedCount] = useState(12);
   const [isLoading, setIsLoading] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Sort items by priority
   const sortedItems = useMemo(() => {

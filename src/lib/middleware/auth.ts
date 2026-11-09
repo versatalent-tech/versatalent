@@ -95,7 +95,7 @@ export async function requireTeamPermission(
 /**
  * Verify admin authentication
  */
-export async function verifyAdminAuth(request?: NextRequest): Promise<boolean> {
+export async function verifyAdminAuth(): Promise<boolean> {
   const session = await getCurrentSession();
   return session?.role === 'admin';
 }
@@ -103,7 +103,7 @@ export async function verifyAdminAuth(request?: NextRequest): Promise<boolean> {
 /**
  * Verify staff authentication (admins also count as staff)
  */
-export async function verifyStaffAuth(request?: NextRequest): Promise<boolean> {
+export async function verifyStaffAuth(): Promise<boolean> {
   const session = await getCurrentSession();
   return session !== null;
 }

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 export function useImagePreloader(src: string) {
   const [isLoaded, setIsLoaded] = useState(false);

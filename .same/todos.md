@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 8 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 042 are on production. Tests: `npm run test:e2e` (53 tests, also run on GitHub for every PR)._
+_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 042 are on production. Tests: `npm run test:e2e` (94 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -60,12 +60,9 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning: needs an Apple Developer Program membership (not yet, decided 5 Nov). Until then, staff open it the first time with right-click → Open → Open. Android phones and tablets don't need the Bridge (phone tap)
 - [ ] Backups: a longer Neon restore window needs a paid Neon plan (the free plan's 6 hours is already set); staying on free for now
 
-## 5. Housekeeping
-- [ ] Clean up unused variables and imports (100 lint warnings)
-- [ ] Replace `<img>` with Next.js `Image` (15 warnings)
-
 ## Completed
 ### November 2026
+- [x] Housekeeping: no lint warnings left (unused code removed, admin images use Next.js `Image`); the talent compare bars now show the real proportions
 - [x] Talent notifications: portal bell, phone push, reminders the day before (migration 042)
 - [x] Member pass always shows "Buy tickets with your card", with a note while nothing is on sale (PR #61)
 - [x] Checked on 5 Nov: the public pass hides points history, check-ins and the email from anyone not signed in as the team

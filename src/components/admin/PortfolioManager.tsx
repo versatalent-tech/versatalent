@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,8 +29,7 @@ import {
   Video,
   X,
   Save,
-  ExternalLink,
-} from "lucide-react";
+  } from "lucide-react";
 import type { PortfolioItem } from "@/lib/data/talents";
 import { ImageUpload } from "./ImageUpload";
 
@@ -198,10 +198,12 @@ export function PortfolioManager({ portfolio, onChange }: PortfolioManagerProps)
               {/* Preview */}
               <div className="relative aspect-square bg-gray-100">
                 {item.type === "image" ? (
-                  <img
+                  <Image
                     src={item.thumbnailUrl || item.url}
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-900">
@@ -485,9 +487,11 @@ export function PortfolioManager({ portfolio, onChange }: PortfolioManagerProps)
             <div className="bg-gray-50 rounded-lg p-4 my-4">
               <div className="flex items-center gap-3">
                 {selectedItem.type === "image" ? (
-                  <img
+                  <Image
                     src={selectedItem.thumbnailUrl || selectedItem.url}
                     alt={selectedItem.title}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 object-cover rounded"
                   />
                 ) : (

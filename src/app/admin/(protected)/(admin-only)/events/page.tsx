@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Button } from "@/components/ui/button";
@@ -30,20 +31,17 @@ import {
   Edit,
   Trash2,
   Search,
-  Filter,
   Save,
   X,
   Users,
   Tag,
-  DollarSign,
-  ExternalLink,
   AlertCircle,
   CheckCircle,
   XCircle,
   Info,
   Nfc,
 } from "lucide-react";
-import type { Event, EventType, EventStatus, CreateEventRequest, EventVenue, EventPrice, Talent } from "@/lib/db/types";
+import type { Event, EventType, EventStatus, Talent } from "@/lib/db/types";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TalentMultiSelect } from "@/components/admin/TalentMultiSelect";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
@@ -605,10 +603,12 @@ export default function AdminEventsPage() {
                   {/* Event Image */}
                   {event.image_url && (
                     <div className="relative h-48 bg-gray-100">
-                      <img
+                      <Image
                         src={event.image_url}
                         alt={event.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover"
                       />
                       {event.featured && (
                         <Badge className="absolute top-2 right-2 bg-gold">

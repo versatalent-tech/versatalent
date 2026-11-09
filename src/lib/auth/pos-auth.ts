@@ -5,7 +5,7 @@ import { getCurrentSession } from '@/lib/middleware/auth';
  * Auth middleware for POS routes
  * Checks if user is authenticated and has staff or admin role
  */
-export async function checkPOSAuth(request: NextRequest): Promise<{
+export async function checkPOSAuth(): Promise<{
   authorized: boolean;
   userId?: string;
   role?: string;
@@ -50,7 +50,7 @@ export function withPOSAuth<T = any>(
 ) {
   return async (request: NextRequest, context?: T): Promise<Response> => {
     try {
-      const authCheck = await checkPOSAuth(request);
+      const authCheck = await checkPOSAuth();
 
       if (!authCheck.authorized) {
         return NextResponse.json(

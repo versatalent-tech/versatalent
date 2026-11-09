@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit, Trash2, User, Mail, Receipt, Download } from "lucide-react";
+import { Plus, Edit, Trash2, User, Receipt, Download } from "lucide-react";
 import PurchaseHistory from "@/components/admin/PurchaseHistory";
 import { VIPDetailsFields, EMPTY_VIP_PROFILE } from "@/components/admin/nfc/VIPDetailsFields";
 import { AGE_RANGES, type VIPProfileInput } from "@/lib/vip-profile";
@@ -480,6 +480,7 @@ export function UsersManager() {
             </Button>
             <Button
               onClick={isCreateDialogOpen ? handleCreate : handleUpdate}
+              disabled={saving}
               className="bg-gold hover:bg-gold/90 text-white"
             >
               {isCreateDialogOpen ? 'Create User' : 'Save Changes'}

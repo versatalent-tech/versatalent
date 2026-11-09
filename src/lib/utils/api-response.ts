@@ -85,7 +85,7 @@ export async function parseRequestBody<T = unknown>(request: Request): Promise<T
   try {
     const body = await request.json();
     return body as T;
-  } catch (error) {
+  } catch {
     throw new Error('Invalid JSON body');
   }
 }

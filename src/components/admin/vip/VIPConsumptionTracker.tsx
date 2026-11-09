@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, ShoppingCart, TrendingUp } from "lucide-react";
+import { Plus, TrendingUp } from "lucide-react";
 import { formatCurrency, POS_CURRENCY } from "@/lib/utils/formatting";
 
 interface VIPUser {

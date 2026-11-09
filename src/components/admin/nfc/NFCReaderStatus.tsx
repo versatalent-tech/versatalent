@@ -1,6 +1,6 @@
 "use client";
 
-import { Wifi, WifiOff, Loader2, AlertTriangle, Nfc, Zap, Info, Server, ExternalLink } from "lucide-react";
+import { Wifi, WifiOff, Loader2, Nfc, Zap, Info, Server, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNFCReader } from "@/lib/hooks/useNFCReader";

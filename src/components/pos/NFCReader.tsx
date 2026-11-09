@@ -10,8 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { CreditCard, Loader2, User, CheckCircle2, X } from "lucide-react";
+import { CreditCard, Loader2, X } from "lucide-react";
 
 export interface LinkedCustomer {
   id: string;

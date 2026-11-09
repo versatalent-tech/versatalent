@@ -9,10 +9,8 @@ import {
   ChevronDown,
   ChevronRight,
   Receipt,
-  TrendingUp,
   ShoppingCart,
   Euro,
-  Calendar,
   User,
   CreditCard
 } from 'lucide-react';

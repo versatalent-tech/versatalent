@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,8 +36,7 @@ import {
   StarOff,
   Eye,
   EyeOff,
-  Link as LinkIcon,
-  KeyRound,
+  Link as KeyRound,
   FileText,
   Ruler,
   Palette,
@@ -1174,10 +1174,12 @@ export default function AdminTalentsPage() {
                     {/* Talent Image */}
                     {talent.image_src && (
                       <div className="relative h-64 bg-gray-100">
-                        <img
+                        <Image
                           src={talent.image_src}
                           alt={talent.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover"
                         />
                         {talent.featured && (
                           <Badge className="absolute top-2 right-2 bg-gold">

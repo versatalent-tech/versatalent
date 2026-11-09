@@ -9,7 +9,6 @@ import {
   Music,
   Film,
   ChefHat,
-  MapPin,
   Users,
   Award,
   Target,
