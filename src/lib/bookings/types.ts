@@ -123,3 +123,52 @@ export function commissionCents(feeCents: number | null, commissionPercent: numb
   if (feeCents === null) return null;
   return Math.round((feeCents * (commissionPercent ?? 0)) / 100);
 }
+
+/** A manager's or road manager's share: their rate of the agency's (rounded) commission, in cents */
+export function staffShareCents(feeCents: number | null, commissionPercent: number | null, sharePercent: number): number | null {
+  if (feeCents === null) return null;
+  return Math.round((commissionCents(feeCents, commissionPercent)! * sharePercent) / 100);
+}
+
+/** Team members who can earn a share of the agency's commission */
+export type EarnerRole = 'manager' | 'road_manager';
+
+export interface TeamRate {
+  id: string;
+  name: string;
+  role: EarnerRole;
+  is_active: boolean;
+  share_percent: number | null;
+  /** Names of the talents they look after */
+  talents: string[];
+}
+
+/** One person's share of one booking (admin view) */
+export interface StaffShare {
+  booking_id: string;
+  user_id: string;
+  person_name: string;
+  role: EarnerRole;
+  booking_title: string;
+  talent_name: string;
+  starts_at: string;
+  ends_at: string;
+  currency: string;
+  share_percent: number;
+  amount_cents: number;
+  paid_at: string | null;
+  paid_cents: number | null;
+  paid_reference: string | null;
+}
+
+/** One of your own shares: never the fee, commission or rate */
+export interface MyEarning {
+  booking_id: string;
+  booking_title: string;
+  talent_name: string;
+  starts_at: string;
+  ends_at: string;
+  currency: string;
+  amount_cents: number;
+  paid_at: string | null;
+}
