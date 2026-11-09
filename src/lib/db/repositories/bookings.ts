@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import type { z } from 'zod';
 import { sql } from '../client';
 import { getTalentScope } from './team';
+import { addStaffShares, replaceUnpaidStaffShares } from './staff-shares';
 import type { TeamRole } from '@/lib/auth/permissions';
 import type { availabilitySchema, bookingSchema, bookingUpdateSchema } from '@/lib/bookings/schemas';
 import {
@@ -237,6 +238,7 @@ export async function createBooking(actor: BookingActor, data: BookingInput): Pr
     RETURNING id, deal_id, (SELECT name FROM talents WHERE id = ${data.talent_id}) AS talent_name
   `;
   const created = rows[0];
+  await addStaffShares(created.id);
   if (created.deal_id) {
     await logOnDeal(actor, created.deal_id, `Booking added: ${created.talent_name}, ${data.title}`);
   }
@@ -279,6 +281,10 @@ export async function updateBooking(
       updated_at = NOW()
     WHERE id = ${id}
   `;
+
+  if (has('talent_id') && changes.talent_id !== current.talent_id) {
+    await replaceUnpaidStaffShares(id);
+  }
 
   if (changes.status && changes.status !== current.status && current.deal_id) {
     await logOnDeal(
