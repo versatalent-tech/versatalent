@@ -34,7 +34,7 @@ const ICONS: Record<ActivityType, React.ElementType> = {
 type Loggable = keyof typeof LOGGABLE_ACTIVITY_TYPES;
 
 /** Default due time for a new task: tomorrow at 10:00, as a datetime-local value */
-function tomorrowAtTen(): string {
+export function tomorrowAtTen(): string {
   const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
   d.setHours(10, 0, 0, 0);
   const pad = (n: number) => String(n).padStart(2, "0");
