@@ -25,6 +25,7 @@ export interface BookingOptions {
     availability: boolean;
     rates: boolean;
     payouts: boolean;
+    teamPayouts: boolean;
     delete: boolean;
   };
   hasPersonalAccount: boolean;

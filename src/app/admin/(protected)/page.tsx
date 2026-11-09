@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { MyTasks } from "@/components/tasks/MyTasks";
+import { MyEarningsCard } from "@/components/dashboard/MyEarningsCard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { formatCurrency, PAYMENT_METHOD_LABELS } from "@/lib/utils/formatting";
 import type {
@@ -252,10 +253,12 @@ function ScopedView({
   summary,
   canUseCrm,
   bookings,
+  earns,
 }: {
   summary: ScopedDashboardSummary;
   canUseCrm: boolean;
   bookings: Booking[];
+  earns: boolean;
 }) {
   return (
     <>
@@ -263,6 +266,9 @@ function ScopedView({
 
       {/* People without the CRM (road managers) see the tasks given to them here */}
       {!canUseCrm && <MyTasks endpoint="/api/tasks/mine" title="Your tasks" />}
+
+      {/* Managers and road managers: their share of their talents' bookings */}
+      {earns && <MyEarningsCard />}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">{canUseCrm ? "Bookings & sales" : "Bookings"}</h2>
@@ -438,7 +444,12 @@ export default function AdminPage() {
             )}
 
             {summary?.view === "scoped" && (
-              <ScopedView summary={summary} canUseCrm={summary.viewer.canUseCrm} bookings={summary.upcoming_bookings} />
+              <ScopedView
+                summary={summary}
+                canUseCrm={summary.viewer.canUseCrm}
+                bookings={summary.upcoming_bookings}
+                earns={summary.viewer.role === "manager" || summary.viewer.role === "road_manager"}
+              />
             )}
 
             {summary?.view === "full" && (

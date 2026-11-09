@@ -10,8 +10,10 @@ import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Booking } from "@/lib/bookings/types";
 import { Field, api, errorMessage, formatMoney } from "@/components/crm/shared";
+import { TeamPayouts } from "@/components/bookings/TeamPayouts";
 
 type View = "owed" | "paid";
+type Tab = "talents" | "team";
 
 /** "£1,200 + €300" */
 function totalLabel(items: { cents: number; currency: string }[]): string {
@@ -21,6 +23,8 @@ function totalLabel(items: { cents: number; currency: string }[]): string {
 }
 
 export default function PayoutsPage() {
+  const [tab, setTab] = useState<Tab>("talents");
+  const [canTeam, setCanTeam] = useState(false);
   const [view, setView] = useState<View>("owed");
   const [bookings, setBookings] = useState<Booking[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -45,6 +49,16 @@ export default function PayoutsPage() {
     setSelected(new Set());
     load();
   }, [load]);
+
+  // The Team tab is for admins only; ?tab=team opens it (e.g. from the dashboard)
+  useEffect(() => {
+    api<{ can: { teamPayouts: boolean } }>("/api/bookings/options")
+      .then((options) => {
+        setCanTeam(options.can.teamPayouts);
+        if (options.can.teamPayouts && new URLSearchParams(window.location.search).get("tab") === "team") setTab("team");
+      })
+      .catch(() => undefined);
+  }, []);
 
   const byTalent = useMemo(() => {
     const groups = new Map<string, { name: string; items: Booking[] }>();
@@ -108,97 +122,121 @@ export default function PayoutsPage() {
             Back to calendar
           </Link>
           <h1 className="mb-1 text-3xl font-bold text-white md:text-4xl">
-            Talent <span className="text-gold">Payouts</span>
+            {tab === "team" ? "Team" : "Talent"} <span className="text-gold">Payouts</span>
           </h1>
           <p className="max-w-2xl text-gray-300">
-            What talents are owed for finished jobs (their fee minus commission), and what&apos;s been paid. Talents see the same in their portal.
+            {tab === "team"
+              ? "What managers and road managers are owed for finished jobs (their share of the agency's commission), and what's been paid. They see their own on their dashboard."
+              : "What talents are owed for finished jobs (their fee minus commission), and what's been paid. Talents see the same in their portal."}
           </p>
         </div>
       </section>
 
       <div className="min-h-[50vh] bg-gray-50 py-6">
         <div className="container mx-auto max-w-4xl space-y-4 px-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex rounded-md border bg-white p-0.5 text-sm">
-              {(["owed", "paid"] as const).map((v) => (
-                <button key={v} onClick={() => setView(v)} className={`rounded px-3 py-1 ${view === v ? "bg-black text-white" : "text-gray-600"}`}>
-                  {v === "owed" ? "To pay" : "Paid (last 4 months)"}
+          {canTeam && (
+            <div className="flex w-fit rounded-md border bg-white p-0.5 text-sm" role="tablist">
+              {(["talents", "team"] as const).map((t) => (
+                <button
+                  key={t}
+                  role="tab"
+                  aria-selected={tab === t}
+                  onClick={() => setTab(t)}
+                  className={`rounded px-4 py-1 font-medium ${tab === t ? "bg-gold text-black" : "text-gray-600"}`}
+                >
+                  {t === "talents" ? "Talents" : "Team"}
                 </button>
               ))}
             </div>
-            {view === "owed" && (
-              <Button onClick={() => setDialog(true)} disabled={chosen.length === 0} className="bg-gold text-black hover:bg-gold/90">
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Mark {chosen.length || ""} as paid{chosen.length ? ` · ${totalLabel(chosen.map((b) => ({ cents: amount(b), currency: b.money?.currency ?? "GBP" })))}` : ""}
-              </Button>
-            )}
-          </div>
+          )}
 
-          {notice && <p className="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-900">{notice}</p>}
-          {error && <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
-
-          {!bookings ? (
-            <Loader2 className="mx-auto mt-10 h-8 w-8 animate-spin text-gold" />
-          ) : byTalent.length === 0 ? (
-            <p className="rounded-lg border bg-white p-10 text-center text-sm text-gray-500">
-              {view === "owed" ? "Nothing to pay: every finished job with a fee has been paid." : "No payments recorded recently."}
-            </p>
+          {tab === "team" ? (
+            <TeamPayouts />
           ) : (
-            byTalent.map(([talentId, group]) => {
-              const ids = group.items.map((b) => b.id);
-              const allOn = ids.every((id) => selected.has(id));
-              return (
-                <section key={talentId} className="overflow-hidden rounded-lg border bg-white">
-                  <header className="flex items-center justify-between gap-3 border-b bg-gray-50 px-4 py-2">
-                    <label className="flex items-center gap-2 font-semibold">
-                      {view === "owed" && (
-                        <input type="checkbox" checked={allOn} onChange={(e) => toggle(ids, e.target.checked)} className="h-4 w-4 accent-[#D4AF37]" />
-                      )}
-                      {group.name}
-                    </label>
-                    <span className="text-sm font-medium">
-                      {totalLabel(group.items.map((b) => ({ cents: amount(b), currency: b.money?.currency ?? "GBP" })))}
-                    </span>
-                  </header>
-                  <ul className="divide-y">
-                    {group.items.map((b) => (
-                      <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                        <label className="flex min-w-0 items-center gap-3">
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex rounded-md border bg-white p-0.5 text-sm">
+                  {(["owed", "paid"] as const).map((v) => (
+                    <button key={v} onClick={() => setView(v)} className={`rounded px-3 py-1 ${view === v ? "bg-black text-white" : "text-gray-600"}`}>
+                      {v === "owed" ? "To pay" : "Paid (last 4 months)"}
+                    </button>
+                  ))}
+                </div>
+                {view === "owed" && (
+                  <Button onClick={() => setDialog(true)} disabled={chosen.length === 0} className="bg-gold text-black hover:bg-gold/90">
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Mark {chosen.length || ""} as paid{chosen.length ? ` · ${totalLabel(chosen.map((b) => ({ cents: amount(b), currency: b.money?.currency ?? "GBP" })))}` : ""}
+                  </Button>
+                )}
+              </div>
+
+              {notice && <p className="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-900">{notice}</p>}
+              {error && <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+
+              {!bookings ? (
+                <Loader2 className="mx-auto mt-10 h-8 w-8 animate-spin text-gold" />
+              ) : byTalent.length === 0 ? (
+                <p className="rounded-lg border bg-white p-10 text-center text-sm text-gray-500">
+                  {view === "owed" ? "Nothing to pay: every finished job with a fee has been paid." : "No payments recorded recently."}
+                </p>
+              ) : (
+                byTalent.map(([talentId, group]) => {
+                  const ids = group.items.map((b) => b.id);
+                  const allOn = ids.every((id) => selected.has(id));
+                  return (
+                    <section key={talentId} className="overflow-hidden rounded-lg border bg-white">
+                      <header className="flex items-center justify-between gap-3 border-b bg-gray-50 px-4 py-2">
+                        <label className="flex items-center gap-2 font-semibold">
                           {view === "owed" && (
-                            <input
-                              type="checkbox"
-                              checked={selected.has(b.id)}
-                              onChange={(e) => toggle([b.id], e.target.checked)}
-                              className="h-4 w-4 flex-shrink-0 accent-[#D4AF37]"
-                            />
+                            <input type="checkbox" checked={allOn} onChange={(e) => toggle(ids, e.target.checked)} className="h-4 w-4 accent-[#D4AF37]" />
                           )}
-                          <span className="min-w-0">
-                            <span className="block truncate font-medium">{b.title}</span>
-                            <span className="block text-xs text-gray-500">
-                              {format(new Date(b.starts_at), "EEE d MMM yyyy")}
-                              {b.client ? ` · ${b.client.name}` : ""}
-                              {view === "owed" && b.money?.fee_cents != null
-                                ? ` · fee ${formatMoney(b.money.fee_cents, b.money.currency)} − ${b.money.commission_percent ?? 0}%`
-                                : ""}
-                              {view === "paid" && b.money?.paid_at ? ` · paid ${format(new Date(b.money.paid_at), "d MMM yyyy")}` : ""}
-                              {view === "paid" && b.money?.paid_reference ? ` · ref ${b.money.paid_reference}` : ""}
-                            </span>
-                          </span>
+                          {group.name}
                         </label>
-                        <span className="flex flex-shrink-0 items-center gap-2">
-                          <span className="font-semibold">{formatMoney(amount(b), b.money?.currency)}</span>
-                          {view === "paid" && (
-                            <button onClick={() => undo(b)} aria-label="Undo payment" className="text-gray-400 hover:text-red-600">
-                              <Undo2 className="h-4 w-4" />
-                            </button>
-                          )}
+                        <span className="text-sm font-medium">
+                          {totalLabel(group.items.map((b) => ({ cents: amount(b), currency: b.money?.currency ?? "GBP" })))}
                         </span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })
+                      </header>
+                      <ul className="divide-y">
+                        {group.items.map((b) => (
+                          <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                            <label className="flex min-w-0 items-center gap-3">
+                              {view === "owed" && (
+                                <input
+                                  type="checkbox"
+                                  checked={selected.has(b.id)}
+                                  onChange={(e) => toggle([b.id], e.target.checked)}
+                                  className="h-4 w-4 flex-shrink-0 accent-[#D4AF37]"
+                                />
+                              )}
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">{b.title}</span>
+                                <span className="block text-xs text-gray-500">
+                                  {format(new Date(b.starts_at), "EEE d MMM yyyy")}
+                                  {b.client ? ` · ${b.client.name}` : ""}
+                                  {view === "owed" && b.money?.fee_cents != null
+                                    ? ` · fee ${formatMoney(b.money.fee_cents, b.money.currency)} − ${b.money.commission_percent ?? 0}%`
+                                    : ""}
+                                  {view === "paid" && b.money?.paid_at ? ` · paid ${format(new Date(b.money.paid_at), "d MMM yyyy")}` : ""}
+                                  {view === "paid" && b.money?.paid_reference ? ` · ref ${b.money.paid_reference}` : ""}
+                                </span>
+                              </span>
+                            </label>
+                            <span className="flex flex-shrink-0 items-center gap-2">
+                              <span className="font-semibold">{formatMoney(amount(b), b.money?.currency)}</span>
+                              {view === "paid" && (
+                                <button onClick={() => undo(b)} aria-label="Undo payment" className="text-gray-400 hover:text-red-600">
+                                  <Undo2 className="h-4 w-4" />
+                                </button>
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })
+              )}
+            </>
           )}
         </div>
       </div>

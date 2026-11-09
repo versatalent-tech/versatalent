@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 042 are on production. Tests: `npm run test:e2e` (94 tests, also run on GitHub for every PR)._
+_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 043 are on production. Tests: `npm run test:e2e` (128 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -16,6 +16,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
 
 ## 2. Check after the latest deploys
+- [ ] Team payouts (migration 043 on production 9 Nov 2026): set each manager's and road manager's rate on Bookings → Commission Rates (Team), check the shares on their talents' bookings, pay one from Payouts → Team, and check "Your earnings" on their dashboard
 - [ ] Talent notifications (migration 042 on production 8 Nov 2026): add the push keys in Netlify (`docs/NOTIFICATIONS_SETUP.md`) and redeploy. Check the bell in the portal, switch on notifications on an Android phone and an iPhone (from the Home Screen), give a test to-do and change a test booking
 - [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day and Staff → Rewards, press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
@@ -62,6 +63,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Team payouts: managers and road managers earn a share of the agency's commission on their talents' bookings; rates, Payouts → Team, and "Your earnings" on their dashboard (migration 043)
 - [x] Housekeeping: no lint warnings left (unused code removed, admin images use Next.js `Image`); the talent compare bars now show the real proportions
 - [x] Talent notifications: portal bell, phone push, reminders the day before (migration 042)
 - [x] Member pass always shows "Buy tickets with your card", with a note while nothing is on sale (PR #61)

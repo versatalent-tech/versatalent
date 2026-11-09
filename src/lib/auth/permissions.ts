@@ -33,6 +33,7 @@ export type Permission =
   | 'availability.edit'
   | 'payouts.manage' // see and record what's been paid to talents
   | 'rates.manage' // admins only: talents' commission rates
+  | 'payouts.team' // admins only: see and record managers' and road managers' shares
   | 'crm.view'
   | 'crm.edit'
   | 'crm.delete' // admins only: deleting clients, contacts and deals

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import type { TalentRate } from "@/lib/bookings/types";
 import { api, errorMessage } from "@/components/crm/shared";
+import { TeamRatesSection } from "@/components/bookings/TeamRates";
 
 export default function CommissionRatesPage() {
   const [rates, setRates] = useState<TalentRate[]>([]);
@@ -116,6 +117,7 @@ export default function CommissionRatesPage() {
               </div>
             </>
           )}
+          <TeamRatesSection />
         </div>
       </div>
     </SimpleMainLayout>
