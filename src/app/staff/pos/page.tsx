@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StaffAuthGuard } from "@/components/auth/StaffAuthGuard";
+import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   Minus,
   CreditCard,
   Trash2,
+  Gift,
   LogOut,
   Package,
   AlertTriangle,
@@ -311,14 +313,22 @@ function StaffPOSContent() {
               </h1>
               <p className="text-gray-300">Process sales and manage orders</p>
             </div>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-black"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button asChild variant="outline" className="border-gold/60 bg-transparent text-gold hover:bg-gold hover:text-black">
+                <Link href="/staff/rewards">
+                  <Gift className="h-4 w-4 mr-2" />
+                  Rewards
+                </Link>
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="border-white bg-transparent text-white hover:bg-white hover:text-black"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </section>
