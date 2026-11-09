@@ -436,3 +436,84 @@ test.describe('Screens', () => {
     await expect.poll(async () => (await sql`SELECT share_percent FROM users WHERE id = ${person.id}`)[0].share_percent).toBe('10.00');
   });
 });
+
+test.describe('Review fixes', () => {
+  test('an admin can remove an unpaid share; paid ones must be undone first', async () => {
+    const admin = await adminApi();
+    const talent = await createTalent();
+    const person = await createTeamUser('manager', [talent.id]);
+    await setRate(person.id, 10);
+    const unpaid = await apiBooking(admin, talent.id);
+    const paid = await apiBooking(admin, talent.id, { starts_at: new Date(Date.now() - 6 * DAY).toISOString(), ends_at: new Date(Date.now() - 6 * DAY + 3_600_000).toISOString() });
+    await sql`UPDATE booking_staff_shares SET paid_at = NOW(), paid_cents = 2000 WHERE booking_id = ${paid}`;
+
+    const own = await teamApi(person.email, person.password);
+    expect((await own.post('/api/payouts/team/remove', { data: { booking_id: unpaid, user_id: person.id } })).status()).toBe(403);
+
+    expect((await admin.post('/api/payouts/team/remove', { data: { booking_id: unpaid, user_id: person.id } })).status()).toBe(200);
+    expect((await sharesOf(unpaid)).size).toBe(0);
+    const earnings = (await (await own.get('/api/earnings/mine')).json()).data;
+    expect(earnings.owed.find((e: { booking_id: string }) => e.booking_id === unpaid)).toBeUndefined();
+
+    expect((await admin.post('/api/payouts/team/remove', { data: { booking_id: paid, user_id: person.id } })).status()).toBe(404);
+    expect((await sharesOf(paid)).size).toBe(1);
+  });
+
+  test('a talent change keeps a deactivated person’s owed share when they also look after the new talent', async () => {
+    const admin = await adminApi();
+    const x = await createTalent();
+    const y = await createTalent();
+    const road = await createTeamUser('road_manager', [x.id, y.id]);
+    await setRate(road.id, 5);
+    const id = await apiBooking(admin, x.id);
+    await sql`UPDATE users SET is_active = false WHERE id = ${road.id}`;
+    expect((await admin.patch(`/api/bookings/${id}`, { data: { talent_id: y.id, force: true } })).status()).toBe(200);
+    expect((await sharesOf(id)).get(road.id)).toEqual({ percent: 5, paid: false });
+  });
+
+  test.describe('when saving shares fails', () => {
+    // A trigger makes inserting a 99.99% share fail, standing in for a dropped connection
+    test.beforeAll(async () => {
+      await sql`
+        CREATE OR REPLACE FUNCTION e2e_fail_share() RETURNS trigger AS $$
+        BEGIN
+          IF NEW.share_percent = 99.99 THEN RAISE EXCEPTION 'e2e: share insert failed'; END IF;
+          RETURN NEW;
+        END $$ LANGUAGE plpgsql`;
+      await sql`DROP TRIGGER IF EXISTS e2e_fail_share ON booking_staff_shares`;
+      await sql`CREATE TRIGGER e2e_fail_share BEFORE INSERT ON booking_staff_shares FOR EACH ROW EXECUTE FUNCTION e2e_fail_share()`;
+    });
+    test.afterAll(async () => {
+      await sql`DROP TRIGGER IF EXISTS e2e_fail_share ON booking_staff_shares`;
+    });
+
+    test('the booking isn’t created without its shares', async () => {
+      const admin = await adminApi();
+      const talent = await createTalent();
+      const person = await createTeamUser('manager', [talent.id]);
+      await setRate(person.id, 99.99);
+      const title = uniq('E2E Atomic');
+      const start = Date.now() - 3 * DAY;
+      const response = await admin.post('/api/bookings', {
+        data: { talent_id: talent.id, title, status: 'confirmed', starts_at: new Date(start).toISOString(), ends_at: new Date(start + 3_600_000).toISOString(), fee_cents: 100_000, commission_percent: 20, force: true },
+      });
+      expect(response.status()).toBe(500);
+      expect(await sql`SELECT id FROM bookings WHERE title = ${title}`).toHaveLength(0);
+    });
+
+    test('a talent change isn’t saved without its shares', async () => {
+      const admin = await adminApi();
+      const x = await createTalent();
+      const y = await createTalent();
+      const old = await createTeamUser('manager', [x.id]);
+      const next = await createTeamUser('manager', [y.id]);
+      await setRate(old.id, 10);
+      await setRate(next.id, 99.99);
+      const id = await apiBooking(admin, x.id);
+      expect((await admin.patch(`/api/bookings/${id}`, { data: { talent_id: y.id, force: true } })).status()).toBe(500);
+      const [booking] = await sql`SELECT talent_id FROM bookings WHERE id = ${id}`;
+      expect(booking.talent_id).toBe(x.id);
+      expect((await sharesOf(id)).get(old.id)).toEqual({ percent: 10, paid: false });
+    });
+  });
+});

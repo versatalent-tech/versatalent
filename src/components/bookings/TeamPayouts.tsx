@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { CheckCircle2, Loader2, Undo2 } from "lucide-react";
+import { CheckCircle2, Loader2, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -102,6 +102,16 @@ export function TeamPayouts() {
     }
   };
 
+  const remove = async (s: StaffShare) => {
+    if (!window.confirm(`Remove ${s.person_name}'s share of “${s.booking_title}”? They won't be owed anything for this booking.`)) return;
+    try {
+      await api("/api/payouts/team/remove", { method: "POST", json: { booking_id: s.booking_id, user_id: s.user_id } });
+      load();
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  };
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -168,9 +178,13 @@ export function TeamPayouts() {
                     </label>
                     <span className="flex flex-shrink-0 items-center gap-2">
                       <span className="font-semibold">{formatCurrency(s.amount_cents, s.currency)}</span>
-                      {view === "paid" && (
+                      {view === "paid" ? (
                         <button onClick={() => undo(s)} aria-label="Undo payment" className="text-gray-400 hover:text-red-600">
                           <Undo2 className="h-4 w-4" />
+                        </button>
+                      ) : (
+                        <button onClick={() => remove(s)} aria-label="Remove share" title="Remove share" className="text-gray-400 hover:text-red-600">
+                          <X className="h-4 w-4" />
                         </button>
                       )}
                     </span>

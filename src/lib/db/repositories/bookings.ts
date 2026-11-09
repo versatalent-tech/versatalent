@@ -1,8 +1,8 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import type { z } from 'zod';
 import { sql } from '../client';
 import { getTalentScope } from './team';
-import { addStaffShares, replaceUnpaidStaffShares } from './staff-shares';
+import { staffSharesForNewTalent, staffSharesInsert } from './staff-shares';
 import type { TeamRole } from '@/lib/auth/permissions';
 import type { availabilitySchema, bookingSchema, bookingUpdateSchema } from '@/lib/bookings/schemas';
 import {
@@ -217,28 +217,32 @@ export async function findClashes(
 type BookingInput = z.infer<typeof bookingSchema>;
 
 export async function createBooking(actor: BookingActor, data: BookingInput): Promise<string> {
-  const rows = await sql`
-    INSERT INTO bookings (
-      talent_id, deal_id, organisation_id, title, status, starts_at, ends_at, location, call_time, brief,
-      logistics_notes, onsite_contact, fee_cents, currency, commission_percent,
-      client_visible_to_talent, shared_with_talent, created_by
-    ) VALUES (
-      ${data.talent_id}, ${data.deal_id ?? null},
-      -- the client defaults to the deal's client
-      COALESCE(${data.organisation_id ?? null}::uuid, (SELECT organisation_id FROM deals WHERE id = ${data.deal_id ?? null}::uuid)),
-      ${data.title}, ${data.status}, ${data.starts_at}, ${data.ends_at}, ${data.location ?? null},
-      ${data.call_time ?? null}, ${data.brief ?? null}, ${data.logistics_notes ?? null},
-      ${JSON.stringify(data.onsite_contact ?? {})}, ${data.fee_cents ?? null}, ${data.currency},
-      -- commission is the talent's rate at the time of booking, unless set explicitly
-      ${data.commission_percent === undefined
-        ? sql`(SELECT commission_percent FROM talents WHERE id = ${data.talent_id})`
-        : sql`${data.commission_percent}`},
-      ${data.client_visible_to_talent}, ${data.shared_with_talent}, ${actor.userId}
-    )
-    RETURNING id, deal_id, (SELECT name FROM talents WHERE id = ${data.talent_id}) AS talent_name
-  `;
+  // The id is chosen here so the team's shares are saved in the same transaction
+  const id = randomUUID();
+  const [rows] = await sql.transaction([
+    sql`
+      INSERT INTO bookings (
+        id, talent_id, deal_id, organisation_id, title, status, starts_at, ends_at, location, call_time, brief,
+        logistics_notes, onsite_contact, fee_cents, currency, commission_percent,
+        client_visible_to_talent, shared_with_talent, created_by
+      ) VALUES (
+        ${id}, ${data.talent_id}, ${data.deal_id ?? null},
+        -- the client defaults to the deal's client
+        COALESCE(${data.organisation_id ?? null}::uuid, (SELECT organisation_id FROM deals WHERE id = ${data.deal_id ?? null}::uuid)),
+        ${data.title}, ${data.status}, ${data.starts_at}, ${data.ends_at}, ${data.location ?? null},
+        ${data.call_time ?? null}, ${data.brief ?? null}, ${data.logistics_notes ?? null},
+        ${JSON.stringify(data.onsite_contact ?? {})}, ${data.fee_cents ?? null}, ${data.currency},
+        -- commission is the talent's rate at the time of booking, unless set explicitly
+        ${data.commission_percent === undefined
+          ? sql`(SELECT commission_percent FROM talents WHERE id = ${data.talent_id})`
+          : sql`${data.commission_percent}`},
+        ${data.client_visible_to_talent}, ${data.shared_with_talent}, ${actor.userId}
+      )
+      RETURNING id, deal_id, (SELECT name FROM talents WHERE id = ${data.talent_id}) AS talent_name
+    `,
+    staffSharesInsert(id),
+  ]);
   const created = rows[0];
-  await addStaffShares(created.id);
   if (created.deal_id) {
     await logOnDeal(actor, created.deal_id, `Booking added: ${created.talent_name}, ${data.title}`);
   }
@@ -259,7 +263,7 @@ export async function updateBooking(
   const has = (key: string) => Object.prototype.hasOwnProperty.call(changes, key);
   const pick = (key: keyof typeof changes) => (has(key) ? (changes[key] ?? null) : current[key]);
 
-  await sql`
+  const update = sql`
     UPDATE bookings SET
       talent_id = ${pick('talent_id')},
       deal_id = ${pick('deal_id')},
@@ -281,9 +285,11 @@ export async function updateBooking(
       updated_at = NOW()
     WHERE id = ${id}
   `;
-
-  if (has('talent_id') && changes.talent_id !== current.talent_id) {
-    await replaceUnpaidStaffShares(id);
+  // A new talent means new people share in it: saved together with the booking
+  if (has('talent_id') && changes.talent_id && changes.talent_id !== current.talent_id) {
+    await sql.transaction([update, ...staffSharesForNewTalent(id, changes.talent_id)]);
+  } else {
+    await update;
   }
 
   if (changes.status && changes.status !== current.status && current.deal_id) {

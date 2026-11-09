@@ -8,9 +8,10 @@ import { AGENCY_TIME_ZONE, type EarnerRole, type MyEarning, type StaffShare, typ
 /**
  * Give a booking a share for each active manager and road manager looking
  * after its talent who has a rate, at their rate now. Existing shares are kept.
+ * Returned unawaited so it can run in the same transaction as the booking write.
  */
-export async function addStaffShares(bookingId: string): Promise<void> {
-  await sql`
+export function staffSharesInsert(bookingId: string) {
+  return sql`
     INSERT INTO booking_staff_shares (booking_id, user_id, share_percent)
     SELECT b.id, u.id, u.share_percent
     FROM bookings b
@@ -22,10 +23,30 @@ export async function addStaffShares(bookingId: string): Promise<void> {
   `;
 }
 
-/** After the booking's talent changes: unpaid shares go to the new talent's people; paid ones stay */
-export async function replaceUnpaidStaffShares(bookingId: string): Promise<void> {
-  await sql`DELETE FROM booking_staff_shares WHERE booking_id = ${bookingId} AND paid_at IS NULL`;
-  await addStaffShares(bookingId);
+/**
+ * After the booking's talent changes (run in the same transaction, after the
+ * booking update): unpaid shares of people who don't look after the new talent
+ * go, and the new talent's people get theirs. Paid shares, and shares of people
+ * who look after both talents (even if since deactivated), stay.
+ */
+export function staffSharesForNewTalent(bookingId: string, talentId: string) {
+  return [
+    sql`
+      DELETE FROM booking_staff_shares
+      WHERE booking_id = ${bookingId} AND paid_at IS NULL
+        AND user_id NOT IN (SELECT user_id FROM talent_assignments WHERE talent_id = ${talentId})
+    `,
+    staffSharesInsert(bookingId),
+  ];
+}
+
+/** Remove an unpaid share (e.g. someone linked to the talent by mistake); paid ones must be undone first */
+export async function removeStaffShare(bookingId: string, userId: string): Promise<boolean> {
+  const rows = await sql`
+    DELETE FROM booking_staff_shares WHERE booking_id = ${bookingId} AND user_id = ${userId} AND paid_at IS NULL
+    RETURNING booking_id
+  `;
+  return rows.length > 0;
 }
 
 // ---------------------------------------------------------------------------
