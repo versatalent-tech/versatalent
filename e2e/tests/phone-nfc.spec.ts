@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
-import { createEvent, createMember, pointsFor, sql } from '../support/db';
+import { createEvent, createMember, createStaffUser, pointsFor, sql } from '../support/db';
 import { ADMIN_STATE } from '../support/env';
 
 /**
@@ -26,6 +26,13 @@ async function pretendPhone(page: Page, granted = false) {
         ? Promise.resolve({ state: alreadyAllowed ? 'granted' : 'prompt' } as PermissionStatus)
         : query(d)) as typeof navigator.permissions.query;
   }, granted);
+}
+
+/** Sign the page in to the till (it only accepts a staff sign-in) */
+async function signInToTill(page: Page) {
+  const staff = await createStaffUser();
+  const response = await page.request.post('/api/staff/login', { data: { email: staff.email, password: staff.password } });
+  expect(response.ok(), await response.text()).toBe(true);
 }
 
 /** A member's card, with the id as Chrome reports it (colon-separated, lower case) */
@@ -65,6 +72,27 @@ test.describe('Tapping cards on an Android phone or tablet', () => {
     await page.evaluate((s) => (window as any).__tap(s), serial);
     await expect(page.getByText('E2E Member').first()).toBeVisible();
     await expect.poll(async () => (await pointsFor(member.id)).status).toBeGreaterThan(0);
+  });
+
+  test('till: switch on phone tap, then a tap links the customer to the sale', async ({ page }) => {
+    const { serial } = await memberCard();
+    await pretendPhone(page);
+    await signInToTill(page);
+    await page.goto('/staff/pos');
+
+    await page.getByRole('button', { name: 'Tap cards on this device' }).click();
+    await expect(page.getByText('Phone tap is on')).toBeVisible();
+    await page.evaluate((s) => (window as any).__tap(s), serial);
+    await expect(page.getByText('E2E Member', { exact: true })).toBeVisible();
+  });
+
+  test('till: the header links to Rewards and Logout is readable', async ({ page }) => {
+    await signInToTill(page);
+    await page.goto('/staff/pos');
+    // The outline button used to fill white behind its white text
+    await expect(page.getByRole('button', { name: 'Logout' })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await page.getByRole('link', { name: 'Rewards' }).click();
+    await expect(page).toHaveURL(/\/staff\/rewards$/);
   });
 
   test('on an iPhone, iPad or computer there is no phone tap button', async ({ page }) => {

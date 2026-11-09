@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 044 are on production. Tests: `npm run test:e2e` (153 tests, also run on GitHub for every PR)._
+_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 044 are on production. Tests: `npm run test:e2e` (155 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -19,7 +19,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Fee approvals (migration 044 on production 9 Nov 2026): as a manager, change a test booking's fee, then approve it from the dashboard reminder or Bookings → Fee approvals
 - [ ] Team payouts (migration 043 on production 9 Nov 2026): set each manager's and road manager's rate on Bookings → Commission Rates (Team), check the shares on their talents' bookings, pay one from Payouts → Team, and check "Your earnings" on their dashboard
 - [ ] Talent notifications (migration 042 on production 8 Nov 2026): add the push keys in Netlify (`docs/NOTIFICATIONS_SETUP.md`) and redeploy. Check the bell in the portal, switch on notifications on an Android phone and an iPhone (from the Home Screen), give a test to-do and change a test booking
-- [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day and Staff → Rewards, press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
+- [ ] Phone tap on an Android phone or tablet with NFC (Chrome): open Staff → Event day, Staff → Rewards and the till (Staff POS), press "Tap cards on this device", allow NFC, then hold a member card to the back of the device. iPhones and iPads can't read cards from a website, so use an Android device or a laptop with the USB reader
 - [ ] After rewards launch: ask for a reward on a test member's pass (no points taken), then tap the card at Staff → Rewards and "Confirm and give" (points taken then)
 - [ ] Member pass with rewards closed: no reward points balance or rewards list; "Points this year" still shows. Admin → Rewards says points are building up for launch
 - [ ] Tickets with a membership card: tap a VIP card on a phone; the pass always shows "Buy tickets with your card" (with "No tickets on sale right now" until ticket types are added); the ticket page says "Points go to <first name>"; buy with a different email and check the points reach the card's member; "Not you?" removes the link
@@ -64,6 +64,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Till: "Tap cards on this device" links the customer on Android phones and tablets; Rewards link in the till's header; Logout button readable again
 - [x] Fee approvals: managers' changes to a booking's fee, commission or currency (and the fee on bookings they create) wait for an admin's approval (migration 044)
 - [x] Tasks on their own: CRM → Tasks → New task, for anyone (team, road managers, talents with a portal login), optionally linked to a client or deal
 - [x] Team payouts: managers and road managers earn a share of the agency's commission on their talents' bookings; rates, Payouts → Team, and "Your earnings" on their dashboard (migration 043)
