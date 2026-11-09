@@ -14,8 +14,11 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Ticket terms approved (draft at `/tickets/terms`), and the ticket lines added to the privacy notice
 - [ ] Ticket points rate (VIP → Point Rules → Ticket Points; 1 point per £3, while the till gives 1 per £2). Recommended: no extra bonus for buying on the website; buyers already earn twice (buying and checking in), and a temporary double-points launch offer can be tried later
 - [ ] Email provider and owned domain: unlocks automatic member emails, ticket confirmation emails and prospecting v2
+- [ ] Pausing team earnings: clearing a manager's or road manager's rate and setting it again counts as a first rate, so they get a share on every booking not yet paid to the talent, including ones made while the rate was cleared. Keep that, or make clearing a pause
+- [ ] GitGuardian incident #38257341: mark it as a false positive on the GitGuardian dashboard (a random test password in the test helpers, not a real secret)
 
 ## 2. Check after the latest deploys
+- [ ] New task: CRM → Tasks → New task, give a test talent a to-do (check it reaches their portal and the bell) and link one to a deal (check it shows on the deal page)
 - [ ] Fee approvals (migration 044 on production 9 Nov 2026): as a manager, change a test booking's fee, then approve it from the dashboard reminder or Bookings → Fee approvals
 - [ ] Team payouts (migration 043 on production 9 Nov 2026): set each manager's and road manager's rate on Bookings → Commission Rates (Team), check the shares on their talents' bookings, pay one from Payouts → Team, and check "Your earnings" on their dashboard
 - [ ] Talent notifications (migration 042 on production 8 Nov 2026): add the push keys in Netlify (`docs/NOTIFICATIONS_SETUP.md`) and redeploy. Check the bell in the portal, switch on notifications on an Android phone and an iPhone (from the Home Screen), give a test to-do and change a test booking
@@ -43,6 +46,8 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## 4. Later
 - [ ] Notifications follow-ups from the review: switch off phone notifications when a talent signs out; tell talents when a cancelled booking is back on or a booking is un-shared; mark only the shown notifications read; re-subscribe phones after the push keys change; limit phones per talent
+- [ ] Team payouts follow-ups from the review: penny rounding in the app's own sum (display is right); a deactivated person given a first rate gets no catch-up shares when reactivated; say how many were skipped when marking paid; record the amount and reference when a payment is undone or a share removed; payment dates near midnight in summer; a stale rates tab can overwrite another admin's changes
+- [ ] Fee approvals follow-ups from the review: a manager clearing the commission on a new booking gets the talent's rate instead of none; the waiting box's "now" amount can be out of date until the calendar reloads; money-only saves write an empty audit entry; a proper page for managers who open Fee approvals; only the person who asked can withdraw (decide)
 - [ ] AI meeting notes (built, off): privacy notice line about Anthropic, add `ANTHROPIC_API_KEY` in Netlify (Functions scope), redeploy, test one draft
 - [ ] Meetings: audio recordings (needs a speech-to-text service), link meetings to bookings, share notes with talents
 - [ ] Prospecting v2: send through an email provider, open/reply tracking, one-click unsubscribe
