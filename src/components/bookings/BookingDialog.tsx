@@ -198,6 +198,9 @@ export function BookingDialog({
       if (commission !== null && (Number.isNaN(commission) || commission < 0 || commission > 100)) {
         return setError("Commission must be between 0 and 100%");
       }
+      const opened = booking ? initialForm(booking, defaults, options) : null;
+      const moneyEdited =
+        !!opened && (form.fee !== opened.fee || form.commission !== opened.commission || form.currency !== opened.currency);
       if (!form.talent_id) return setError("Choose a talent");
       payload = {
         talent_id: form.talent_id,
@@ -214,7 +217,9 @@ export function BookingDialog({
         onsite_contact: { name: form.contact_name, phone: form.contact_phone },
         shared_with_talent: form.shared_with_talent,
         ...(options.can.clientVisibility ? { client_visible_to_talent: form.client_visible_to_talent } : {}),
-        ...(options.can.fees ? { fee_cents: fee, currency: form.currency, commission_percent: commission } : {}),
+        // An existing booking only sends the money when it was changed here, so a save of
+        // other fields can't put back an old fee (e.g. after a fee change was approved)
+        ...(options.can.fees && (!booking || moneyEdited) ? { fee_cents: fee, currency: form.currency, commission_percent: commission } : {}),
         ...(force ? { force: true } : {}),
       };
     }

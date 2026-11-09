@@ -76,13 +76,22 @@ test.describe('Held changes', () => {
     expect((await bookingMoney(bookingId)).title).toBe('E2E Renamed');
   });
 
-  test('a second change replaces the pending request; changing back withdraws it', async () => {
+  test('a second change replaces the pending request', async () => {
     const { managerApi, bookingId } = await setup();
     await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
     await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 130_000 } });
     expect(await requestsFor(bookingId)).toEqual([{ status: 'pending', fee_cents: 130_000, commission_percent: 20, currency: 'GBP' }]);
-    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 100_000 } });
-    expect((await requestsFor(bookingId)).map((r) => r.status)).toEqual(['withdrawn']);
+  });
+
+  test('saving other fields with the current money leaves a waiting request alone', async () => {
+    const { managerApi, bookingId } = await setup();
+    await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+    const response = await managerApi.patch(`/api/bookings/${bookingId}`, {
+      data: { fee_cents: 100_000, commission_percent: 20, currency: 'GBP', location: 'Manchester' },
+    });
+    expect(response.status()).toBe(200);
+    expect(await requestsFor(bookingId)).toEqual([{ status: 'pending', fee_cents: 120_000, commission_percent: 20, currency: 'GBP' }]);
+    expect((await bookingMoney(bookingId)).location).toBe('Manchester');
   });
 
   test('a manager’s new booking starts with no fee and a request', async () => {
@@ -251,5 +260,66 @@ test.describe('Screens', () => {
     const item = body.data.attention.find((a: { key: string }) => a.key === 'fee-requests');
     expect(item?.href).toBe('/admin/bookings/fee-approvals');
     expect(item?.label).toContain(String(n));
+  });
+});
+
+test.describe('Review fixes', () => {
+  test('approve and reject at the same time never leave the booking and the request disagreeing', async () => {
+    for (let i = 0; i < 4; i++) {
+      const { admin, managerApi, bookingId } = await setup();
+      await managerApi.patch(`/api/bookings/${bookingId}`, { data: { fee_cents: 120_000 } });
+      const [{ id }] = await sql`SELECT id FROM booking_fee_requests WHERE booking_id = ${bookingId} AND status = 'pending'`;
+      await Promise.all([
+        admin.post(`/api/bookings/fee-requests/${id}`, { data: { decision: 'approve' } }),
+        admin.post(`/api/bookings/fee-requests/${id}`, { data: { decision: 'reject' } }),
+      ]);
+      const [{ status }] = await sql`SELECT status FROM booking_fee_requests WHERE id = ${id}`;
+      const fee = (await bookingMoney(bookingId)).fee_cents;
+      expect({ status, fee }).toEqual(status === 'approved' ? { status, fee: 120_000 } : { status: 'rejected', fee: 100_000 });
+    }
+  });
+
+  test('a manager re-opening a booking with a waiting request and saving another field keeps the request', async ({ page }) => {
+    const ctx = await setup();
+    const title = uniq('E2E Fee reopen');
+    const { data } = await apiBooking(ctx.admin, ctx.talent.id, {
+      title,
+      starts_at: new Date(Date.now() + 2 * DAY).toISOString(),
+      ends_at: new Date(Date.now() + 2 * DAY + 3_600_000).toISOString(),
+    });
+    await ctx.managerApi.patch(`/api/bookings/${data.id}`, { data: { fee_cents: 120_000 } });
+    await page.context().addCookies((await ctx.managerApi.storageState()).cookies);
+    await page.goto('/admin/bookings');
+    await page.getByRole('button', { name: 'list', exact: true }).click();
+    await page.getByText(title).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Call time').fill('18:00');
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    expect((await requestsFor(data.id)).map((r) => r.status)).toEqual(['pending']);
+  });
+
+  test('an admin’s open dialog doesn’t put the old fee back after an approval', async ({ page }) => {
+    const ctx = await setup();
+    const title = uniq('E2E Fee stale');
+    const { data } = await apiBooking(ctx.admin, ctx.talent.id, {
+      title,
+      starts_at: new Date(Date.now() + 2 * DAY).toISOString(),
+      ends_at: new Date(Date.now() + 2 * DAY + 3_600_000).toISOString(),
+    });
+    await page.context().addCookies((await ctx.admin.storageState()).cookies);
+    await page.goto('/admin/bookings');
+    await page.getByRole('button', { name: 'list', exact: true }).click();
+    await page.getByText(title).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByLabel('Call time')).toBeVisible();
+    // Meanwhile a manager asks for more and it's approved elsewhere
+    await ctx.managerApi.patch(`/api/bookings/${data.id}`, { data: { fee_cents: 120_000 } });
+    const [{ id }] = await sql`SELECT id FROM booking_fee_requests WHERE booking_id = ${data.id} AND status = 'pending'`;
+    expect((await ctx.admin.post(`/api/bookings/fee-requests/${id}`, { data: { decision: 'approve' } })).status()).toBe(200);
+    await dialog.getByLabel('Call time').fill('19:00');
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    expect((await bookingMoney(data.id)).fee_cents).toBe(120_000);
   });
 });
