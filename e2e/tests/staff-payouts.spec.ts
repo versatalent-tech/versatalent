@@ -205,3 +205,105 @@ test.describe('Team rates', () => {
     expect((await api.put('/api/team-rates', { data: { rates: [{ user_id: manager.id, share_percent: 50 }] } })).status()).toBe(403);
   });
 });
+
+test.describe('Team payouts', () => {
+  type Row = { booking_id: string; user_id: string; amount_cents: number; currency: string; paid_cents: number | null; paid_reference: string | null };
+  const daysAgo = (n: number) => ({ starts_at: new Date(Date.now() - n * DAY).toISOString(), ends_at: new Date(Date.now() - n * DAY + 3_600_000).toISOString() });
+  const inDays = (n: number) => ({ starts_at: new Date(Date.now() + n * DAY).toISOString(), ends_at: new Date(Date.now() + n * DAY + 3_600_000).toISOString() });
+
+  async function list(api: APIRequestContext, view: 'owed' | 'paid'): Promise<Row[]> {
+    const response = await api.get(`/api/payouts/team?view=${view}`);
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json()).data;
+  }
+  const find = (rows: Row[], bookingId: string, userId: string) => rows.find((r) => r.booking_id === bookingId && r.user_id === userId);
+  async function pay(api: APIRequestContext, shares: { booking_id: string; user_id: string }[], reference = 'BACS 1') {
+    const response = await api.post('/api/payouts/team/paid', { data: { shares, paid_on: new Date().toISOString().slice(0, 10), reference } });
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json()).data as Row[];
+  }
+  async function rated(rate = 10) {
+    const talent = await createTalent();
+    const person = await createTeamUser('manager', [talent.id]);
+    await setRate(person.id, rate);
+    return { talent, person };
+  }
+
+  test('owed lists finished shares with an amount', async () => {
+    const api = await adminApi();
+    const { talent, person } = await rated();
+    const zero = await createTeamUser('road_manager', [talent.id]);
+    await setRate(zero.id, 0);
+    const finished = await apiBooking(api, talent.id);
+    const upcoming = await apiBooking(api, talent.id, inDays(5));
+    const cancelled = await apiBooking(api, talent.id, { status: 'cancelled', ...daysAgo(6) });
+    const noFee = await apiBooking(api, talent.id, { fee_cents: null, ...daysAgo(8) });
+    const noCommission = await apiBooking(api, talent.id, { commission_percent: null, ...daysAgo(10) });
+
+    const owed = await list(api, 'owed');
+    expect(find(owed, finished, person.id)).toMatchObject({ amount_cents: 2000, currency: 'GBP' });
+    for (const id of [upcoming, cancelled, noFee, noCommission]) expect(find(owed, id, person.id)).toBeUndefined();
+    expect(find(owed, finished, zero.id)).toBeUndefined();
+  });
+
+  test('mixed currencies stay separate', async () => {
+    const api = await adminApi();
+    const { talent, person } = await rated();
+    const gbp = await apiBooking(api, talent.id);
+    const eur = await apiBooking(api, talent.id, { currency: 'EUR', fee_cents: 50_000, ...daysAgo(6) });
+    const owed = await list(api, 'owed');
+    expect(find(owed, gbp, person.id)).toMatchObject({ currency: 'GBP', amount_cents: 2000 });
+    expect(find(owed, eur, person.id)).toMatchObject({ currency: 'EUR', amount_cents: 1000 });
+  });
+
+  test('marking paid stores the amount; marking again changes nothing', async () => {
+    const api = await adminApi();
+    const { talent, person } = await rated();
+    const id = await apiBooking(api, talent.id);
+    const share = { booking_id: id, user_id: person.id };
+    expect(await pay(api, [share], 'BACS 42')).toHaveLength(1);
+    expect((await api.patch(`/api/bookings/${id}`, { data: { fee_cents: 200_000 } })).status()).toBe(200);
+    expect(await pay(api, [share])).toHaveLength(0);
+    const [row] = await sql`SELECT paid_cents, paid_reference FROM booking_staff_shares WHERE booking_id = ${id} AND user_id = ${person.id}`;
+    expect(row).toEqual({ paid_cents: 2000, paid_reference: 'BACS 42' });
+    expect(find(await list(api, 'paid'), id, person.id)).toMatchObject({ paid_cents: 2000, paid_reference: 'BACS 42' });
+    expect(find(await list(api, 'owed'), id, person.id)).toBeUndefined();
+  });
+
+  test('an unfinished booking’s share can’t be marked paid', async () => {
+    const api = await adminApi();
+    const { talent, person } = await rated();
+    const id = await apiBooking(api, talent.id, inDays(5));
+    expect(await pay(api, [{ booking_id: id, user_id: person.id }])).toHaveLength(0);
+  });
+
+  test('undo clears the payment', async () => {
+    const api = await adminApi();
+    const { talent, person } = await rated();
+    const id = await apiBooking(api, talent.id);
+    await pay(api, [{ booking_id: id, user_id: person.id }]);
+    expect((await api.delete(`/api/payouts/team/${id}/${person.id}`)).status()).toBe(200);
+    expect(find(await list(api, 'owed'), id, person.id)).toMatchObject({ amount_cents: 2000 });
+    expect((await api.delete(`/api/payouts/team/${id}/${person.id}`)).status()).toBe(404);
+  });
+
+  test('a deactivated person’s share is still owed and payable', async () => {
+    const api = await adminApi();
+    const { talent, person } = await rated();
+    const id = await apiBooking(api, talent.id);
+    await sql`UPDATE users SET is_active = false WHERE id = ${person.id}`;
+    expect(find(await list(api, 'owed'), id, person.id)).toBeDefined();
+    expect(await pay(api, [{ booking_id: id, user_id: person.id }])).toHaveLength(1);
+  });
+
+  test('managers can’t see or pay team shares, even their own', async () => {
+    const admin = await adminApi();
+    const { talent, person } = await rated();
+    const id = await apiBooking(admin, talent.id);
+    const api = await teamApi(person.email, person.password);
+    expect((await api.get('/api/payouts/team?view=owed')).status()).toBe(403);
+    const share = { booking_id: id, user_id: person.id };
+    expect((await api.post('/api/payouts/team/paid', { data: { shares: [share], paid_on: new Date().toISOString().slice(0, 10) } })).status()).toBe(403);
+    expect((await api.delete(`/api/payouts/team/${id}/${person.id}`)).status()).toBe(403);
+  });
+});
