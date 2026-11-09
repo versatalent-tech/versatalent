@@ -1,6 +1,6 @@
 import { sql, query } from '../client';
 import { cache, CACHE_TTL } from '@/lib/utils/cache';
-import type { Event, CreateEventRequest, UpdateEventRequest, EventType, EventStatus } from '../types';
+import type { Event, CreateEventRequest, UpdateEventRequest, EventType } from '../types';
 
 // Cache keys
 const EVENT_CACHE_KEYS = {

@@ -17,7 +17,6 @@ import {
   Wifi,
   WifiOff,
   ArrowLeft,
-  ExternalLink,
   Shield,
   Cpu,
   HelpCircle,

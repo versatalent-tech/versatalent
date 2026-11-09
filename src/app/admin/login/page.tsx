@@ -27,7 +27,7 @@ function LoginFormContent() {
           // Already logged in, redirect to admin
           router.push(returnTo);
         }
-      } catch (err) {
+      } catch {
         // Not authenticated, stay on login page
       }
     };
@@ -55,7 +55,7 @@ function LoginFormContent() {
         const data = await response.json();
         setError(data.error || 'Invalid credentials');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);

@@ -16,14 +16,12 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Maximize,
   Loader2,
   Play
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShareButtons } from "@/components/ui/ShareButtons";
-import { ImageSkeleton } from "@/components/ui/image-skeleton";
 import { useBatchImagePreloader } from "@/lib/hooks/useImagePreloader";
 import { useMobileGestures } from "@/lib/hooks/useMobileGestures";
 import type { PortfolioItem } from "@/lib/data/talents";
@@ -86,18 +84,12 @@ export function EnhancedLightbox({
     .map(item => item.url);
 
   // Preload adjacent images for smoother navigation
-  const { preloadImages, isLoaded } = useBatchImagePreloader(imageUrls);
+  const { preloadImages } = useBatchImagePreloader(imageUrls);
 
   // Preload next and previous images when current changes
   useEffect(() => {
     if (isOpen && !isVideo) {
       // Preload current, next, and previous images
-      const indicesToPreload = [
-        currentIndex,
-        (currentIndex + 1) % items.length,
-        (currentIndex - 1 + items.length) % items.length
-      ];
-
       preloadImages(Math.max(0, currentIndex - 1), 3);
     }
   }, [currentIndex, isOpen, preloadImages, items.length, isVideo]);
@@ -111,12 +103,12 @@ export function EnhancedLightbox({
     onPinchZoom: isVideo ? undefined : (scale) => setZoom(prev => Math.max(1, Math.min(3, prev * scale)))
   });
 
-  const handleZoomIn = () => !isVideo && setZoom(prev => Math.min(prev + 0.5, 3));
-  const handleZoomOut = () => !isVideo && setZoom(prev => Math.max(prev - 0.5, 1));
-  const handleResetZoom = () => {
+  const handleZoomIn = useCallback(() => !isVideo && setZoom(prev => Math.min(prev + 0.5, 3)), [isVideo]);
+  const handleZoomOut = useCallback(() => !isVideo && setZoom(prev => Math.max(prev - 0.5, 1)), [isVideo]);
+  const handleResetZoom = useCallback(() => {
     setZoom(1);
     setPosition({ x: 0, y: 0 });
-  };
+  }, []);
 
   // Mouse drag for panning when zoomed (only for images)
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -180,7 +172,7 @@ export function EnhancedLightbox({
         handleResetZoom();
         break;
     }
-  }, [isOpen, onClose, onNext, onPrevious]);
+  }, [isOpen, onClose, onNext, onPrevious, handleZoomIn, handleZoomOut, handleResetZoom]);
 
   // Add keyboard event listener
   useEffect(() => {
@@ -199,7 +191,7 @@ export function EnhancedLightbox({
     handleResetZoom();
     setImageLoading(true);
     setVideoLoading(true);
-  }, [currentIndex]);
+  }, [currentIndex, handleResetZoom]);
 
   if (!isOpen || !currentItem) return null;
 

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { clearStaffAuth } from '@/lib/middleware/auth';
 
 /**
  * Staff Logout API
  * POST /api/staff/logout
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Clear session cookie (and any legacy auth cookies)
     await clearStaffAuth();

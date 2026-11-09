@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,7 @@ import {
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
-import type { BlogPost, CreateBlogPostRequest, UpdateBlogPostRequest } from "@/lib/db/types";
+import type { BlogPost, CreateBlogPostRequest } from "@/lib/db/types";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -425,10 +426,12 @@ export default function AdminBlogsPage() {
                     {/* Post Image */}
                     {post.image_url ? (
                       <div className="relative h-48 bg-gray-100">
-                        <img
+                        <Image
                           src={post.image_url}
                           alt={post.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover"
                         />
                         <div className="absolute top-2 right-2 flex gap-1">
                           {post.featured && (

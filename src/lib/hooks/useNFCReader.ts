@@ -2,12 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-// ACR122U USB identifiers
-const ACR122U_VENDOR_ID = 0x072F; // ACS (Advanced Card Systems)
-
-// ACR122U product IDs for different variants
-const ACR122U_PRODUCT_IDS = [0x2200, 0x2214, 0x2210, 0x90CC];
-
 // Local bridge server URL (for native NFC reader access)
 const DEFAULT_BRIDGE_URL = "ws://localhost:9876";
 
@@ -60,17 +54,6 @@ export function useNFCReader(options: UseNFCReaderOptions = {}) {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check browser support
-  useEffect(() => {
-    const supportsWebUSB = typeof navigator !== 'undefined' && 'usb' in navigator;
-    const supportsWebHID = typeof navigator !== 'undefined' && 'hid' in navigator;
-
-    setStatus(prev => ({ ...prev, supportsWebUSB, supportsWebHID }));
-
-    // Check if bridge server is available
-    checkBridgeAvailability();
-  }, []);
-
   // Check if local NFC bridge server is running
   const checkBridgeAvailability = useCallback(async () => {
     try {
@@ -119,6 +102,17 @@ export function useNFCReader(options: UseNFCReaderOptions = {}) {
       return false;
     }
   }, [bridgeUrl]);
+
+  // Check browser support
+  useEffect(() => {
+    const supportsWebUSB = typeof navigator !== 'undefined' && 'usb' in navigator;
+    const supportsWebHID = typeof navigator !== 'undefined' && 'hid' in navigator;
+
+    setStatus(prev => ({ ...prev, supportsWebUSB, supportsWebHID }));
+
+    // Check if bridge server is available
+    checkBridgeAvailability();
+  }, [checkBridgeAvailability]);
 
   // Connect to NFC bridge server
   const connectToBridge = useCallback(async (): Promise<boolean> => {

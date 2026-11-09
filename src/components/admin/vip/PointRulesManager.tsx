@@ -10,7 +10,6 @@ import {
   Save,
   RefreshCw,
   Settings,
-  Coins,
   Calendar,
   ShoppingCart,
   Info,
@@ -26,21 +25,6 @@ import { POS_CURRENCY } from "@/lib/utils/formatting";
 interface PointRulesManagerProps {
   className?: string;
 }
-// Default point rules if none exist
-const DEFAULT_RULES: Partial<VIPPointRule>[] = [
-  {
-    action_type: "consumption",
-    points_per_unit: 1 / 3,
-    unit: POS_CURRENCY,
-    is_active: true,
-  },
-  {
-    action_type: "event_checkin",
-    points_per_unit: 10,
-    unit: "checkin",
-    is_active: true,
-  },
-];
 // Helper to convert points_per_unit to "euros per point" display
 function pointsPerUnitToEurosPerPoint(pointsPerUnit: number): number {
   if (pointsPerUnit <= 0) return 0;
@@ -52,7 +36,6 @@ function eurosPerPointToPointsPerUnit(eurosPerPoint: number): number {
   return 1 / eurosPerPoint;
 }
 export function PointRulesManager({ className }: PointRulesManagerProps) {
-  const [rules, setRules] = useState<VIPPointRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +65,6 @@ export function PointRulesManager({ className }: PointRulesManagerProps) {
       const response = await fetch("/api/vip/point-rules");
       if (response.ok) {
         const data: VIPPointRule[] = await response.json();
-        setRules(data);
         // Update form values from fetched rules
         const consumptionRule = data.find((r) => r.action_type === "consumption");
         const checkinRule = data.find((r) => r.action_type === "event_checkin");

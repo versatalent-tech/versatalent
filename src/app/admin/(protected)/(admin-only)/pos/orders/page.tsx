@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,12 +60,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-    fetchStats();
-  }, [statusFilter]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const url = statusFilter === 'all'
@@ -79,9 +74,9 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch('/api/pos/orders?counts=true');
       const data = await response.json();
@@ -89,7 +84,12 @@ export default function AdminOrdersPage() {
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+    fetchStats();
+  }, [fetchOrders, fetchStats]);
 
   const getStatusBadge = (status: OrderStatus) => {
     const styles = {

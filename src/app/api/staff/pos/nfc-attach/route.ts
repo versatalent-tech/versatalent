@@ -9,7 +9,7 @@ import type { NFCAttachResponse } from '@/lib/db/types';
  *
  * Automatically links an NFC card to a POS order when scanned
  */
-export const POST = withStaffAuth(async (request: NextRequest, auth) => {
+export const POST = withStaffAuth(async (request: NextRequest) => {
   try {
     const { card_uid, pos_order_id } = await request.json();
 

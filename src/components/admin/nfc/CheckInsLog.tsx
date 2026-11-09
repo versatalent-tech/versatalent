@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, User, MapPin, Clock } from "lucide-react";
+import { User, MapPin, Clock } from "lucide-react";
 
 interface CheckIn {
   id: string;

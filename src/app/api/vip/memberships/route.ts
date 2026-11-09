@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/middleware/auth';
 import { rollOverMembershipYears } from '@/lib/services/vip-points-service';
 
 // GET all VIP memberships
-export async function GET(request: NextRequest) {
+export async function GET() {
   const denied = await requireAdmin();
   if (denied) return denied;
 

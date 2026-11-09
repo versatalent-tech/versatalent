@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Calendar } from "lucide-react";
+import { Plus, Calendar } from "lucide-react";
 
 interface NFCEvent {
   id: string;
@@ -186,7 +186,7 @@ export function NFCEventsManager() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} className="bg-gold hover:bg-gold/90 text-white">
+            <Button onClick={handleCreate} disabled={saving} className="bg-gold hover:bg-gold/90 text-white">
               Create Event
             </Button>
           </DialogFooter>
