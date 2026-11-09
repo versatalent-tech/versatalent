@@ -37,14 +37,17 @@ async function setup() {
   return { admin, talent, manager, managerApi, bookingId: data.id };
 }
 
-async function bookingMoney(id: string) {
+type Money = { fee_cents: number | null; commission_percent: number | null; currency: string; location: string | null; title: string };
+type Request = { status: string; fee_cents: number | null; commission_percent: number | null; currency: string };
+
+async function bookingMoney(id: string): Promise<Money> {
   const [b] = await sql`SELECT fee_cents, commission_percent, currency, location, title FROM bookings WHERE id = ${id}`;
-  return { ...b, commission_percent: b.commission_percent === null ? null : Number(b.commission_percent) };
+  return { ...(b as Money), commission_percent: b.commission_percent === null ? null : Number(b.commission_percent) };
 }
 
-async function requestsFor(id: string) {
+async function requestsFor(id: string): Promise<Request[]> {
   const rows = await sql`SELECT status, fee_cents, commission_percent, currency FROM booking_fee_requests WHERE booking_id = ${id} ORDER BY created_at`;
-  return rows.map((r) => ({ ...r, commission_percent: r.commission_percent === null ? null : Number(r.commission_percent) }));
+  return rows.map((r) => ({ ...(r as Request), commission_percent: r.commission_percent === null ? null : Number(r.commission_percent) }));
 }
 
 test.describe('Held changes', () => {
