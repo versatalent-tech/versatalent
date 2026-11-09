@@ -172,3 +172,23 @@ export interface MyEarning {
   amount_cents: number;
   paid_at: string | null;
 }
+
+/** A booking's money: what a manager's fee change asks for */
+export type FeeMoney = { fee_cents: number | null; commission_percent: number | null; currency: string };
+
+export type FeeRequestStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn';
+
+/** A manager's change to a booking's fee, commission or currency, waiting for (or decided by) an admin */
+export interface FeeRequest {
+  id: string;
+  booking_id: string;
+  status: FeeRequestStatus;
+  fee_cents: number | null;
+  commission_percent: number | null;
+  currency: string;
+  requested_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+  decided_at: string | null;
+  decision_note: string | null;
+}

@@ -34,6 +34,7 @@ export type Permission =
   | 'payouts.manage' // see and record what's been paid to talents
   | 'rates.manage' // admins only: talents' commission rates
   | 'payouts.team' // admins only: see and record managers' and road managers' shares
+  | 'fees.approve' // admins only: approve managers' fee and commission changes
   | 'crm.view'
   | 'crm.edit'
   | 'crm.delete' // admins only: deleting clients, contacts and deals
@@ -77,4 +78,9 @@ export function can(role: string | undefined | null, permission: Permission): bo
 /** Roles whose data is limited to the talents assigned to them */
 export function isScopedRole(role: TeamRole): boolean {
   return role !== 'admin';
+}
+
+/** People who can change fees but not approve them: their changes wait for an admin */
+export function needsFeeApproval(role: string | undefined | null): boolean {
+  return can(role, 'bookings.fees') && !can(role, 'fees.approve');
 }
