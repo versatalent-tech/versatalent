@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Loader2, Nfc, AlertCircle } from "lucide-react";
 import { useBridgeCardTaps } from "@/lib/hooks/useBridgeCardTaps";
+import { usePhoneCardTaps } from "@/lib/hooks/usePhoneCardTaps";
+import { PhoneTapControl } from "@/components/staff/PhoneTapControl";
 import { lookupCustomerByCard, type LinkedCustomer } from "@/components/pos/NFCReader";
 
 interface CardTapListenerProps {
@@ -13,13 +15,14 @@ interface CardTapListenerProps {
 
 /**
  * Links the customer automatically when their card is tapped on the USB
- * reader (via the NFC Bridge app), and shows the reader's status.
+ * reader (via the NFC Bridge app) or, on an Android phone or tablet, on the
+ * device itself, and shows the reader's status.
  */
 export function CardTapListener({ onCustomerLinked, paused }: CardTapListenerProps) {
   const [looking, setLooking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { state, readerName } = useBridgeCardTaps(async (uid) => {
+  const link = async (uid: string) => {
     setLooking(true);
     setError(null);
     try {
@@ -29,7 +32,11 @@ export function CardTapListener({ onCustomerLinked, paused }: CardTapListenerPro
     } finally {
       setLooking(false);
     }
-  }, { paused });
+  };
+  const { state, readerName } = useBridgeCardTaps(link, { paused });
+  const phone = usePhoneCardTaps(link, { paused: paused || looking });
+  // With phone tap on and no USB reader set up, the bridge's status is just noise
+  const showBridgeStatus = looking || phone.state !== "on" || state === "ready" || state === "no-reader";
 
   const status = (() => {
     if (looking) return { dot: "bg-gold", text: "Reading card…" };
@@ -47,15 +54,18 @@ export function CardTapListener({ onCustomerLinked, paused }: CardTapListenerPro
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs text-gray-600" role="status" aria-live="polite">
-        {looking ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-gold" />
-        ) : (
-          <Nfc className="h-3.5 w-3.5 text-gray-400" />
-        )}
-        <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-        <span title={readerName || undefined}>{status.text}</span>
-      </div>
+      <PhoneTapControl state={phone.state} onStart={phone.start} tone="light" />
+      {showBridgeStatus && (
+        <div className="flex items-center gap-2 text-xs text-gray-600" role="status" aria-live="polite">
+          {looking ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-gold" />
+          ) : (
+            <Nfc className="h-3.5 w-3.5 text-gray-400" />
+          )}
+          <span className={`h-2 w-2 rounded-full ${status.dot}`} />
+          <span title={readerName || undefined}>{status.text}</span>
+        </div>
+      )}
       {error && (
         <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">
           <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
