@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { staffShareCents } from '../../src/lib/bookings/types';
 import { createTalent, createTeamUser, sql, uniq } from '../support/db';
-import { adminApi } from '../support/auth';
+import { adminApi, teamApi } from '../support/auth';
 
 const DAY = 86_400_000;
 
@@ -134,5 +134,74 @@ test.describe('Shares on bookings', () => {
     expect((await sharesOf(id)).size).toBe(1);
     expect((await api.delete(`/api/bookings/${id}`)).status()).toBe(200);
     expect((await sharesOf(id)).size).toBe(0);
+  });
+});
+
+test.describe('Team rates', () => {
+  async function putRates(api: APIRequestContext, rates: { user_id: string; share_percent: number | null }[]) {
+    const response = await api.put('/api/team-rates', { data: { rates } });
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json()).data as { people: { id: string; share_percent: number | null; talents: string[] }[]; overLimit: { talent: string; percent: number }[] };
+  }
+
+  test('first rate fills in unpaid, uncancelled bookings only', async () => {
+    const api = await adminApi();
+    const talent = await createTalent();
+    const manager = await createTeamUser('manager', [talent.id]);
+    const finished = await apiBooking(api, talent.id);
+    const upcoming = await apiBooking(api, talent.id, { starts_at: new Date(Date.now() + 5 * DAY).toISOString(), ends_at: new Date(Date.now() + 5 * DAY + 3_600_000).toISOString() });
+    const cancelled = await apiBooking(api, talent.id, { status: 'cancelled', starts_at: new Date(Date.now() - 8 * DAY).toISOString(), ends_at: new Date(Date.now() - 8 * DAY + 3_600_000).toISOString() });
+    const paidToTalent = await apiBooking(api, talent.id, { starts_at: new Date(Date.now() - 10 * DAY).toISOString(), ends_at: new Date(Date.now() - 10 * DAY + 3_600_000).toISOString() });
+    await sql`UPDATE bookings SET talent_paid_at = NOW(), talent_paid_cents = 80000 WHERE id = ${paidToTalent}`;
+
+    const data = await putRates(api, [{ user_id: manager.id, share_percent: 10 }]);
+    expect(data.people.find((p) => p.id === manager.id)?.share_percent).toBe(10);
+    expect((await sharesOf(finished)).get(manager.id)?.percent).toBe(10);
+    expect((await sharesOf(upcoming)).get(manager.id)?.percent).toBe(10);
+    expect((await sharesOf(cancelled)).size).toBe(0);
+    expect((await sharesOf(paidToTalent)).size).toBe(0);
+  });
+
+  test('changing a rate later adds nothing and changes nothing', async () => {
+    const api = await adminApi();
+    const talent = await createTalent();
+    const manager = await createTeamUser('manager', [talent.id]);
+    const first = await apiBooking(api, talent.id);
+    await putRates(api, [{ user_id: manager.id, share_percent: 10 }]);
+    const [direct] = await sql`
+      INSERT INTO bookings (talent_id, title, status, starts_at, ends_at, fee_cents, commission_percent)
+      VALUES (${talent.id}, ${uniq('E2E direct')}, 'confirmed', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days' + INTERVAL '1 hour', 100000, 20)
+      RETURNING id`;
+    await putRates(api, [{ user_id: manager.id, share_percent: 12 }]);
+    expect((await sharesOf(first)).get(manager.id)?.percent).toBe(10);
+    expect((await sharesOf(direct.id)).size).toBe(0);
+  });
+
+  test('over 100% is reported', async () => {
+    const api = await adminApi();
+    const talent = await createTalent();
+    const a = await createTeamUser('manager', [talent.id]);
+    const b = await createTeamUser('road_manager', [talent.id]);
+    const data = await putRates(api, [{ user_id: a.id, share_percent: 60 }, { user_id: b.id, share_percent: 50 }]);
+    const [row] = await sql`SELECT name FROM talents WHERE id = ${talent.id}`;
+    expect(data.overLimit).toContainEqual({ talent: row.name, percent: 110 });
+    expect(data.people.find((p) => p.id === a.id)?.talents).toEqual([row.name]);
+  });
+
+  test('only managers and road managers get a rate', async () => {
+    const api = await adminApi();
+    const talent = await createTalent();
+    const [admin] = await sql`SELECT id FROM users WHERE role = 'admin' LIMIT 1`;
+    const manager = await createTeamUser('manager', [talent.id]);
+    await putRates(api, [{ user_id: admin.id, share_percent: 10 }, { user_id: manager.id, share_percent: 5 }]);
+    const [stored] = await sql`SELECT share_percent FROM users WHERE id = ${admin.id}`;
+    expect(stored.share_percent).toBeNull();
+  });
+
+  test('managers can’t see or set team rates', async () => {
+    const manager = await createTeamUser('manager');
+    const api = await teamApi(manager.email, manager.password);
+    expect((await api.get('/api/team-rates')).status()).toBe(403);
+    expect((await api.put('/api/team-rates', { data: { rates: [{ user_id: manager.id, share_percent: 50 }] } })).status()).toBe(403);
   });
 });

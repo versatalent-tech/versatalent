@@ -65,3 +65,7 @@ export const availabilitySchema = z
 export const ratesSchema = z.object({
   rates: z.array(z.object({ talent_id: uuid, commission_percent: percent.nullable() })).max(200),
 });
+
+export const teamRatesSchema = z.object({
+  rates: z.array(z.object({ user_id: uuid, share_percent: percent.nullable() })).max(200),
+});
