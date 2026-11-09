@@ -364,3 +364,75 @@ test.describe('Your earnings', () => {
     expect((await api.get('/api/earnings/mine')).status()).toBe(403);
   });
 });
+
+test.describe('Screens', () => {
+  async function signIn(page: import('@playwright/test').Page, api: APIRequestContext) {
+    await page.context().addCookies((await api.storageState()).cookies);
+  }
+
+  test('admin pays a team share from the Team tab', async ({ page }) => {
+    const admin = await adminApi();
+    const talent = await createTalent();
+    const person = await createTeamUser('road_manager', [talent.id]);
+    const [{ name }] = await sql`UPDATE users SET name = ${uniq('E2E Payee')}, share_percent = 10 WHERE id = ${person.id} RETURNING name`;
+    const id = await apiBooking(admin, talent.id);
+    await signIn(page, admin);
+    await page.goto('/admin/bookings/payouts?tab=team');
+    const group = page.locator('section', { has: page.getByText(name, { exact: true }) });
+    await expect(group.getByText('£20.00').first()).toBeVisible();
+    await group.getByRole('checkbox').first().check();
+    await page.getByRole('button', { name: /Mark 1 as paid/ }).click();
+    await page.getByRole('button', { name: 'Mark as paid', exact: true }).click();
+    await expect(page.getByText('1 marked paid')).toBeVisible();
+    await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+    const [row] = await sql`SELECT paid_cents FROM booking_staff_shares WHERE booking_id = ${id} AND user_id = ${person.id}`;
+    expect(row.paid_cents).toBe(2000);
+  });
+
+  test('managers don’t see the Team tab', async ({ page }) => {
+    const manager = await createTeamUser('manager');
+    await signIn(page, await teamApi(manager.email, manager.password));
+    await page.goto('/admin/bookings/payouts');
+    await expect(page.getByRole('button', { name: 'To pay' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Team' })).toHaveCount(0);
+  });
+
+  test('a road manager sees their earnings on the dashboard', async ({ page }) => {
+    const admin = await adminApi();
+    const talent = await createTalent();
+    const road = await createTeamUser('road_manager', [talent.id]);
+    await setRate(road.id, 5);
+    await apiBooking(admin, talent.id, { fee_cents: 123_400 });
+    await signIn(page, await teamApi(road.email, road.password));
+    await page.goto('/admin');
+    const card = page.locator('section', { has: page.getByRole('heading', { name: 'Your earnings' }) });
+    await expect(card.getByText('£12.34').first()).toBeVisible();
+    await expect(card.getByText('£1,234.00')).toHaveCount(0);
+  });
+
+  test('admin dashboard flags team pay owed, per currency', async () => {
+    const admin = await adminApi();
+    const talent = await createTalent();
+    const person = await createTeamUser('manager', [talent.id]);
+    await setRate(person.id, 10);
+    await apiBooking(admin, talent.id);
+    await apiBooking(admin, talent.id, { currency: 'EUR', starts_at: new Date(Date.now() - 6 * DAY).toISOString(), ends_at: new Date(Date.now() - 6 * DAY + 3_600_000).toISOString() });
+    const body = await (await admin.get('/api/admin/dashboard')).json();
+    const item = body.data.attention.find((a: { key: string }) => a.key === 'team-pay-owed');
+    expect(item).toBeDefined();
+    expect(item.href).toBe('/admin/bookings/payouts?tab=team');
+    expect(item.detail).toContain('£');
+    expect(item.detail).toContain('€');
+  });
+
+  test('team rates can be set on the rates page', async ({ page }) => {
+    const admin = await adminApi();
+    const person = await createTeamUser('manager');
+    const [{ name }] = await sql`UPDATE users SET name = ${uniq('E2E Rate')} WHERE id = ${person.id} RETURNING name`;
+    await signIn(page, admin);
+    await page.goto('/admin/bookings/rates');
+    await page.getByLabel(name).fill('10');
+    await page.getByRole('button', { name: 'Save team rates' }).click();
+    await expect.poll(async () => (await sql`SELECT share_percent FROM users WHERE id = ${person.id}`)[0].share_percent).toBe('10.00');
+  });
+});
