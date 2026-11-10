@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { sql } from '../client';
+import { setAllAdmitted } from './door-tickets';
 import { HOLD_MINUTES, type CardMember, type EventOnSale, type PublicOrder, type PublicTicketEvent, type PublicTicketType } from '@/lib/tickets/types';
 import type { ticketOrderSchema, ticketTypeSchema } from '@/lib/tickets/schemas';
 import type { z } from 'zod';
@@ -602,10 +603,11 @@ export async function markTicketOrderRefunded(orderId: string, reason: string | 
   return { ok: false, error: current[0].status === 'refunded' ? 'This order has already been refunded' : 'Only paid orders can be refunded' };
 }
 
-export async function setOrderArrived(orderId: string, arrived: boolean): Promise<boolean> {
-  const rows = await sql`
-    UPDATE ticket_orders SET arrived_at = ${arrived ? sql`COALESCE(arrived_at, NOW())` : null}, updated_at = NOW()
-    WHERE id = ${orderId} AND status = 'paid' RETURNING id
-  `;
-  return rows.length > 0;
+/** Door list tick: everyone on the order in (or none); only for paid orders */
+export async function setOrderArrived(
+  orderId: string,
+  arrived: boolean,
+  actor: { userId?: string | null; name?: string | null } = {}
+): Promise<boolean> {
+  return setAllAdmitted(orderId, arrived, { userId: actor.userId ?? null, name: actor.name ?? null });
 }
