@@ -302,3 +302,30 @@ export async function setAllAdmitted(orderId: string, admitted: boolean, actor: 
   }
   return true;
 }
+
+// ---------------------------------------------------------------------------
+// VIP cards at events that sell tickets on the website
+// ---------------------------------------------------------------------------
+
+/** The event sells tickets on the website (it has at least one ticket type) */
+export async function eventSellsTickets(eventId: string): Promise<boolean> {
+  const rows = await sql`SELECT 1 FROM ticket_types WHERE event_id = ${eventId} LIMIT 1`;
+  return rows.length > 0;
+}
+
+/**
+ * A member's tickets for the event: paid orders linked to them (bought from
+ * their card) or bought with their account's email, in any letter case.
+ */
+export async function memberTicketsForEvent(eventId: string, userId: string): Promise<DoorTicket[]> {
+  const orders = await sql`
+    SELECT o.id FROM ticket_orders o
+    WHERE o.event_id = ${eventId} AND o.status = 'paid'
+      AND (o.member_user_id = ${userId}
+        OR lower(o.email) = (SELECT lower(email) FROM users WHERE id = ${userId}))
+    ORDER BY o.paid_at NULLS LAST, o.created_at
+  `;
+  const tickets: DoorTicket[] = [];
+  for (const o of orders as any[]) tickets.push(...(await ensureOrderTickets(o.id)));
+  return tickets;
+}

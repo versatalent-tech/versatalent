@@ -6,6 +6,7 @@ import { createScanLog } from '@/lib/db/repositories/nfc-scan-logs';
 import { getEventDayEvent, findEventCheckin } from '@/lib/db/repositories/event-day';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
 import { getFoundingBadge } from '@/lib/db/repositories/founding';
+import { admitTicket, eventSellsTickets, memberTicketsForEvent, type AdmitResult } from '@/lib/db/repositories/door-tickets';
 
 // Roles that earn loyalty points for checking in (same as /api/nfc/checkins)
 const POINTS_ROLES = ['vip', 'artist'];
@@ -117,6 +118,23 @@ export async function POST(
       });
     }
 
+    // At an event selling tickets on the website the card also lets in the
+    // member's own ticket: no ticket, no check-in (and no points)
+    let ticket: AdmitResult | null = null;
+    if (await eventSellsTickets(event.id)) {
+      const tickets = await memberTicketsForEvent(event.id, user.id);
+      if (tickets.length === 0) {
+        await logScan(false, { nfc_card_id: card.id, user_id: user.id, error_message: 'No ticket for this event' });
+        return NextResponse.json({ error: 'No ticket for this event', code: 'NO_TICKET', customer, founding }, { status: 404 });
+      }
+      const unused = tickets.find((t) => !t.admitted_at);
+      if (!unused) {
+        await logScan(true, { nfc_card_id: card.id, user_id: user.id });
+        return NextResponse.json({ status: 'already_in', customer, founding, points: null, points_error: false });
+      }
+      ticket = await admitTicket(unused.id, event.id, { userId: session.userId ?? null, name: session.name ?? null }, 'card');
+    }
+
     const checkin = await createCheckIn({
       user_id: user.id,
       nfc_card_id: card.id,
@@ -137,6 +155,7 @@ export async function POST(
       checked_in_at: checkin.timestamp,
       points,
       points_error: pointsError,
+      ...(ticket ? { ticket } : {}),
     }, { status: 201 });
   } catch (error) {
     console.error('Error processing event-day check-in:', error);

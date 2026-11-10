@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { PDFDocument } from 'pdf-lib';
-import { createEvent, createTeamUser, sql } from '../support/db';
+import { randomBytes } from 'node:crypto';
+import { createEvent, createMember, createTeamUser, createTicketType, pointsFor, sql } from '../support/db';
 import { adminApi, anonymousApi, teamApi } from '../support/auth';
 import { paidOrder } from '../support/tickets';
 
@@ -175,5 +176,78 @@ test.describe('At the door', () => {
     const anonymous = await anonymousApi();
     expect((await anonymous.post(`/api/staff/event-day/${event.id}/tickets/admit`, { data: { code: 'VT-AAAAAAAAAAAAAAAAAAAAAAAAAA' } })).status()).toBe(401);
     expect((await anonymous.get(`/api/staff/event-day/${event.id}/tickets?q=ab`)).status()).toBe(401);
+  });
+});
+
+test.describe('VIP cards', () => {
+  /** A ticketed door event (it has a ticket type) */
+  async function ticketedDoorEvent() {
+    const event = await doorEvent();
+    await createTicketType(event.id);
+    return event;
+  }
+  async function memberWithCard() {
+    const member = await createMember();
+    const uid = `04${randomBytes(6).toString('hex')}`.toUpperCase();
+    await sql`INSERT INTO nfc_cards (card_uid, user_id, type) VALUES (${uid}, ${member.id}, 'vip')`;
+    return { ...member, uid };
+  }
+  const tap = (api: APIRequestContext, eventId: string, uid: string) =>
+    api.post(`/api/staff/event-day/${eventId}/checkin`, { data: { card_uid: uid } });
+
+  test('a member with a ticket is admitted by card and gets points', async () => {
+    const event = await ticketedDoorEvent();
+    const member = await memberWithCard();
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }], { member_user_id: member.id });
+    const admin = await adminApi();
+    const response = await tap(admin, event.id, member.uid);
+    expect(response.status(), await response.text()).toBe(201);
+    const body = await response.json();
+    expect(body.ticket).toMatchObject({ status: 'admitted', ticket: { admitted_via: 'card' } });
+    expect((await ticketsOf(order.id))[0].admitted_via).toBe('card');
+    await expect.poll(async () => (await pointsFor(member.id)).status).toBeGreaterThan(0);
+  });
+
+  test('tapping again does not use up another ticket', async () => {
+    const event = await ticketedDoorEvent();
+    const member = await memberWithCard();
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }], { member_user_id: member.id });
+    const admin = await adminApi();
+    expect((await tap(admin, event.id, member.uid)).status()).toBe(201);
+    const again = await tap(admin, event.id, member.uid);
+    expect((await again.json()).status).toBe('already_checked_in');
+    expect((await ticketsOf(order.id)).filter((t) => t.admitted_at !== null)).toHaveLength(1);
+  });
+
+  test('a ticket bought with the member’s email in a different case is found', async () => {
+    const event = await ticketedDoorEvent();
+    const member = await memberWithCard();
+    await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }], { email: member.email.toUpperCase() });
+    const admin = await adminApi();
+    const response = await tap(admin, event.id, member.uid);
+    expect(response.status(), await response.text()).toBe(201);
+    expect((await response.json()).ticket.status).toBe('admitted');
+  });
+
+  test('no ticket, no check-in', async () => {
+    const event = await ticketedDoorEvent();
+    const member = await memberWithCard();
+    const admin = await adminApi();
+    const response = await tap(admin, event.id, member.uid);
+    expect(response.status()).toBe(404);
+    const body = await response.json();
+    expect(body).toMatchObject({ code: 'NO_TICKET', error: 'No ticket for this event' });
+    expect(body.customer?.name).toBe('E2E Member');
+    expect(await sql`SELECT id FROM checkins WHERE user_id = ${member.id}`).toHaveLength(0);
+    expect((await pointsFor(member.id)).status).toBe(0);
+  });
+
+  test('events without tickets on the website are unchanged', async () => {
+    const event = await doorEvent();
+    const member = await memberWithCard();
+    const admin = await adminApi();
+    const response = await tap(admin, event.id, member.uid);
+    expect(response.status(), await response.text()).toBe(201);
+    expect((await response.json()).status).toBe('checked_in');
   });
 });
