@@ -358,7 +358,23 @@ test.describe('Review fixes', () => {
     });
   });
 
-  test('a card tap and a QR scan of the same ticket at once never let two people in', async () => {
+  test('a member who came in by QR gets checked in by card without using a guest’s ticket', async () => {
+    const event = await ticketedDoorEvent();
+    const member = await memberWithCard();
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }], { member_user_id: member.id });
+    const admin = await adminApi();
+    const [first] = await codesFor(admin, order.id);
+    expect((await admit(admin, event.id, first)).status).toBe('admitted');
+
+    const response = await admin.post(`/api/staff/event-day/${event.id}/checkin`, { data: { card_uid: member.uid } });
+    expect(response.status(), await response.text()).toBe(201);
+    expect((await response.json()).status).toBe('checked_in');
+    const tickets = await ticketsOf(order.id);
+    expect(tickets.map((t) => t.admitted_at !== null)).toEqual([true, false]);
+    await expect.poll(async () => (await pointsFor(member.id)).status).toBeGreaterThan(0);
+  });
+
+  test('a card tap and a QR scan of the same ticket at once use it only once', async () => {
     for (let i = 0; i < 4; i++) {
       const event = await ticketedDoorEvent();
       const member = await memberWithCard();
@@ -369,9 +385,12 @@ test.describe('Review fixes', () => {
         admin.post(`/api/staff/event-day/${event.id}/checkin`, { data: { card_uid: member.uid } }).then((r) => r.json()),
         admin.post(`/api/staff/event-day/${event.id}/tickets/admit`, { data: { code } }).then((r) => r.json()),
       ]);
-      const cardLetIn = card.status === 'checked_in';
-      const qrLetIn = qr.data?.status === 'admitted';
-      expect({ i, cardLetIn, qrLetIn, card: card.status, qr: qr.data?.status }).toEqual({ i, cardLetIn, qrLetIn: !cardLetIn, card: card.status, qr: qr.data?.status });
+      // One ticket is used, by exactly one of them (the card may still check the member in
+      // without a ticket once theirs is in, as for a member who came in by QR)
+      const cardUsedTicket = card.ticket?.status === 'admitted';
+      const qrUsedTicket = qr.data?.status === 'admitted';
+      expect({ i, cardUsedTicket, qrUsedTicket }).toEqual({ i, cardUsedTicket, qrUsedTicket: !cardUsedTicket });
+      expect((await ticketsOf(order.id)).filter((t) => t.admitted_at !== null)).toHaveLength(1);
     }
   });
 });

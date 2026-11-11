@@ -65,8 +65,8 @@ Who: anyone signed in as staff or admin, as for card check-in today. Every actio
 
 **VIP card tap (existing check-in, extended).** For an event that sells tickets on the website (it has at least one ticket type):
 - **The member's tickets:** tickets on paid orders for this event that are linked to the member (`member_user_id`) or bought with their account's email (case-insensitive). If those orders have no ticket rows yet, they're created on the spot; the PDF isn't needed for that.
-- **One unused:** it's admitted (`via 'card'`) and their check-in points are given as today. The result shows the ticket as for a scan.
-- **All used:** "Already in" (no new points, as today).
+- **None of them in yet:** one is admitted (`via 'card'`) and their check-in points are given as today. The result shows the ticket as for a scan.
+- **One or more already in** (e.g. the member came in on a QR, or a guest did): they're checked in and get their points without using another ticket, so a guest's ticket still works. _(Decided 11 Nov, after review: a member who entered by QR and then taps for points mustn't use up a friend's ticket.)_
 - **None:** ❌ "No ticket for this event", with no check-in and no points. The scan is logged as an error.
 
 For an event that doesn't sell tickets on the website, card check-in is unchanged.

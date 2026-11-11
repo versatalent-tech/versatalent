@@ -127,18 +127,18 @@ export async function POST(
         await logScan(false, { nfc_card_id: card.id, user_id: user.id, error_message: 'No ticket for this event' });
         return NextResponse.json({ error: 'No ticket for this event', code: 'NO_TICKET', customer, founding }, { status: 404 });
       }
-      // The list was read before claiming, so a QR scan may take a ticket first: try the next
-      const actor = { userId: session.userId ?? null, name: session.name ?? null };
-      for (const unused of tickets.filter((t) => !t.admitted_at)) {
-        const tried = await admitTicket(unused.id, event.id, actor, 'card');
-        if (tried.status === 'admitted') {
-          ticket = tried;
-          break;
+      // If one of their tickets is already in (e.g. they came in on its QR), they're checked
+      // in without using another, so a guest's ticket still works. Otherwise one is let in;
+      // the list was read before claiming, so if a QR scan takes a ticket first, try the next
+      if (!tickets.some((t) => t.admitted_at)) {
+        const actor = { userId: session.userId ?? null, name: session.name ?? null };
+        for (const unused of tickets) {
+          const tried = await admitTicket(unused.id, event.id, actor, 'card');
+          if (tried.status === 'admitted') {
+            ticket = tried;
+            break;
+          }
         }
-      }
-      if (!ticket) {
-        await logScan(true, { nfc_card_id: card.id, user_id: user.id });
-        return NextResponse.json({ status: 'already_in', customer, founding, points: null, points_error: false });
       }
     }
 
