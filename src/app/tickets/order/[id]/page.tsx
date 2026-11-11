@@ -115,6 +115,7 @@ function OrderContent() {
             {order.member ? `${order.member.first_name}’s membership` : "your membership"}.
           </p>
         )}
+        {!order.member && order.points_awarded === 0 && <AddMembership orderId={order.id} token={token} onAdded={load} />}
         {order.event.id && (
           <Link href={`/events/${order.event.id}`} className="inline-block text-gold underline">
             Event details
@@ -180,5 +181,58 @@ export default function TicketOrderPage() {
         </div>
       </section>
     </MainLayout>
+  );
+}
+
+/** "Forgot to add your membership?": links a paid order to a membership email and gives the points */
+function AddMembership({ orderId, token, onAdded }: { orderId: string; token: string; onAdded: () => void }) {
+  const [email, setEmail] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/tickets/orders/${encodeURIComponent(orderId)}/member`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ k: token, email }),
+      });
+      const body = await response.json().catch(() => ({}));
+      setMessage(response.ok ? body.message : body.error || "Something went wrong. Please try again.");
+      if (response.ok) onAdded();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="mx-auto max-w-md space-y-2 rounded-lg border border-gold/30 p-4 text-left">
+      <p className="flex items-center gap-2 font-medium">
+        <Star className="h-4 w-4 text-gold" /> Forgot to add your membership?
+      </p>
+      <p className="text-sm text-gray-600">V•PRIVILEGE members: enter the email on your membership to collect this order&apos;s points.</p>
+      <label htmlFor="membership-email" className="sr-only">
+        Your membership email
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="membership-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your membership email"
+          className="min-w-0 flex-1 rounded-md border px-3 py-2 text-sm"
+        />
+        <Button type="submit" disabled={saving || !email.trim()} className="bg-gold text-black hover:bg-gold/90">
+          {saving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+          Add my membership
+        </Button>
+      </div>
+      {message && <p className="text-sm text-gray-700">{message}</p>}
+    </form>
   );
 }

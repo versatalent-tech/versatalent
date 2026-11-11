@@ -52,6 +52,16 @@ export const ticketOrderSchema = z.object({
   source: z.enum(['website', 'card_tap', 'member_pass']).default('website'),
   /** Member id from a card tap: the order earns that member's points */
   member: z.string().uuid().nullable().optional().or(z.literal('').transform(() => null)),
+  /** A member buying with a different email: their membership email earns the points */
+  member_email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(200)
+    .refine((v) => v === '' || z.string().email().safeParse(v).success, 'Enter a valid membership email')
+    .transform((v) => (v === '' ? null : v))
+    .nullable()
+    .optional(),
   utm_source: optionalText(100),
   utm_medium: optionalText(100),
   utm_campaign: optionalText(100),

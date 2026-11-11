@@ -6,6 +6,8 @@ import { AlertCircle, Instagram, Loader2, Lock, Minus, Plus, Star } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HONEYPOT_FIELD } from "@/lib/crm/types";
+import { PhoneTapControl } from "@/components/staff/PhoneTapControl";
+import { usePhoneCardTaps } from "@/lib/hooks/usePhoneCardTaps";
 import { AGE_RANGES, HEARD_FROM, formatPrice, normaliseInstagram, type CardMember, type PublicTicketEvent } from "@/lib/tickets/types";
 
 const selectClass =
@@ -52,6 +54,9 @@ export function TicketPurchase({
 }) {
   // The buyer can unlink the card ("Not you?"); the form is never filled in from it
   const [linked, setLinked] = useState<CardMember | null>(member ?? null);
+  // Buying with a different email than their membership's
+  const [memberEmail, setMemberEmail] = useState("");
+  const [cardError, setCardError] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [form, setForm] = useState({
     first_name: "",
@@ -71,6 +76,26 @@ export function TicketPurchase({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setTracking(readTracking()), []);
+
+  // A membership card held to an Android phone links it, as a tap that opened this page does
+  const phone = usePhoneCardTaps(
+    async (uid) => {
+      setCardError(null);
+      try {
+        const response = await fetch("/api/tickets/card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ card_uid: uid }),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || !body.success) throw new Error(body.error || "Couldn't read the card");
+        setLinked(body.data);
+      } catch (err) {
+        setCardError(err instanceof Error ? err.message : "Couldn't read the card");
+      }
+    },
+    { paused: !!linked || submitting }
+  );
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -117,6 +142,7 @@ export function TicketPurchase({
           accept_terms: true,
           ...(tracking ?? {}),
           member: linked?.id ?? null,
+          member_email: linked ? null : memberEmail.trim() || null,
           [HONEYPOT_FIELD]: trap,
         }),
       });
@@ -258,17 +284,35 @@ export function TicketPurchase({
               </button>
             </span>
           </div>
-        ) : poundsPerPoint && (
-          <p className="flex items-start gap-2 rounded-lg bg-gold/10 p-3 text-sm text-gray-800">
-            <Star className="mt-0.5 h-4 w-4 flex-shrink-0 text-gold" />
-            <span>
-              V•PRIVILEGE members earn 1 point for every £{poundsPerPoint} spent on tickets. Use the email on your membership to collect
-              them.{" "}
-              <Link href="/membership" className="text-gold underline" target="_blank">
-                Not a member yet?
-              </Link>
-            </span>
-          </p>
+        ) : (
+          <div className="space-y-3 rounded-lg bg-gold/10 p-3 text-sm text-gray-800">
+            <p className="flex items-start gap-2">
+              <Star className="mt-0.5 h-4 w-4 flex-shrink-0 text-gold" />
+              <span>
+                {poundsPerPoint
+                  ? `V•PRIVILEGE members earn 1 point for every £${poundsPerPoint} spent on tickets. `
+                  : "V•PRIVILEGE members collect points on tickets. "}
+                Buying with the email on your membership collects them; otherwise add your membership below.{" "}
+                <Link href="/membership" className="text-gold underline" target="_blank">
+                  Not a member yet?
+                </Link>
+              </span>
+            </p>
+            <div>
+              <Label htmlFor="member-email">Your membership email (if different)</Label>
+              <Input
+                id="member-email"
+                type="email"
+                autoComplete="off"
+                value={memberEmail}
+                onChange={(e) => setMemberEmail(e.target.value)}
+                placeholder="The email on your V•PRIVILEGE membership"
+                className="bg-white"
+              />
+            </div>
+            <PhoneTapControl state={phone.state} onStart={phone.start} tone="light" />
+            {cardError && <p className="text-red-700">{cardError}</p>}
+          </div>
         )}
       </fieldset>
 
