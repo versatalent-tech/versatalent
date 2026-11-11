@@ -13,13 +13,19 @@ import {
   Maximize,
   Minimize,
   Nfc,
+  ScanLine,
+  Search,
   Star,
+  Ticket,
   Users,
   XCircle,
 } from "lucide-react";
 import { useBridgeCardTaps } from "@/lib/hooks/useBridgeCardTaps";
 import { usePhoneCardTaps } from "@/lib/hooks/usePhoneCardTaps";
 import { PhoneTapControl } from "@/components/staff/PhoneTapControl";
+import { TicketScanner } from "@/components/staff/TicketScanner";
+import { TicketSearch } from "@/components/staff/TicketSearch";
+import type { AdmitResult } from "@/lib/db/repositories/door-tickets";
 import type { EventDayCheckin, EventDayEvent } from "@/lib/db/repositories/event-day";
 import type { FoundingBadge } from "@/lib/membership/founding";
 
@@ -31,14 +37,19 @@ const REPEAT_TAP_MS = 4000;
 const REFRESH_MS = 15000;
 
 interface CheckinResult {
-  status: "checked_in" | "already_checked_in" | "error";
+  /** already_in: at a ticketed event, all of the member's tickets are already in */
+  status: "checked_in" | "already_checked_in" | "already_in" | "error";
   customer?: { id: string; name: string; role: string; avatar_url: string | null };
   checked_in_at?: string;
   points?: { awarded: number; already_awarded?: boolean; balance: number; tier: string } | null;
   points_error?: boolean;
   founding?: FoundingBadge | null;
+  /** At a ticketed event: the member's ticket the card let in */
+  ticket?: AdmitResult;
   error?: string;
 }
+
+const VIA_LABELS = { qr: "QR", card: "card", manual: "by hand" } as const;
 
 const TIER_STYLES: Record<string, string> = {
   black: "bg-black text-white border border-gray-600",
@@ -80,6 +91,10 @@ export default function EventDayCheckinPage() {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualUid, setManualUid] = useState("");
   const [fullscreen, setFullscreen] = useState(false);
+  const [tickets, setTickets] = useState<{ in: number; total: number } | null>(null);
+  const [ticketResult, setTicketResult] = useState<AdmitResult | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTap = useRef<{ uid: string; at: number } | null>(null);
@@ -93,6 +108,7 @@ export default function EventDayCheckinPage() {
       if (!response.ok) throw new Error(data.error || "Failed to load event");
       setEvent(data.event);
       setCheckins(data.checkins);
+      setTickets(data.tickets ?? null);
       setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load event");
@@ -116,6 +132,7 @@ export default function EventDayCheckinPage() {
   }, []);
 
   const showResult = (next: CheckinResult) => {
+    setTicketResult(null);
     setResult(next);
     beep(next.status !== "error");
     if (resultTimer.current) clearTimeout(resultTimer.current);
@@ -141,7 +158,7 @@ export default function EventDayCheckinPage() {
       });
       const data = await response.json();
       if (!response.ok) {
-        showResult({ status: "error", error: data.error || "Check-in failed" });
+        showResult({ status: "error", error: data.error || "Check-in failed", customer: data.customer });
       } else {
         showResult(data);
         load();
@@ -151,6 +168,36 @@ export default function EventDayCheckinPage() {
     } finally {
       busy.current = false;
       setProcessing(false);
+    }
+  };
+
+  const showTicketResult = (next: AdmitResult) => {
+    setResult(null);
+    setTicketResult(next);
+    beep(next.status === "admitted");
+    if (resultTimer.current) clearTimeout(resultTimer.current);
+    resultTimer.current = setTimeout(() => setTicketResult(null), RESULT_DISPLAY_MS);
+    load();
+  };
+
+  // A QR read by the camera
+  const admitCode = async (code: string) => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      const response = await fetch(`/api/staff/event-day/${eventId}/tickets/admit`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const body = await response.json();
+      if (response.ok) showTicketResult(body.data);
+      else showResult({ status: "error", error: body.error || "Couldn't check the ticket" });
+    } catch {
+      showResult({ status: "error", error: "Connection problem — please scan again" });
+    } finally {
+      busy.current = false;
     }
   };
 
@@ -206,12 +253,25 @@ export default function EventDayCheckinPage() {
     );
   }
 
-  const tone =
-    result?.status === "checked_in"
-      ? "from-green-900/80 via-green-950 to-black"
-      : result?.status === "already_checked_in"
-        ? "from-amber-900/70 via-amber-950 to-black"
+  const outcome = ticketResult
+    ? ticketResult.status === "admitted"
+      ? "good"
+      : ticketResult.status === "already_used"
+        ? "warn"
+        : "bad"
+    : result?.status === "checked_in"
+      ? "good"
+      : result?.status === "already_checked_in" || result?.status === "already_in"
+        ? "warn"
         : result?.status === "error"
+          ? "bad"
+          : null;
+  const tone =
+    outcome === "good"
+      ? "from-green-900/80 via-green-950 to-black"
+      : outcome === "warn"
+        ? "from-amber-900/70 via-amber-950 to-black"
+        : outcome === "bad"
           ? "from-red-900/80 via-red-950 to-black"
           : "from-black via-gray-900 to-black";
 
@@ -260,11 +320,19 @@ export default function EventDayCheckinPage() {
         <div className="mt-6 grid flex-1 gap-6 lg:grid-cols-[1fr_340px]">
           {/* Tap / result panel */}
           <section className="flex min-h-[420px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/5 p-8 text-center" aria-live="assertive">
-            {processing ? (
+            {scannerOpen ? (
+              <div className="flex w-full max-w-md flex-col items-center gap-4">
+                <TicketScanner onCode={admitCode} onClose={() => setScannerOpen(false)} />
+                {ticketResult && <TicketResultView result={ticketResult} compact />}
+                {result && <ResultView result={result} />}
+              </div>
+            ) : processing ? (
               <>
                 <Loader2 className="mb-6 h-20 w-20 animate-spin text-gold" />
                 <p className="text-3xl font-semibold">Checking you in…</p>
               </>
+            ) : ticketResult ? (
+              <TicketResultView result={ticketResult} />
             ) : result ? (
               <ResultView result={result} />
             ) : (
@@ -286,7 +354,32 @@ export default function EventDayCheckinPage() {
             <div className="grid grid-cols-2 gap-3">
               <Stat icon={<Users className="h-4 w-4" />} label="Checked in" value={event.unique_attendees} />
               <Stat icon={<Star className="h-4 w-4" />} label="Rewarded" value={event.members_rewarded} hint="members" />
+              {tickets && <Stat icon={<Ticket className="h-4 w-4" />} label="Tickets in" value={`${tickets.in} / ${tickets.total}`} />}
             </div>
+
+            {tickets && (
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setScannerOpen((open) => !open)}
+                    disabled={!tapsEnabled}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-gold px-3 py-3 font-semibold text-black disabled:opacity-40"
+                  >
+                    <ScanLine className="h-5 w-5" /> Scan ticket
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen((open) => !open)}
+                    disabled={!tapsEnabled}
+                    className="flex items-center justify-center gap-2 rounded-lg border border-white/20 px-3 py-3 font-semibold hover:bg-white/10 disabled:opacity-40"
+                  >
+                    <Search className="h-5 w-5" /> Find a ticket
+                  </button>
+                </div>
+                {searchOpen && <TicketSearch eventId={eventId} onResult={showTicketResult} />}
+              </div>
+            )}
 
             <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 bg-white/5">
               <h2 className="border-b border-white/10 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Latest arrivals</h2>
@@ -340,7 +433,7 @@ export default function EventDayCheckinPage() {
   );
 }
 
-function Stat({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: number; hint?: string }) {
+function Stat({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: number | string; hint?: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-gray-400">{icon}{label}</div>
@@ -352,13 +445,64 @@ function Stat({ icon, label, value, hint }: { icon: React.ReactNode; label: stri
   );
 }
 
+/** The outcome of a ticket scan or a ticket let in by hand */
+function TicketResultView({ result, compact }: { result: AdmitResult; compact?: boolean }) {
+  const t = result.ticket;
+  const o = result.order;
+  const text = (() => {
+    switch (result.status) {
+      case "admitted":
+        return `Admitted: ${o?.name ?? "ticket"} · ${t?.ticket_type_name ?? ""} · ${o?.in_count ?? 1} of ${o?.quantity ?? 1} from this order in`;
+      case "already_used":
+        return `Already used at ${t?.admitted_at ? formatTime(t.admitted_at) : "an earlier time"}${
+          t?.admitted_via ? ` (${VIA_LABELS[t.admitted_via]}${t.admitted_by_name ? `, by ${t.admitted_by_name}` : ""})` : ""
+        }`;
+      case "other_event":
+        return `This ticket is for ${result.event_title ?? "another event"}`;
+      case "refunded":
+        return "This ticket's order was refunded";
+      case "cancelled":
+        return "This ticket's order was cancelled";
+      default:
+        return "Not a VersaTalent ticket";
+    }
+  })();
+  const Icon = result.status === "admitted" ? CheckCircle2 : result.status === "already_used" ? AlertTriangle : XCircle;
+  const colour = result.status === "admitted" ? "text-green-400" : result.status === "already_used" ? "text-amber-400" : "text-red-400";
+  if (compact) {
+    return (
+      <p className="flex items-start gap-2 rounded-xl border border-white/10 bg-black/40 p-3 text-left text-lg font-semibold">
+        <Icon className={`mt-1 h-6 w-6 shrink-0 ${colour}`} />
+        <span>{text}</span>
+      </p>
+    );
+  }
+  return (
+    <>
+      <Icon className={`mb-6 h-24 w-24 ${colour}`} />
+      <p className="text-3xl font-bold lg:text-4xl">{text}</p>
+      {o && result.status !== "admitted" && <p className="mt-3 text-lg text-gray-300">{o.name} · order {o.reference}</p>}
+    </>
+  );
+}
+
 function ResultView({ result }: { result: CheckinResult }) {
   if (result.status === "error") {
     return (
       <>
         <XCircle className="mb-6 h-24 w-24 text-red-400" />
         <p className="text-3xl font-bold lg:text-4xl">{result.error}</p>
+        {result.customer?.name && <p className="mt-3 text-xl">{result.customer.name}</p>}
         <p className="mt-3 text-lg text-gray-300">Please see a member of staff</p>
+      </>
+    );
+  }
+  if (result.status === "already_in") {
+    return (
+      <>
+        <AlertTriangle className="mb-6 h-24 w-24 text-amber-400" />
+        <p className="text-4xl font-bold lg:text-5xl">{result.customer?.name ?? "This member"} is already in</p>
+        <p className="mt-3 text-lg text-gray-300">All of their tickets for this event have been used.</p>
       </>
     );
   }
@@ -390,6 +534,13 @@ function ResultView({ result }: { result: CheckinResult }) {
           ? "You're checked in. Enjoy the event!"
           : `You already checked in at ${result.checked_in_at ? formatTime(result.checked_in_at) : "an earlier time"}.`}
       </p>
+
+      {result.ticket?.status === "admitted" && result.ticket.order && (
+        <p className="mt-3 inline-flex items-center gap-2 text-lg text-green-300">
+          <Ticket className="h-5 w-5" />
+          {result.ticket.ticket?.ticket_type_name} ticket · {result.ticket.order.in_count} of {result.ticket.order.quantity} from this order in
+        </p>
+      )}
 
       {points && (
         <div className="mt-8 flex flex-col items-center gap-3">

@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { createEvent, createMember, createTeamUser, createTicketType, pointsFor, sql } from '../support/db';
 import { adminApi, anonymousApi, teamApi } from '../support/auth';
 import { paidOrder } from '../support/tickets';
+import { ADMIN_STATE } from '../support/env';
 
 /**
  * Ticket PDFs with one QR code per person, and letting people in at the door
@@ -249,5 +250,63 @@ test.describe('VIP cards', () => {
     const response = await tap(admin, event.id, member.uid);
     expect(response.status(), await response.text()).toBe(201);
     expect((await response.json()).status).toBe('checked_in');
+  });
+});
+
+test.describe('Screens', () => {
+  test.use({ storageState: ADMIN_STATE });
+
+  test('admin creates and downloads a ticket PDF', async ({ page }) => {
+    const event = await createEvent({ startsInDays: 7 });
+    await createTicketType(event.id);
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
+    await page.goto('/admin/tickets');
+    await page.getByLabel('Event').selectOption(event.id);
+    const row = page.locator('li', { hasText: order.reference });
+    const downloading = page.waitForEvent('download');
+    await row.getByRole('button', { name: 'Create PDF' }).click();
+    expect((await downloading).suggestedFilename()).toMatch(new RegExp(`${order.reference}\\.pdf$`));
+    await expect(row.getByRole('button', { name: 'Download PDF' })).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Remake PDF' })).toBeVisible();
+  });
+
+  test('door: find a ticket and admit it', async ({ page }) => {
+    const event = await doorEvent();
+    await createTicketType(event.id);
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
+    await page.goto(`/staff/event-day/${event.id}`);
+    await page.getByRole('button', { name: 'Find a ticket' }).click();
+    await page.getByPlaceholder('Name, email or order reference').fill(order.last_name);
+    const found = page.locator('li', { hasText: order.reference });
+    await found.getByRole('button', { name: 'Admit ticket 1' }).click();
+    await expect(page.getByText(/^Admitted: /)).toBeVisible();
+    await expect(found.getByText(/In at/)).toBeVisible();
+    await expect(page.getByText('1 / 2')).toBeVisible();
+  });
+
+  test('door: the scanner explains how to allow the camera', async ({ page }) => {
+    const event = await doorEvent();
+    await createTicketType(event.id);
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'mediaDevices', {
+        value: { getUserMedia: () => Promise.reject(new DOMException('Permission denied', 'NotAllowedError')), enumerateDevices: () => Promise.resolve([]) },
+      });
+    });
+    await page.goto(`/staff/event-day/${event.id}`);
+    await page.getByRole('button', { name: 'Scan ticket' }).click();
+    await expect(page.getByText(/Allow camera access/)).toBeVisible();
+  });
+
+  test('admin door list shows how many are in', async ({ page }) => {
+    const event = await doorEvent();
+    await createTicketType(event.id);
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
+    const admin = await adminApi();
+    const [code] = await codesFor(admin, order.id);
+    await admit(admin, event.id, code);
+    await page.goto('/admin/tickets');
+    await page.getByLabel('Event').selectOption(event.id);
+    await page.getByRole('button', { name: 'Door list' }).click();
+    await expect(page.locator('tr', { hasText: order.reference }).getByText('1 of 2 in')).toBeVisible();
   });
 });
