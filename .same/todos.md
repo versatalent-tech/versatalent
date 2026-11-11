@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 11 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 044 are on production. Tests: `npm run test:e2e` (178 tests, also run on GitHub for every PR)._
+_Last updated 11 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 045 are on production. Tests: `npm run test:e2e` (178 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -18,7 +18,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] GitGuardian incident #38257341: mark it as a false positive on the GitGuardian dashboard (a random test password in the test helpers, not a real secret)
 
 ## 2. Check after the latest deploys
-- [ ] Ticket PDFs and door scanning (migration 045 not yet on production): in Admin → Tickets make a PDF for a test order and open it; on the event day page scan its QR with a phone (Android and iPhone), tap a VIP card with and without a ticket, and find and admit a ticket by name
+- [ ] Ticket PDFs and door scanning (migration 045 on production 11 Nov 2026): in Admin → Tickets make a PDF for a test order and open it; on the event day page scan its QR with a phone (Android and iPhone), tap a VIP card with and without a ticket, and find and admit a ticket by name
 - [ ] New task: CRM → Tasks → New task, give a test talent a to-do (check it reaches their portal and the bell) and link one to a deal (check it shows on the deal page)
 - [ ] Fee approvals (migration 044 on production 9 Nov 2026): as a manager, change a test booking's fee, then approve it from the dashboard reminder or Bookings → Fee approvals
 - [ ] Team payouts (migration 043 on production 9 Nov 2026): set each manager's and road manager's rate on Bookings → Commission Rates (Team), check the shares on their talents' bookings, pay one from Payouts → Team, and check "Your earnings" on their dashboard
@@ -46,6 +46,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] More tests (Playwright, `e2e/tests`): loyalty at the till (tier boundaries, discounts, till refunds), referrals; CRM (document access rules, prospecting steps and outcomes, KPI figures); bookings and talent calendars; booking documents; staff and guest card taps
 
 ## 4. Later
+- [ ] Door tickets follow-ups from the review: hide ticket codes from door staff's search results; search shouldn't create ticket rows; orders ticked off before tickets existed can show "0 of n in" once their tickets are made, and the event day count leaves them out; block downloading a refunded order's stored PDF; PDF buttons on the Door list too; show search errors; names in non-Latin scripts print as "?" in the PDF (embed a Unicode font); fetch the PDF logo from a fixed site address; undoing a card-admitted ticket keeps the check-in
 - [ ] Notifications follow-ups from the review: switch off phone notifications when a talent signs out; tell talents when a cancelled booking is back on or a booking is un-shared; mark only the shown notifications read; re-subscribe phones after the push keys change; limit phones per talent
 - [ ] Team payouts follow-ups from the review: penny rounding in the app's own sum (display is right); a deactivated person given a first rate gets no catch-up shares when reactivated; say how many were skipped when marking paid; record the amount and reference when a payment is undone or a share removed; payment dates near midnight in summer; a stale rates tab can overwrite another admin's changes
 - [ ] Fee approvals follow-ups from the review: a manager clearing the commission on a new booking gets the talent's rate instead of none; the waiting box's "now" amount can be out of date until the calendar reloads; money-only saves write an empty audit entry; a proper page for managers who open Fee approvals; only the person who asked can withdraw (decide)
