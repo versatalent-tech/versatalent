@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CameraOff, Loader2, X } from "lucide-react";
 
-/** The same code read again within this time counts as one scan */
+/** The same code read again within this time of the last read counts as one scan */
 const REPEAT_MS = 3000;
 
 /**
@@ -31,8 +31,11 @@ export function TicketScanner({ onCode, onClose, paused }: { onCode: (code: stri
           (result) => {
             const now = Date.now();
             if (pausedRef.current) return;
-            if (last.current && last.current.code === result.data && now - last.current.at < REPEAT_MS) return;
+            const repeat = last.current && last.current.code === result.data && now - last.current.at < REPEAT_MS;
+            // Keep the guard going while the same code stays in view, so a person just let in
+            // isn't shown "Already used" for holding their phone up a little longer
             last.current = { code: result.data, at: now };
+            if (repeat) return;
             onCodeRef.current(result.data);
           },
           { returnDetailedScanResult: true, highlightScanRegion: true, preferredCamera: "environment" }

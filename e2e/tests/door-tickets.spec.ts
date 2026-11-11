@@ -310,3 +310,68 @@ test.describe('Screens', () => {
     await expect(page.locator('tr', { hasText: order.reference }).getByText('1 of 2 in')).toBeVisible();
   });
 });
+
+test.describe('Review fixes', () => {
+  async function ticketedDoorEvent() {
+    const event = await doorEvent();
+    await createTicketType(event.id);
+    return event;
+  }
+  async function memberWithCard() {
+    const member = await createMember();
+    const uid = `04${randomBytes(6).toString('hex')}`.toUpperCase();
+    await sql`INSERT INTO nfc_cards (card_uid, user_id, type) VALUES (${uid}, ${member.id}, 'vip')`;
+    return { ...member, uid };
+  }
+
+  test.describe('when saving the check-in fails', () => {
+    // A trigger makes this member's check-in fail, standing in for a dropped connection
+    test.beforeAll(async () => {
+      await sql`CREATE TABLE IF NOT EXISTS e2e_fail_checkins (user_id uuid PRIMARY KEY)`;
+      await sql`
+        CREATE OR REPLACE FUNCTION e2e_fail_checkin() RETURNS trigger AS $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM e2e_fail_checkins WHERE user_id = NEW.user_id) THEN RAISE EXCEPTION 'e2e: check-in failed'; END IF;
+          RETURN NEW;
+        END $$ LANGUAGE plpgsql`;
+      await sql`DROP TRIGGER IF EXISTS e2e_fail_checkin ON checkins`;
+      await sql`CREATE TRIGGER e2e_fail_checkin BEFORE INSERT ON checkins FOR EACH ROW EXECUTE FUNCTION e2e_fail_checkin()`;
+    });
+    test.afterAll(async () => {
+      await sql`DROP TRIGGER IF EXISTS e2e_fail_checkin ON checkins`;
+    });
+
+    test('the ticket is put back, so a retry works', async () => {
+      const event = await ticketedDoorEvent();
+      const member = await memberWithCard();
+      const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }], { member_user_id: member.id });
+      await sql`INSERT INTO e2e_fail_checkins (user_id) VALUES (${member.id})`;
+      const admin = await adminApi();
+      const failed = await admin.post(`/api/staff/event-day/${event.id}/checkin`, { data: { card_uid: member.uid } });
+      expect(failed.status()).toBe(500);
+      expect((await ticketsOf(order.id))[0].admitted_at).toBeNull();
+
+      await sql`DELETE FROM e2e_fail_checkins WHERE user_id = ${member.id}`;
+      const retry = await admin.post(`/api/staff/event-day/${event.id}/checkin`, { data: { card_uid: member.uid } });
+      expect(retry.status(), await retry.text()).toBe(201);
+      expect((await ticketsOf(order.id))[0].admitted_via).toBe('card');
+    });
+  });
+
+  test('a card tap and a QR scan of the same ticket at once never let two people in', async () => {
+    for (let i = 0; i < 4; i++) {
+      const event = await ticketedDoorEvent();
+      const member = await memberWithCard();
+      const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }], { member_user_id: member.id });
+      const admin = await adminApi();
+      const [code] = await codesFor(admin, order.id);
+      const [card, qr] = await Promise.all([
+        admin.post(`/api/staff/event-day/${event.id}/checkin`, { data: { card_uid: member.uid } }).then((r) => r.json()),
+        admin.post(`/api/staff/event-day/${event.id}/tickets/admit`, { data: { code } }).then((r) => r.json()),
+      ]);
+      const cardLetIn = card.status === 'checked_in';
+      const qrLetIn = qr.data?.status === 'admitted';
+      expect({ i, cardLetIn, qrLetIn, card: card.status, qr: qr.data?.status }).toEqual({ i, cardLetIn, qrLetIn: !cardLetIn, card: card.status, qr: qr.data?.status });
+    }
+  });
+});
