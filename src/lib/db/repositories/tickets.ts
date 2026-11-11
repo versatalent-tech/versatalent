@@ -1,5 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { sql } from '../client';
+import { setAllAdmitted } from './door-tickets';
 import { HOLD_MINUTES, type CardMember, type EventOnSale, type PublicOrder, type PublicTicketEvent, type PublicTicketType } from '@/lib/tickets/types';
 import type { ticketOrderSchema, ticketTypeSchema } from '@/lib/tickets/schemas';
 import type { z } from 'zod';
@@ -458,8 +459,19 @@ export interface AdminTicketOrder {
   refunded_at: string | null;
   refund_reason: string | null;
   arrived_at: string | null;
+  /** People in at the door (orders ticked off before per-ticket admission count as all in) */
+  in_count: number;
+  /** When the confirmation PDF was last made */
+  pdf_created_at: string | null;
   created_at: string;
 }
+
+/** People in from order `o`: admitted tickets, or the whole order if it was ticked off before tickets existed */
+const orderInCount = () => sql`(CASE
+  WHEN EXISTS (SELECT 1 FROM tickets t WHERE t.order_id = o.id)
+    THEN (SELECT COUNT(*) FROM tickets t WHERE t.order_id = o.id AND t.admitted_at IS NOT NULL)
+  WHEN o.arrived_at IS NOT NULL THEN o.quantity
+  ELSE 0 END)::int`;
 
 export async function listTicketOrders(filters: { eventId?: string | null; status?: string | null; search?: string | null; limit?: number }): Promise<AdminTicketOrder[]> {
   const search = filters.search?.trim() ? `%${filters.search.trim().replace(/^@/, '').toLowerCase()}%` : null;
@@ -467,7 +479,8 @@ export async function listTicketOrders(filters: { eventId?: string | null; statu
     SELECT o.*, u.name AS member_name,
       COALESCE((SELECT json_agg(json_build_object('name', i.name, 'quantity', i.quantity, 'unit_price_cents', i.unit_price_cents) ORDER BY i.name)
         FROM ticket_order_items i WHERE i.order_id = o.id), '[]') AS items,
-      (SELECT COUNT(*) FROM ticket_orders p WHERE lower(p.email) = lower(o.email) AND p.status = 'paid' AND p.created_at < o.created_at)::int AS previous_orders
+      (SELECT COUNT(*) FROM ticket_orders p WHERE lower(p.email) = lower(o.email) AND p.status = 'paid' AND p.created_at < o.created_at)::int AS previous_orders,
+      ${orderInCount()} AS in_count
     FROM ticket_orders o LEFT JOIN users u ON u.id = o.member_user_id
     WHERE (${filters.eventId ?? null}::uuid IS NULL OR o.event_id = ${filters.eventId ?? null}::uuid)
       AND (${filters.status ?? null}::text IS NULL OR o.status = ${filters.status ?? null})
@@ -509,6 +522,8 @@ export async function listTicketOrders(filters: { eventId?: string | null; statu
     refunded_at: iso(r.refunded_at),
     refund_reason: r.refund_reason,
     arrived_at: iso(r.arrived_at),
+    in_count: Number(r.in_count),
+    pdf_created_at: iso(r.pdf_created_at),
     created_at: iso(r.created_at)!,
   }));
 }
@@ -544,7 +559,7 @@ export async function ticketSummary(eventId: string | null): Promise<TicketSumma
         ))::int AS repeat_buyers,
         COUNT(*) FILTER (WHERE o.member_user_id IS NOT NULL)::int AS member_orders,
         COUNT(*) FILTER (WHERE o.marketing_consent)::int AS opt_ins,
-        COALESCE(SUM(o.quantity) FILTER (WHERE o.arrived_at IS NOT NULL), 0)::int AS arrived
+        COALESCE(SUM(${orderInCount()}), 0)::int AS arrived
       FROM ticket_orders o WHERE ${paid}
     `,
     sql`
@@ -602,10 +617,11 @@ export async function markTicketOrderRefunded(orderId: string, reason: string | 
   return { ok: false, error: current[0].status === 'refunded' ? 'This order has already been refunded' : 'Only paid orders can be refunded' };
 }
 
-export async function setOrderArrived(orderId: string, arrived: boolean): Promise<boolean> {
-  const rows = await sql`
-    UPDATE ticket_orders SET arrived_at = ${arrived ? sql`COALESCE(arrived_at, NOW())` : null}, updated_at = NOW()
-    WHERE id = ${orderId} AND status = 'paid' RETURNING id
-  `;
-  return rows.length > 0;
+/** Door list tick: everyone on the order in (or none); only for paid orders */
+export async function setOrderArrived(
+  orderId: string,
+  arrived: boolean,
+  actor: { userId?: string | null; name?: string | null } = {}
+): Promise<boolean> {
+  return setAllAdmitted(orderId, arrived, { userId: actor.userId ?? null, name: actor.name ?? null });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireStaff } from '@/lib/middleware/auth';
 import { getEventDayEvent, getEventDayCheckins } from '@/lib/db/repositories/event-day';
+import { eventSellsTickets, ticketCounts } from '@/lib/db/repositories/door-tickets';
 
 /**
  * Event details, counters and latest check-ins for the door page
@@ -25,7 +26,9 @@ export async function GET(
     }
 
     const checkins = await getEventDayCheckins(event.nfc_event_id);
-    return NextResponse.json({ event, checkins });
+    // People in on tickets bought on the website (null when the event doesn't sell any)
+    const tickets = (await eventSellsTickets(event.id)) ? await ticketCounts(event.id) : null;
+    return NextResponse.json({ event, checkins, tickets });
   } catch (error) {
     console.error('Error fetching event day:', error);
     return NextResponse.json({ error: 'Failed to load event' }, { status: 500 });

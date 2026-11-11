@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Copy, Download, ExternalLink, Instagram, Loader2, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { Copy, Download, ExternalLink, FileDown, Instagram, Loader2, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 import { Button } from "@/components/ui/button";
@@ -313,6 +313,65 @@ function Analysis({ summary }: { summary: TicketSummary }) {
 // Orders and door list
 // ---------------------------------------------------------------------------
 
+/** Make (POST) or fetch (GET) an order's ticket PDF and save it on this computer */
+async function downloadTicketPdf(orderId: string, method: "POST" | "GET") {
+  const response = await fetch(`/api/admin/tickets/orders/${orderId}/pdf`, { method, credentials: "include" });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || "Couldn't get the PDF");
+  }
+  const name = /filename="([^"]+)"/.exec(response.headers.get("content-disposition") ?? "")?.[1] ?? "VersaTalent-tickets.pdf";
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+/** Create PDF, or Download / Remake once it exists (paid orders only) */
+function TicketPdfButtons({ o, onMade }: { o: AdminTicketOrder; onMade: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const run = async (method: "POST" | "GET") => {
+    setBusy(true);
+    try {
+      await downloadTicketPdf(o.id, method);
+      if (method === "POST") onMade();
+    } catch (err) {
+      window.alert(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (!o.pdf_created_at) {
+    return (
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => run("POST")}>
+        {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileDown className="mr-1 h-4 w-4" />}
+        Create PDF
+      </Button>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => run("GET")}>
+        {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileDown className="mr-1 h-4 w-4" />}
+        Download PDF
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        disabled={busy}
+        onClick={() => run("POST")}
+        title={`Made ${format(new Date(o.pdf_created_at), "d MMM yyyy HH:mm")}. Remake after correcting the order; the QR codes stay the same.`}
+      >
+        Remake PDF
+      </Button>
+    </div>
+  );
+}
+
 function OrderRow({ o, showEvent, onAction }: { o: AdminTicketOrder; showEvent: boolean; onAction: () => void }) {
   const [busy, setBusy] = useState(false);
   const refund = async () => {
@@ -361,9 +420,12 @@ function OrderRow({ o, showEvent, onAction }: { o: AdminTicketOrder; showEvent: 
         {o.refund_reason && <p className="text-xs italic text-gray-500">Refund: {o.refund_reason}</p>}
       </div>
       {o.status === "paid" && (
-        <Button size="sm" variant="ghost" className="flex-shrink-0 text-red-700" disabled={busy} onClick={refund}>
-          Refund
-        </Button>
+        <div className="flex flex-shrink-0 flex-wrap items-start gap-1">
+          <TicketPdfButtons o={o} onMade={onAction} />
+          <Button size="sm" variant="ghost" className="text-red-700" disabled={busy} onClick={refund}>
+            Refund
+          </Button>
+        </div>
       )}
     </li>
   );
@@ -376,14 +438,15 @@ function DoorList({ orders, event, onChanged }: { orders: AdminTicketOrder[]; ev
   );
   const toggle = async (o: AdminTicketOrder) => {
     try {
-      await api(`/api/admin/tickets/orders/${o.id}`, { method: "PATCH", json: { action: "arrived", arrived: !o.arrived_at } });
+      // Ticking lets everyone left on the order in; unticking (all in) undoes them
+      await api(`/api/admin/tickets/orders/${o.id}`, { method: "PATCH", json: { action: "arrived", arrived: o.in_count < o.quantity } });
       onChanged();
     } catch (err) {
       window.alert(errorMessage(err));
     }
   };
   const tickets = paid.reduce((n, o) => n + o.quantity, 0);
-  const arrived = paid.filter((o) => o.arrived_at).reduce((n, o) => n + o.quantity, 0);
+  const arrived = paid.reduce((n, o) => n + o.in_count, 0);
   return (
     <div className="space-y-3 print:space-y-1">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -409,7 +472,12 @@ function DoorList({ orders, event, onChanged }: { orders: AdminTicketOrder[]; ev
           {paid.map((o) => (
             <tr key={o.id} className="border-t">
               <td className="p-2">
-                <input type="checkbox" checked={Boolean(o.arrived_at)} onChange={() => toggle(o)} className="h-5 w-5 accent-[#D4AF37]" aria-label={`${o.first_name} ${o.last_name} arrived`} />
+                <label className="flex items-center gap-2 whitespace-nowrap">
+                  <input type="checkbox" checked={o.in_count >= o.quantity} onChange={() => toggle(o)} className="h-5 w-5 accent-[#D4AF37]" aria-label={`${o.first_name} ${o.last_name} arrived`} />
+                  <span className={`text-xs ${o.in_count > 0 ? "font-medium text-green-700" : "text-gray-400"}`}>
+                    {o.in_count} of {o.quantity} in
+                  </span>
+                </label>
               </td>
               <td className="p-2 font-medium">
                 {o.last_name}, {o.first_name}

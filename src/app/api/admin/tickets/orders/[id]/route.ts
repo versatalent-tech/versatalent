@@ -31,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return successResponse({ points_reversed: result.pointsReversed }, 'Order refunded');
     }
     const arrived = (body.data as { arrived: boolean }).arrived;
-    if (!(await setOrderArrived(id, arrived))) return ApiErrors.BadRequest('Only paid orders can be ticked off');
+    if (!(await setOrderArrived(id, arrived, actor))) return ApiErrors.BadRequest('Only paid orders can be ticked off');
     return successResponse({ arrived });
   } catch (error) {
     console.error('Ticket order action failed:', error);

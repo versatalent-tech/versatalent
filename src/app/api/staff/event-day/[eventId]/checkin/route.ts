@@ -6,6 +6,7 @@ import { createScanLog } from '@/lib/db/repositories/nfc-scan-logs';
 import { getEventDayEvent, findEventCheckin } from '@/lib/db/repositories/event-day';
 import { processEventCheckin } from '@/lib/services/vip-points-service';
 import { getFoundingBadge } from '@/lib/db/repositories/founding';
+import { admitTicket, eventSellsTickets, memberTicketsForEvent, undoTicket, type AdmitResult } from '@/lib/db/repositories/door-tickets';
 
 // Roles that earn loyalty points for checking in (same as /api/nfc/checkins)
 const POINTS_ROLES = ['vip', 'artist'];
@@ -117,15 +118,47 @@ export async function POST(
       });
     }
 
-    const checkin = await createCheckIn({
-      user_id: user.id,
-      nfc_card_id: card.id,
-      event_id: event.nfc_event_id,
-      source: 'event_checkin',
-      metadata: { via: 'event_day', public_event_id: event.id, staff_user_id: session.userId },
-      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-      user_agent: request.headers.get('user-agent') || undefined,
-    });
+    // At an event selling tickets on the website the card also lets in the
+    // member's own ticket: no ticket, no check-in (and no points)
+    let ticket: AdmitResult | null = null;
+    if (await eventSellsTickets(event.id)) {
+      const tickets = await memberTicketsForEvent(event.id, user.id);
+      if (tickets.length === 0) {
+        await logScan(false, { nfc_card_id: card.id, user_id: user.id, error_message: 'No ticket for this event' });
+        return NextResponse.json({ error: 'No ticket for this event', code: 'NO_TICKET', customer, founding }, { status: 404 });
+      }
+      // If one of their tickets is already in (e.g. they came in on its QR), they're checked
+      // in without using another, so a guest's ticket still works. Otherwise one is let in;
+      // the list was read before claiming, so if a QR scan takes a ticket first, try the next
+      if (!tickets.some((t) => t.admitted_at)) {
+        const actor = { userId: session.userId ?? null, name: session.name ?? null };
+        for (const unused of tickets) {
+          const tried = await admitTicket(unused.id, event.id, actor, 'card');
+          if (tried.status === 'admitted') {
+            ticket = tried;
+            break;
+          }
+        }
+      }
+    }
+
+    // If the check-in can't be saved, put the ticket back so the tap can be retried
+    const admittedTicketId = ticket?.ticket?.id ?? null;
+    let checkin: Awaited<ReturnType<typeof createCheckIn>>;
+    try {
+      checkin = await createCheckIn({
+        user_id: user.id,
+        nfc_card_id: card.id,
+        event_id: event.nfc_event_id,
+        source: 'event_checkin',
+        metadata: { via: 'event_day', public_event_id: event.id, staff_user_id: session.userId },
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        user_agent: request.headers.get('user-agent') || undefined,
+      });
+    } catch (err) {
+      if (admittedTicketId) await undoTicket(admittedTicketId, event.id).catch(() => undefined);
+      throw err;
+    }
     await logScan(true, { nfc_card_id: card.id, user_id: user.id });
 
     const { points, pointsError } = await awardPoints(checkin.id);
@@ -137,6 +170,7 @@ export async function POST(
       checked_in_at: checkin.timestamp,
       points,
       points_error: pointsError,
+      ...(ticket ? { ticket } : {}),
     }, { status: 201 });
   } catch (error) {
     console.error('Error processing event-day check-in:', error);
