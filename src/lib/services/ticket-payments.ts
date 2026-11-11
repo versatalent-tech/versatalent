@@ -19,6 +19,7 @@ import {
   recordTicketCheckout,
   renewHold,
   setOrderPoints,
+  claimOrderForMember,
   setTicketCheckoutOutcome,
   type PayableOrder,
   type TicketCheckoutRecord,
@@ -136,4 +137,14 @@ export async function refundTicketOrder(
   if (result.ok === false) return { ok: false, error: result.error };
   const pointsReversed = await reverseEarnedPoints(`ticket:${orderId}`, `ticket_refund:${orderId}`, orderId, { ticket_order_id: orderId }, actorId);
   return { ok: true as const, pointsReversed };
+}
+
+/**
+ * A buyer adding their membership after paying (order page). Says nothing
+ * about whether the email is a membership; links and gives the points once.
+ */
+export async function addMembershipAfterPurchase(orderId: string, membershipEmail: string): Promise<void> {
+  const memberId = await findMemberByEmail(membershipEmail);
+  if (!memberId) return;
+  if (await claimOrderForMember(orderId, memberId)) await afterTicketOrderPaid(orderId);
 }

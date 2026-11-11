@@ -7,6 +7,12 @@ import { paidOrder } from '../support/tickets';
 import { ADMIN_STATE } from '../support/env';
 
 /**
+ * Ticket types for these events go on sale in a month, so the many test
+ * events here don't crowd the member pass's "on sale now" list in other tests
+ */
+const NOT_ON_SALE = { salesStartInDays: 30 };
+
+/**
  * Ticket PDFs with one QR code per person, and letting people in at the door
  * by QR, by VIP card or by finding the ticket.
  */
@@ -184,7 +190,7 @@ test.describe('VIP cards', () => {
   /** A ticketed door event (it has a ticket type) */
   async function ticketedDoorEvent() {
     const event = await doorEvent();
-    await createTicketType(event.id);
+    await createTicketType(event.id, NOT_ON_SALE);
     return event;
   }
   async function memberWithCard() {
@@ -258,7 +264,7 @@ test.describe('Screens', () => {
 
   test('admin creates and downloads a ticket PDF', async ({ page }) => {
     const event = await createEvent({ startsInDays: 7 });
-    await createTicketType(event.id);
+    await createTicketType(event.id, NOT_ON_SALE);
     const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
     await page.goto('/admin/tickets');
     await page.getByLabel('Event').selectOption(event.id);
@@ -272,7 +278,7 @@ test.describe('Screens', () => {
 
   test('door: find a ticket and admit it', async ({ page }) => {
     const event = await doorEvent();
-    await createTicketType(event.id);
+    await createTicketType(event.id, NOT_ON_SALE);
     const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
     await page.goto(`/staff/event-day/${event.id}`);
     await page.getByRole('button', { name: 'Find a ticket' }).click();
@@ -286,7 +292,7 @@ test.describe('Screens', () => {
 
   test('door: the scanner explains how to allow the camera', async ({ page }) => {
     const event = await doorEvent();
-    await createTicketType(event.id);
+    await createTicketType(event.id, NOT_ON_SALE);
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'mediaDevices', {
         value: { getUserMedia: () => Promise.reject(new DOMException('Permission denied', 'NotAllowedError')), enumerateDevices: () => Promise.resolve([]) },
@@ -299,7 +305,7 @@ test.describe('Screens', () => {
 
   test('admin door list shows how many are in', async ({ page }) => {
     const event = await doorEvent();
-    await createTicketType(event.id);
+    await createTicketType(event.id, NOT_ON_SALE);
     const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
     const admin = await adminApi();
     const [code] = await codesFor(admin, order.id);
@@ -314,7 +320,7 @@ test.describe('Screens', () => {
 test.describe('Review fixes', () => {
   async function ticketedDoorEvent() {
     const event = await doorEvent();
-    await createTicketType(event.id);
+    await createTicketType(event.id, NOT_ON_SALE);
     return event;
   }
   async function memberWithCard() {

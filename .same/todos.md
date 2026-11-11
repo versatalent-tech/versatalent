@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 11 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 045 are on production. Tests: `npm run test:e2e` (178 tests, also run on GitHub for every PR)._
+_Last updated 11 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 045 are on production. Tests: `npm run test:e2e` (187 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -18,6 +18,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] GitGuardian incident #38257341: mark it as a false positive on the GitGuardian dashboard (a random test password in the test helpers, not a real secret)
 
 ## 2. Check after the latest deploys
+- [ ] Ticket points for members buying with another email: buy a £3+ test ticket with a different email and your membership email in the new box (or tap your card on an Android phone), check the points arrive and your VIP card finds the ticket at the door, then refund it. Also try "Forgot to add your membership?" on a paid order's page
 - [ ] Ticket PDFs and door scanning (migration 045 on production 11 Nov 2026): in Admin → Tickets make a PDF for a test order and open it; on the event day page scan its QR with a phone (Android and iPhone), tap a VIP card with and without a ticket, and find and admit a ticket by name
 - [ ] New task: CRM → Tasks → New task, give a test talent a to-do (check it reaches their portal and the bell) and link one to a deal (check it shows on the deal page)
 - [ ] Fee approvals (migration 044 on production 9 Nov 2026): as a manager, change a test booking's fee, then approve it from the dashboard reminder or Bookings → Fee approvals
@@ -75,6 +76,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 
 ## Completed
 ### November 2026
+- [x] Members can add their membership when buying tickets (membership email box, or tapping their card on an Android phone) or afterwards on the order page, so the order earns their points and their card finds it at the door
 - [x] Ticket PDFs with one QR code per person (Admin → Tickets → Create PDF), and letting people in on the event day page by QR scan, VIP card (members need a ticket at ticketed events) or Find a ticket (migration 045)
 - [x] Till: "Tap cards on this device" links the customer on Android phones and tablets; Rewards link in the till's header; Logout button readable again
 - [x] Fee approvals: managers' changes to a booking's fee, commission or currency (and the fee on bookings they create) wait for an admin's approval (migration 044)

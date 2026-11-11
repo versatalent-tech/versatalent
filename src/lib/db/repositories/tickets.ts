@@ -140,11 +140,13 @@ export async function createTicketOrder(input: OrderInput): Promise<{ id: string
         ) AS id
       `;
       const id = rows[0].id as string;
-      if (input.member) {
-        // Bought after tapping a membership card: points go to that member, whatever email was used
+      // Bought with a membership card (tapped), or with a membership email given on the form:
+      // points go to that member, whatever email the order uses
+      const memberId = input.member ?? (input.member_email ? await findMemberByEmail(input.member_email) : null);
+      if (memberId) {
         await sql`
           UPDATE ticket_orders SET member_user_id = u.id FROM users u
-          WHERE ticket_orders.id = ${id} AND u.id = ${input.member}::uuid AND u.role IN ('vip', 'artist') AND u.is_active
+          WHERE ticket_orders.id = ${id} AND u.id = ${memberId}::uuid AND u.role IN ('vip', 'artist') AND u.is_active
         `;
       }
       const totals = await sql`SELECT total_cents FROM ticket_orders WHERE id = ${id}`;
@@ -624,4 +626,30 @@ export async function setOrderArrived(
   actor: { userId?: string | null; name?: string | null } = {}
 ): Promise<boolean> {
   return setAllAdmitted(orderId, arrived, { userId: actor.userId ?? null, name: actor.name ?? null });
+}
+
+/**
+ * The member an active membership card belongs to (a card tapped on the
+ * ticket form), or null for unknown, deactivated or blocked cards.
+ */
+export async function findMemberByCard(cardUid: string): Promise<CardMember | null> {
+  const rows = await sql`
+    SELECT user_id FROM nfc_cards
+    WHERE card_uid = ${cardUid.trim().toUpperCase()} AND is_active AND COALESCE(status, 'active') <> 'blocked'
+    LIMIT 1
+  `;
+  return rows[0] ? findCardMember(rows[0].user_id) : null;
+}
+
+/**
+ * Link a paid order with no membership yet to this member; false when the
+ * order already has one (or has earned points), isn't paid, or was claimed first.
+ */
+export async function claimOrderForMember(orderId: string, memberId: string): Promise<boolean> {
+  const rows = await sql`
+    UPDATE ticket_orders SET member_user_id = ${memberId}, updated_at = NOW()
+    WHERE id = ${orderId} AND status = 'paid' AND member_user_id IS NULL AND points_awarded = 0
+    RETURNING id
+  `;
+  return rows.length > 0;
 }
