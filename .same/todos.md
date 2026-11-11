@@ -1,6 +1,6 @@
 # VersaTalent Todos
 
-_Last updated 9 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 044 are on production. Tests: `npm run test:e2e` (155 tests, also run on GitHub for every PR)._
+_Last updated 11 Nov 2026. Loyalty: `docs/LOYALTY_AUDIT_AND_LAUNCH_PLAN.md`. CRM, documents, artist cards, prospecting and KPIs: `docs/CRM_PORTAL_PLAN.md`. Ticket sales: Admin → Tickets. All migrations up to 044 are on production. Tests: `npm run test:e2e` (175 tests, also run on GitHub for every PR)._
 
 ## 1. Decisions waiting (business owner)
 Built but switched off until these are made: Founding Membership sales, rewards, referrals. Ticket sales are built and live, but nothing is on sale until ticket types are added.
@@ -18,6 +18,7 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] GitGuardian incident #38257341: mark it as a false positive on the GitGuardian dashboard (a random test password in the test helpers, not a real secret)
 
 ## 2. Check after the latest deploys
+- [ ] Ticket PDFs and door scanning (migration 045 not yet on production): in Admin → Tickets make a PDF for a test order and open it; on the event day page scan its QR with a phone (Android and iPhone), tap a VIP card with and without a ticket, and find and admit a ticket by name
 - [ ] New task: CRM → Tasks → New task, give a test talent a to-do (check it reaches their portal and the bell) and link one to a deal (check it shows on the deal page)
 - [ ] Fee approvals (migration 044 on production 9 Nov 2026): as a manager, change a test booking's fee, then approve it from the dashboard reminder or Bookings → Fee approvals
 - [ ] Team payouts (migration 043 on production 9 Nov 2026): set each manager's and road manager's rate on Bookings → Commission Rates (Team), check the shares on their talents' bookings, pay one from Payouts → Team, and check "Your earnings" on their dashboard
@@ -55,9 +56,10 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Artist card: choose which profile sections each card shows (e.g. measurements)
 - [ ] Artist card: tap and enquiry counts per talent, shown in their portal
 - [ ] Artist card: "Recently performed at / next appearance" on the profile
-- [ ] Tickets: confirmation email with the order link (needs the email provider)
+- [ ] Tickets: email the confirmation PDF and order link automatically (needs the email provider)
+- [ ] Tickets: show the QR codes on the buyer's order page too
 - [ ] Member accounts (plan in `docs/CRM_PORTAL_PLAN.md` §19): members sign in by email link to see their own points history and check-ins again (needs the email provider)
-- [ ] Tickets: scan a QR code at the door instead of the name list; per-event age limit (18+) on the form
+- [ ] Tickets: per-event age limit (18+) on the form
 - [ ] Tickets: discount codes, member presale (48-hour early access benefit) and member-only ticket types
 - [ ] Tickets: link ticket buyers to CRM contacts / newsletter when they agree to marketing
 - [ ] Notifications by email, for talents who don't switch on phone notifications (needs the email provider); notifications for road managers and the team
@@ -67,8 +69,12 @@ Built but switched off until these are made: Founding Membership sales, rewards,
 - [ ] Sign the macOS NFC Bridge app so staff don't get a security warning: needs an Apple Developer Program membership (not yet, decided 5 Nov). Until then, staff open it the first time with right-click → Open → Open. Android phones and tablets don't need the Bridge (phone tap)
 - [ ] Backups: a longer Neon restore window needs a paid Neon plan (the free plan's 6 hours is already set); staying on free for now
 
+## 5. Housekeeping
+- [ ] Smoke test: `/membership/terms` once logged a React hydration error (#418) around midnight on 11 Nov; it passed on re-run. Find what renders differently on the server and in the browser
+
 ## Completed
 ### November 2026
+- [x] Ticket PDFs with one QR code per person (Admin → Tickets → Create PDF), and letting people in on the event day page by QR scan, VIP card (members need a ticket at ticketed events) or Find a ticket (migration 045)
 - [x] Till: "Tap cards on this device" links the customer on Android phones and tablets; Rewards link in the till's header; Logout button readable again
 - [x] Fee approvals: managers' changes to a booking's fee, commission or currency (and the fee on bookings they create) wait for an admin's approval (migration 044)
 - [x] Tasks on their own: CRM → Tasks → New task, for anyone (team, road managers, talents with a portal login), optionally linked to a client or deal
