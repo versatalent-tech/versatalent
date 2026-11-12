@@ -57,25 +57,33 @@ function mapTemplate(r: any): MessageTemplate {
   };
 }
 
-/** Add the default texts once (a flag stops them coming back after being deleted) */
+/**
+ * Add the default texts once (a flag stops them coming back after being deleted).
+ * The texts and the flag are saved in one transaction, so if anything fails
+ * (e.g. the table isn't there yet) the flag isn't set and the next load tries again.
+ */
 async function ensureDefaultTemplates(): Promise<void> {
-  const claimed = await sql`
-    INSERT INTO programme_settings (key, value) VALUES ('message_templates_seeded', 'true')
-    ON CONFLICT (key) DO NOTHING RETURNING key
-  `;
-  if (claimed.length === 0) return;
-  await sql.transaction(
-    DEFAULT_TEMPLATES.map(
+  const seeded = await sql`SELECT 1 FROM programme_settings WHERE key = 'message_templates_seeded'`;
+  if (seeded.length > 0) return;
+  await sql.transaction([
+    ...DEFAULT_TEMPLATES.map(
       (t, i) => sql`
         INSERT INTO message_templates (stage, name, subject, body, is_default, sort_order)
-        VALUES (${t.stage}, ${t.name}, ${t.subject}, ${t.body}, ${t.is_default}, ${i})
+        SELECT ${t.stage}, ${t.name}, ${t.subject}, ${t.body}, ${t.is_default}, ${i}
+        WHERE NOT EXISTS (SELECT 1 FROM programme_settings WHERE key = 'message_templates_seeded')
       `
-    )
-  );
+    ),
+    sql`
+      INSERT INTO programme_settings (key, value) VALUES ('message_templates_seeded', 'true')
+      ON CONFLICT (key) DO NOTHING
+    `,
+  ]);
 }
 
 export async function listTemplates(): Promise<MessageTemplate[]> {
-  await ensureDefaultTemplates();
+  // Two first loads at once: one transaction wins, the other fails on the
+  // one-default-per-stage index and rolls back. Either way the next query is right.
+  await ensureDefaultTemplates().catch((e) => console.warn('Seeding message templates:', e));
   const rows = await sql`SELECT * FROM message_templates ORDER BY stage, is_default DESC, sort_order, name`;
   return rows.map(mapTemplate);
 }
