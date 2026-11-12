@@ -24,6 +24,7 @@ import { countCardRequests } from '@/lib/db/repositories/membership';
 import { getFoundingSettings, getFoundingStats } from '@/lib/db/repositories/founding';
 import { getCampaignSettings, listCandidates } from '@/lib/db/repositories/outreach';
 import { countReferralsToReview } from '@/lib/db/repositories/referrals';
+import { countQueues } from '@/lib/db/repositories/customer-messages';
 import { listExpiringDocuments } from '@/lib/db/repositories/documents';
 import { EXPIRY_WARNING_DAYS } from '@/lib/documents/types';
 import { STALE_DEAL_DAYS } from '@/lib/crm/types';
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
   try {
     const scope = await getTalentScope(session);
     const bookingScope = await getBookingScope(session);
-    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview, expiringDocs, teamOwed, feeRequests] = await Promise.all([
+    const [summary, crmItems, upcomingBookings, holdsSoon, declined, profileRequests, owed, cards, founding, renewalsDue, referralsToReview, expiringDocs, teamOwed, feeRequests, ticketMessages] = await Promise.all([
       scope === 'all' ? getDashboardSummary() : getScopedDashboardSummary(scope),
       viewer.canUseCrm ? crmAttentionItems(session) : Promise.resolve([]),
       listUpcomingBookings(bookingScope),
@@ -69,6 +70,8 @@ export async function GET(request: NextRequest) {
         : Promise.resolve([]),
       can(session.role, 'payouts.team') ? summariseOwedStaffShares() : Promise.resolve({ count: 0, totals: [] }),
       can(session.role, 'fees.approve') ? countPendingFeeRequests() : Promise.resolve(0),
+      // Before migration 046 runs the tables don't exist: show nothing rather than fail
+      can(session.role, 'venue.manage') ? countQueues().catch(() => null) : Promise.resolve(null),
     ]);
 
     const bookingItems: DashboardAttentionItem[] =
@@ -143,6 +146,33 @@ export async function GET(request: NextRequest) {
         label: `${plural(renewalsDue, 'Founding Membership')} ending within 30 days`,
         detail: 'Send the renewal reminder from Member outreach, then mark it sent.',
         href: '/admin/outreach',
+      });
+    }
+    if (ticketMessages && ticketMessages.confirmation > 0) {
+      bookingItems.push({
+        key: 'ticket-confirmations',
+        severity: 'medium',
+        label: `${plural(ticketMessages.confirmation, 'ticket buyer')} waiting for their tickets`,
+        detail: 'Make the PDF, send it with the confirmation message, then mark it sent.',
+        href: '/admin/messages',
+      });
+    }
+    if (ticketMessages && ticketMessages.reminder > 0) {
+      bookingItems.push({
+        key: 'ticket-reminders',
+        severity: 'low',
+        label: `${plural(ticketMessages.reminder, 'ticket buyer')} to remind about an event in the next 3 days`,
+        detail: 'Send the reminder from Customer messages.',
+        href: '/admin/messages',
+      });
+    }
+    if (ticketMessages && ticketMessages.follow_up > 0) {
+      bookingItems.push({
+        key: 'ticket-follow-ups',
+        severity: 'low',
+        label: `${plural(ticketMessages.follow_up, 'ticket buyer')} to follow up after an event`,
+        detail: 'Thank them for coming (or let them know you missed them) from Customer messages.',
+        href: '/admin/messages',
       });
     }
     if (referralsToReview > 0) {

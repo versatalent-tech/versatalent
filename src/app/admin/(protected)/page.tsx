@@ -32,6 +32,7 @@ import {
   Users,
   Crown,
   Ticket,
+  MessageSquare,
 } from "lucide-react";
 import { AdminAuthGuard } from "@/components/auth/AdminAuthGuard";
 import { MyTasks } from "@/components/tasks/MyTasks";
@@ -86,6 +87,7 @@ const SECTIONS = [
     title: "Sales",
     links: [
       { title: "Tickets", description: "Online ticket sales, buyers and door lists", icon: Ticket, href: "/admin/tickets" },
+      { title: "Customer messages", description: "Ticket confirmations, reminders, follow-ups and promo templates", icon: MessageSquare, href: "/admin/messages" },
       { title: "Products & stock", description: "Till catalogue and inventory", icon: Package, href: "/admin/pos/products" },
       { title: "Orders", description: "Payments, refunds and history", icon: Receipt, href: "/admin/pos/orders" },
       { title: "SumUp card payments", description: "Account and card readers", icon: CreditCard, href: "/admin/pos/sumup" },

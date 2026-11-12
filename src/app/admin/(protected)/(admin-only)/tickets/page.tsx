@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Copy, Download, ExternalLink, FileDown, Instagram, Loader2, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { Copy, Download, ExternalLink, FileDown, Instagram, Loader2, MessageSquare, Pencil, Plus, Printer, Search, Trash2 } from "lucide-react";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 import { Button } from "@/components/ui/button";
@@ -355,6 +355,11 @@ function TicketPdfButtons({ o, onMade }: { o: AdminTicketOrder; onMade: () => vo
   }
   return (
     <div className="flex flex-wrap gap-1">
+      <Link href="/admin/messages">
+        <Button size="sm" variant="outline" title="The confirmation message for this buyer, ready to send with the PDF">
+          <MessageSquare className="mr-1 h-4 w-4" /> Message
+        </Button>
+      </Link>
       <Button size="sm" variant="outline" disabled={busy} onClick={() => run("GET")}>
         {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileDown className="mr-1 h-4 w-4" />}
         Download PDF
