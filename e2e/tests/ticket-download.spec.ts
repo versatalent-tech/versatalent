@@ -34,7 +34,7 @@ test.describe('Buyer ticket download', () => {
     const pdf = await PDFDocument.load(await response.body());
     expect(pdf.getPageCount()).toBe(2);
     const [stored] = await sql`SELECT pdf_key FROM ticket_orders WHERE id = ${order.id}`;
-    expect(stored.pdf_key).toBe(`tickets/${order.id}.pdf`);
+    expect(stored.pdf_key).toBe(`tickets/${order.id}-v2.pdf`);
   });
 
   test('wrong link or unpaid order is refused', async () => {
@@ -84,7 +84,7 @@ test.describe('Buyer ticket download', () => {
     const buyer = await anonymousApi();
     const url = pdfUrl(order.id, await tokenOf(order.id));
     expect((await buyer.get(url)).status()).toBe(200);
-    await fs.rm(path.join(process.cwd(), '.private-uploads', 'documents', `${order.id}.pdf`), { force: true });
+    await fs.rm(path.join(process.cwd(), '.private-uploads', 'documents', `${order.id}-v2.pdf`), { force: true });
     const again = await buyer.get(url);
     expect(again.status(), await again.text()).toBe(200);
     expect((await PDFDocument.load(await again.body())).getPageCount()).toBe(1);
@@ -101,6 +101,48 @@ test.describe('Buyer ticket download', () => {
     const download = page.waitForEvent('download');
     await link.click();
     expect((await download).suggestedFilename()).toMatch(new RegExp(`${order.reference}\\.pdf$`));
+  });
+
+  test('a failed download shows a message on the page', async ({ page }) => {
+    const event = await createEvent({ startsInDays: 7 });
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }]);
+    await page.goto(`/tickets/order/${order.id}?k=${await tokenOf(order.id)}`);
+    const link = page.getByRole('link', { name: 'Download your tickets (PDF)' });
+    await expect(link).toBeVisible();
+    // Refunded after the page loaded
+    await sql`UPDATE ticket_orders SET status = 'refunded' WHERE id = ${order.id}`;
+    await link.click();
+    await expect(page.getByText('Your tickets are ready once payment is confirmed')).toBeVisible();
+  });
+
+  test('made again after the event is edited or the design changes, same QR codes', async () => {
+    const event = await createEvent({ startsInDays: 7 });
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 2 }]);
+    const buyer = await anonymousApi();
+    const url = pdfUrl(order.id, await tokenOf(order.id));
+    const madeAt = async () => (await sql`SELECT pdf_created_at FROM ticket_orders WHERE id = ${order.id}`)[0].pdf_created_at as Date;
+
+    expect((await buyer.get(url)).status()).toBe(200);
+    const codes = await codesOf(order.id);
+    const first = await madeAt();
+
+    // The event's time or venue changed after the PDF was made
+    await sql`UPDATE events SET updated_at = NOW() + INTERVAL '1 second' WHERE id = ${event.id}`;
+    expect((await buyer.get(url)).status()).toBe(200);
+    const second = await madeAt();
+    expect(second.getTime()).toBeGreaterThan(first.getTime());
+
+    // A PDF stored on the old design (before the template)
+    await sql`UPDATE ticket_orders SET pdf_key = ${`tickets/${order.id}.pdf`} WHERE id = ${order.id}`;
+    expect((await buyer.get(url)).status()).toBe(200);
+    const [row] = await sql`SELECT pdf_key, pdf_created_at FROM ticket_orders WHERE id = ${order.id}`;
+    expect(row.pdf_key).toBe(`tickets/${order.id}-v2.pdf`);
+    expect(row.pdf_created_at.getTime()).toBeGreaterThan(second.getTime());
+
+    // The admin's Download gets the fresh one too, and the codes never change
+    const admin = await adminApi();
+    expect((await admin.get(`/api/admin/tickets/orders/${order.id}/pdf`)).status()).toBe(200);
+    expect(await codesOf(order.id)).toEqual(codes);
   });
 
   test('then shows in the confirmation queue with a PDF', async () => {

@@ -31,3 +31,9 @@ Buyers shouldn't have to wait for us to email their tickets. As soon as they've 
 
 ## Left to the builder
 The button's exact placement and styling on the order page, in keeping with the current gold buttons.
+
+## Addendum: ticket design and keeping PDFs current
+- The PDF uses the VersaTalent ticket design (`src/lib/tickets/template/ticket-template.pdf`), supplied on 2026-11-18. The template's form fields mark where each detail goes. The two LOGO boxes get the V logo: dark on the light header, white on the black panel. The QR code goes in the reserved box, with its code underneath, one page per ticket.
+- Doors open shows the event's start time, because events have no separate doors time.
+- `scripts/build-ticket-assets.mjs` turns the template and logo into `template/assets.ts`, so the functions don't read files at runtime. Run it after changing either.
+- A stored PDF is made again when the event was edited after it was made, or when it's on an older design (`DESIGN_VERSION` in `order-pdf.ts`, which goes into the stored file name). The QR codes never change.
