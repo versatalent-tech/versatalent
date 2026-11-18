@@ -90,6 +90,19 @@ test.describe('Buyer ticket download', () => {
     expect((await PDFDocument.load(await again.body())).getPageCount()).toBe(1);
   });
 
+  test('order page shows the download and the email message', async ({ page }) => {
+    const event = await createEvent({ startsInDays: 7 });
+    const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }]);
+    const token = await tokenOf(order.id);
+    await page.goto(`/tickets/order/${order.id}?k=${token}`);
+    const link = page.getByRole('link', { name: 'Download your tickets (PDF)' });
+    await expect(link).toHaveAttribute('href', pdfUrl(order.id, token));
+    await expect(page.getByText(`We'll also email your tickets to ${order.email} within 24 hours`)).toBeVisible();
+    const download = page.waitForEvent('download');
+    await link.click();
+    expect((await download).suggestedFilename()).toMatch(new RegExp(`${order.reference}\\.pdf$`));
+  });
+
   test('then shows in the confirmation queue with a PDF', async () => {
     const event = await createEvent({ startsInDays: 7 });
     const order = await paidOrder(event.id, [{ name: 'Standard', quantity: 1 }]);

@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { CheckCircle2, Clock, Loader2, Star, Ticket, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Download, Loader2, Star, Ticket, XCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { formatPrice, type PublicOrder } from "@/lib/tickets/types";
@@ -104,9 +104,17 @@ function OrderContent() {
       <div className="space-y-6 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h1 className="text-3xl font-bold">You&apos;re going, {order.first_name}!</h1>
-        <p className="text-gray-600">
-          {order.quantity === 1 ? "Your ticket is" : `Your ${order.quantity} tickets are`} booked. At the door, give your name or show this
-          page. Save or screenshot it now: this link is private to you.
+        <p className="text-gray-600">{order.quantity === 1 ? "Your ticket is" : `Your ${order.quantity} tickets are`} booked.</p>
+        <a
+          href={`/api/tickets/orders/${encodeURIComponent(order.id)}/pdf?k=${encodeURIComponent(token)}`}
+          download
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 font-semibold text-black hover:bg-gold/90"
+        >
+          <Download className="h-5 w-5" /> Download your tickets (PDF)
+        </a>
+        <p className="text-sm text-gray-600">
+          We&apos;ll also email your tickets to <span className="font-medium text-gray-900">{order.email}</span> within 24 hours. Keep this
+          page or the PDF handy: we scan the QR code at the door.
         </p>
         {summary}
         {order.points_awarded > 0 && (
