@@ -38,7 +38,7 @@ test.describe('Ticket PDFs', () => {
     expect(pdf.getPageCount()).toBe(3);
     expect(pdf.getTitle()).toContain(order.reference);
     const [stored] = await sql`SELECT pdf_key, pdf_created_at FROM ticket_orders WHERE id = ${order.id}`;
-    expect(stored.pdf_key).toBe(`tickets/${order.id}.pdf`);
+    expect(stored.pdf_key).toBe(`tickets/${order.id}-v2.pdf`);
     expect(stored.pdf_created_at).not.toBeNull();
   });
 

@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { CheckCircle2, Clock, Loader2, Star, Ticket, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Download, Loader2, Star, Ticket, XCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { formatPrice, type PublicOrder } from "@/lib/tickets/types";
@@ -104,9 +104,11 @@ function OrderContent() {
       <div className="space-y-6 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h1 className="text-3xl font-bold">You&apos;re going, {order.first_name}!</h1>
-        <p className="text-gray-600">
-          {order.quantity === 1 ? "Your ticket is" : `Your ${order.quantity} tickets are`} booked. At the door, give your name or show this
-          page. Save or screenshot it now: this link is private to you.
+        <p className="text-gray-600">{order.quantity === 1 ? "Your ticket is" : `Your ${order.quantity} tickets are`} booked.</p>
+        <DownloadTickets orderId={order.id} token={token} />
+        <p className="text-sm text-gray-600">
+          We&apos;ll also email your tickets to <span className="font-medium text-gray-900">{order.email}</span> within 24 hours. Keep this
+          page or the PDF handy: we scan the QR code at the door.
         </p>
         {summary}
         {order.points_awarded > 0 && (
@@ -181,6 +183,61 @@ export default function TicketOrderPage() {
         </div>
       </section>
     </MainLayout>
+  );
+}
+
+/**
+ * Downloads the PDF tickets. Fetched first so a failure shows a message
+ * instead of the browser saving the error as a file.
+ */
+function DownloadTickets({ orderId, token }: { orderId: string; token: string }) {
+  const href = `/api/tickets/orders/${encodeURIComponent(orderId)}/pdf?k=${encodeURIComponent(token)}`;
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const download = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(href, { cache: "no-store" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "We couldn't make your tickets. Please try again.");
+      }
+      const name = /filename="([^"]+)"/.exec(response.headers.get("Content-Disposition") ?? "")?.[1] ?? "VersaTalent-tickets.pdf";
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't make your tickets. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <a
+        href={href}
+        onClick={download}
+        aria-busy={busy}
+        className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 font-semibold text-black hover:bg-gold/90"
+      >
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />} Download your tickets (PDF)
+      </a>
+      {error && (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -81,7 +81,12 @@ export interface PdfOrder {
   event_title: string;
   event_starts_at: string | null;
   venue: string | null;
+  venue_name: string | null;
+  venue_city: string | null;
   pdf_key: string | null;
+  pdf_created_at: string | null;
+  /** When the event was last edited (a PDF made before then may show old details) */
+  event_updated_at: string | null;
 }
 
 /** "Venue name, City" from the event's venue */
@@ -91,10 +96,15 @@ function venueLine(venue: any): string | null {
   return parts.length > 0 ? parts.join(', ') : null;
 }
 
+function venuePart(venue: any, key: 'name' | 'city'): string | null {
+  const value = venue && typeof venue === 'object' ? venue[key] : null;
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
+
 export async function getPdfOrder(orderId: string): Promise<PdfOrder | null> {
   const rows = await sql`
     SELECT o.id, o.reference, o.status, o.first_name, o.last_name, o.pdf_key,
-      COALESCE(e.title, o.event_title) AS event_title, e.start_time, e.venue
+      COALESCE(e.title, o.event_title) AS event_title, e.start_time, e.venue, e.updated_at AS event_updated_at, o.pdf_created_at
     FROM ticket_orders o LEFT JOIN events e ON e.id = o.event_id
     WHERE o.id = ${orderId}
   `;
@@ -108,7 +118,11 @@ export async function getPdfOrder(orderId: string): Promise<PdfOrder | null> {
     event_title: r.event_title,
     event_starts_at: r.start_time ? new Date(r.start_time).toISOString() : null,
     venue: venueLine(r.venue),
+    venue_name: venuePart(r.venue, 'name'),
+    venue_city: venuePart(r.venue, 'city'),
     pdf_key: r.pdf_key ?? null,
+    pdf_created_at: r.pdf_created_at ? new Date(r.pdf_created_at).toISOString() : null,
+    event_updated_at: r.event_updated_at ? new Date(r.event_updated_at).toISOString() : null,
   };
 }
 
