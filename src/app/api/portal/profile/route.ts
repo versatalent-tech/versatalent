@@ -5,6 +5,7 @@ import { profileChangeSchema } from '@/lib/portal/schemas';
 import { getPortalProfile, submitProfileChange, withdrawProfileChange } from '@/lib/db/repositories/portal';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import type { ProfileFields } from '@/lib/portal/types';
+import { notifyProfileSubmitted } from '@/lib/notifications/notify';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
     if (Object.keys(changes).length === 0) return ApiErrors.BadRequest('Nothing has changed');
 
     await submitProfileChange(auth.talent, changes, body.data.note ?? null);
+    await notifyProfileSubmitted(auth.talent.talentName, Object.keys(changes));
     return successResponse(await getPortalProfile(auth.talent.talentId), 'Sent for approval', 201);
   } catch (error) {
     console.error('Portal profile submit error:', error);

@@ -4,6 +4,7 @@ import { requireTeamPermission } from '@/lib/middleware/auth';
 import { parseBody } from '@/lib/crm/route-helpers';
 import { decideFeeRequest } from '@/lib/db/repositories/fee-requests';
 import { logAudit } from '@/lib/db/repositories/audit-log';
+import { notifyFeeRequestDecided } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       before,
       after: { fee_cents: r.fee_cents, commission_percent: r.commission_percent, currency: r.currency, note: r.decision_note },
     });
+    await notifyFeeRequestDecided(r.id, body.data.decision === 'approve', r.decision_note, actor.userId);
     return successResponse(r, body.data.decision === 'approve' ? 'Fee change approved' : 'Fee change not approved');
   } catch (error) {
     console.error('Error deciding fee request:', error);

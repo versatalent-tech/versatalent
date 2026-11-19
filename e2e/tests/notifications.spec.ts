@@ -193,12 +193,12 @@ test.describe('Triggers', () => {
     expect(await notificationsFor(second.id)).toHaveLength(1);
   });
 
-  test("a task for a road manager doesn't notify", async () => {
+  test('a task for a road manager notifies them on the team bell (see team-notifications.spec.ts)', async () => {
     const roadManager = await createTeamUser('road_manager');
     const admin = await adminApi();
     const created = await admin.post('/api/crm/activities', { data: { type: 'task', subject: uniq('Van'), due_at: dueTomorrow(), owner_user_id: roadManager.id } });
     expect(created.status(), await created.text()).toBe(201);
-    expect(await notificationsFor(roadManager.id)).toHaveLength(0);
+    expect(await notificationsFor(roadManager.id)).toEqual([expect.objectContaining({ kind: 'task_assigned', link: '/admin' })]);
   });
 });
 

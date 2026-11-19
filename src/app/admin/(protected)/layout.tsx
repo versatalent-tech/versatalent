@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getTeamSession } from '@/lib/middleware/auth';
+import { TeamNotificationBell } from '@/components/admin/TeamNotificationBell';
 
 /**
  * Server-side guard for every admin page except /admin/login: any team role
@@ -21,5 +22,10 @@ export default async function ProtectedAdminLayout({
     redirect('/admin/login');
   }
 
-  return children;
+  return (
+    <>
+      {children}
+      <TeamNotificationBell />
+    </>
+  );
 }

@@ -4,6 +4,7 @@ import { parseBody } from '@/lib/crm/route-helpers';
 import { respondSchema } from '@/lib/portal/schemas';
 import { getTalentBooking, respondToBooking } from '@/lib/db/repositories/portal';
 import { logAudit } from '@/lib/db/repositories/audit-log';
+import { notifyBookingResponse } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     await logAudit({ userId: auth.talent.userId, name: auth.talent.talentName }, `booking_${body.data.response}`, 'booking', id, {
       after: { note: body.data.note ?? null },
     });
+    await notifyBookingResponse(auth.talent, id, body.data.response!, body.data.note ?? null);
     return successResponse(await getTalentBooking(auth.talent.talentId, id));
   } catch (error) {
     console.error('Portal respond error:', error);

@@ -8,7 +8,7 @@ import { api } from "@/components/crm/shared";
 
 const POLL_MS = 60_000;
 
-function timeAgo(iso: string): string {
+export function timeAgo(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes} min ago`;
@@ -18,8 +18,27 @@ function timeAgo(iso: string): string {
   return days === 1 ? "yesterday" : `${days} days ago`;
 }
 
-/** Portal header bell: unread count, and the latest notifications when opened (which marks them read) */
-export function NotificationBell() {
+interface BellProps {
+  /** GET for the list; POST `${endpoint}/read` marks them read */
+  endpoint?: string;
+  /** Open the panel above the button (for a bell at the bottom of the screen) */
+  openUp?: boolean;
+  /** Link to the full list, shown under the panel */
+  allHref?: string;
+  buttonClassName?: string;
+}
+
+/**
+ * Notification bell: unread count, and the latest notifications when opened
+ * (which marks them read). The portal's header bell by default; the team's
+ * uses /api/admin/notifications.
+ */
+export function NotificationBell({
+  endpoint = "/api/portal/notifications",
+  openUp = false,
+  allHref,
+  buttonClassName = "relative flex items-center p-1 text-gray-300 hover:text-gold",
+}: BellProps = {}) {
   const [items, setItems] = useState<PortalNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
@@ -27,13 +46,13 @@ export function NotificationBell() {
 
   const load = useCallback(async () => {
     try {
-      const data = await api<{ items: PortalNotification[]; unread: number }>("/api/portal/notifications");
+      const data = await api<{ items: PortalNotification[]; unread: number }>(endpoint);
       setItems(data.items);
       setUnread(data.unread);
     } catch {
       // The bell stays as it was; the next poll tries again
     }
-  }, []);
+  }, [endpoint]);
 
   useEffect(() => {
     load();
@@ -58,7 +77,7 @@ export function NotificationBell() {
     setOpen(opening);
     if (opening && unread > 0) {
       setUnread(0);
-      await api("/api/portal/notifications/read", { method: "POST", json: {} }).catch(() => undefined);
+      await api(`${endpoint}/read`, { method: "POST", json: {} }).catch(() => undefined);
     }
   };
 
@@ -69,7 +88,7 @@ export function NotificationBell() {
         onClick={toggle}
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
         aria-expanded={open}
-        className="relative flex items-center p-1 text-gray-300 hover:text-gold"
+        className={buttonClassName}
       >
         <Bell className="h-5 w-5" />
         {unread > 0 && (
@@ -79,7 +98,7 @@ export function NotificationBell() {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-gray-200 bg-white text-black shadow-lg">
+        <div className={`absolute right-0 z-50 ${openUp ? "bottom-full mb-2" : "mt-2"} w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-gray-200 bg-white text-black shadow-lg`}>
           <p className="border-b border-gray-100 px-4 py-2 text-sm font-semibold">Notifications</p>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-gray-500">Nothing yet. We’ll let you know when something changes.</p>
@@ -109,6 +128,15 @@ export function NotificationBell() {
                 );
               })}
             </ul>
+          )}
+          {allHref && (
+            <Link
+              href={allHref}
+              onClick={() => setOpen(false)}
+              className="block border-t border-gray-100 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              See all notifications
+            </Link>
           )}
         </div>
       )}

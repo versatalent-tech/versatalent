@@ -50,7 +50,7 @@ export async function createMember(opts: { tier?: 'silver' | 'gold' | 'black' } 
 }
 
 /** A team login (manager, road manager or till staff) with a known password */
-export async function createTeamUser(role: 'manager' | 'road_manager' | 'staff', talentIds: string[] = []) {
+export async function createTeamUser(role: 'admin' | 'manager' | 'road_manager' | 'staff', talentIds: string[] = []) {
   const id = randomUUID();
   const email = `${uniq(role.replace('_', '-'))}@example.com`;
   const password = `E2e-${randomUUID()}`;
