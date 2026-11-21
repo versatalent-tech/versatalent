@@ -8,7 +8,14 @@ export type NotificationKind =
   | 'booking_reminder'
   | 'profile_reviewed'
   | 'document_shared'
-  | 'payout_paid';
+  | 'payout_paid'
+  // Team (admins, managers, road managers)
+  | 'booking_response'
+  | 'time_off_added'
+  | 'profile_submitted'
+  | 'fee_request_waiting'
+  | 'fee_request_decided'
+  | 'enquiry_received';
 
 /** What to tell someone; dedupeKey stops the same one being saved twice */
 export interface NotificationMessage {
@@ -19,7 +26,7 @@ export interface NotificationMessage {
   dedupeKey?: string;
 }
 
-/** One notification as the portal bell shows it */
+/** One notification as a bell (portal or team) shows it */
 export interface PortalNotification {
   id: string;
   kind: NotificationKind;

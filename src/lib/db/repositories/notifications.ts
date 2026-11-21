@@ -127,3 +127,59 @@ export async function sharedBookingTalentId(bookingId: string): Promise<string |
   const rows = await sql`SELECT talent_id FROM bookings WHERE id = ${bookingId} AND shared_with_talent`;
   return rows[0]?.talent_id ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// Team recipients (admins, managers, road managers)
+// ---------------------------------------------------------------------------
+
+export type TeamRecipient = { id: string; role: 'admin' | 'manager' | 'road_manager' };
+
+const mapRecipients = (rows: any[]): TeamRecipient[] => rows.map((r) => ({ id: r.id, role: r.role }));
+
+/** Active admin accounts (the env-configured admin has no row, so gets none) */
+export async function activeAdmins(): Promise<TeamRecipient[]> {
+  return mapRecipients(await sql`SELECT id, role FROM users WHERE role = 'admin' AND is_active ORDER BY created_at`);
+}
+
+/** The active managers and/or road managers assigned to a talent */
+export async function talentTeam(talentId: string, roles: ('manager' | 'road_manager')[]): Promise<TeamRecipient[]> {
+  if (roles.length === 0) return [];
+  return mapRecipients(await sql`
+    SELECT u.id, u.role FROM talent_assignments ta
+    JOIN users u ON u.id = ta.user_id
+    WHERE ta.talent_id = ${talentId} AND u.is_active AND u.role = ANY(${roles}::text[])
+    ORDER BY u.created_at
+  `);
+}
+
+/** Of these users, the active team members, with their role */
+export async function teamRecipients(userIds: string[]): Promise<TeamRecipient[]> {
+  if (userIds.length === 0) return [];
+  return mapRecipients(await sql`
+    SELECT id, role FROM users WHERE id = ANY(${userIds}::uuid[]) AND is_active AND role IN ('admin', 'manager', 'road_manager')
+  `);
+}
+
+/** A fee request's booking, talent and who asked, for its notifications */
+export async function feeRequestContext(
+  requestId: string
+): Promise<{ title: string; talentId: string; talentName: string; requestedBy: string | null; requestedByName: string | null } | null> {
+  const rows = await sql`
+    SELECT b.title, t.id AS talent_id, t.name AS talent_name, r.requested_by, u.name AS requested_by_name
+    FROM booking_fee_requests r
+    JOIN bookings b ON b.id = r.booking_id
+    JOIN talents t ON t.id = b.talent_id
+    LEFT JOIN users u ON u.id = r.requested_by
+    WHERE r.id = ${requestId}
+  `;
+  const r = rows[0];
+  return r
+    ? { title: r.title, talentId: r.talent_id, talentName: r.talent_name, requestedBy: r.requested_by, requestedByName: r.requested_by_name }
+    : null;
+}
+
+/** A booking's title and start, for the team's "talent answered" message */
+export async function bookingBasics(bookingId: string): Promise<{ title: string; starts_at: string } | null> {
+  const rows = await sql`SELECT title, starts_at FROM bookings WHERE id = ${bookingId}`;
+  return rows[0] ? { title: rows[0].title, starts_at: new Date(rows[0].starts_at).toISOString() } : null;
+}

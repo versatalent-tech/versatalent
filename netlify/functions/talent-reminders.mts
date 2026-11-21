@@ -1,5 +1,5 @@
 /**
- * Scheduled function: talents' reminders the day before (bookings at 10:00,
+ * Scheduled function: reminders the day before for talents and the team (bookings at 10:00,
  * tasks at 09:00, UK time) and deleting notifications older than 90 days.
  * Runs hourly so the UK hours stay right when the clocks change.
  */

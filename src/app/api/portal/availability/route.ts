@@ -4,6 +4,7 @@ import { parseBody } from '@/lib/crm/route-helpers';
 import { portalAvailabilitySchema } from '@/lib/portal/schemas';
 import { addTalentAvailability, listTalentAvailability } from '@/lib/db/repositories/portal';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
+import { notifyTimeOff } from '@/lib/notifications/notify';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +27,14 @@ export async function POST(request: NextRequest) {
   const body = await parseBody(request, portalAvailabilitySchema);
   if ('response' in body) return body.response;
   try {
-    await addTalentAvailability(auth.talent, {
+    const days = {
       starts_on: body.data.starts_on!,
       ends_on: body.data.ends_on!,
       kind: body.data.kind ?? 'unavailable',
       note: body.data.note ?? null,
-    });
+    } as const;
+    await addTalentAvailability(auth.talent, days);
+    await notifyTimeOff(auth.talent, days);
     return successResponse(await listTalentAvailability(auth.talent.talentId), 'Saved', 201);
   } catch (error) {
     console.error('Portal availability error:', error);

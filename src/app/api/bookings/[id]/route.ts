@@ -10,7 +10,7 @@ import { logAudit } from '@/lib/db/repositories/audit-log';
 import { can, needsFeeApproval } from '@/lib/auth/permissions';
 import { requestFeeChange } from '@/lib/db/repositories/fee-requests';
 import type { FeeMoney } from '@/lib/bookings/types';
-import { notifyBookingChanges } from '@/lib/notifications/notify';
+import { notifyBookingChanges, notifyFeeRequestWaiting } from '@/lib/notifications/notify';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { isValidUUID } from '@/lib/utils/validation';
 
@@ -101,8 +101,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       before: { status: before.status, starts_at: before.starts_at, fee_cents: before.money?.fee_cents ?? null },
       after: after && { status: after.status, starts_at: after.starts_at, fee_cents: after.money?.fee_cents ?? null },
     });
-    await notifyBookingChanges(before, after);
+    await notifyBookingChanges(before, after, ctx.actor.userId);
     const feeRequest = heldMoney ? await requestFeeChange(id, ctx.actor.userId, heldMoney) : null;
+    if (feeRequest) await notifyFeeRequestWaiting(feeRequest.id, ctx.actor.userId);
     return successResponse(
       { ...(await getBooking(ctx.scope, ctx.withMoney, id)), ...(heldMoney ? { fee_request: feeRequest } : {}) },
       feeRequest ? 'Saved. The fee change is waiting for approval.' : 'Booking updated'

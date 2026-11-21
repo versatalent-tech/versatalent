@@ -6,6 +6,7 @@ import { ApiErrors, successResponse } from '@/lib/utils/api-response';
 import { HONEYPOT_FIELD } from '@/lib/crm/types';
 import { getTalentById } from '@/lib/db/repositories/talents';
 import { isValidUUID } from '@/lib/utils/validation';
+import { notifyEnquiry } from '@/lib/notifications/notify';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       if (key !== 'form-name' && key !== HONEYPOT_FIELD && value.trim()) payload[key] = value.trim();
     }
 
-    await createEnquiry({
+    const enquiry = {
       form,
       name,
       email,
@@ -90,7 +91,9 @@ export async function POST(request: NextRequest) {
       talent_id: talent?.id ?? null,
       source: form === 'booking' && fields.source === 'card_tap' ? 'card_tap' : 'website',
       marketing_consent: form === 'booking' && fields.marketingConsent === 'yes',
-    });
+    } satisfies Parameters<typeof createEnquiry>[0];
+    await createEnquiry(enquiry);
+    await notifyEnquiry(enquiry);
 
     return successResponse(null, 'Thanks, we got your message', 201);
   } catch (error) {

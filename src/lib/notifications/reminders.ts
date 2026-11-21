@@ -2,7 +2,7 @@
  * Hourly job (netlify/functions/talent-reminders.mts): reminders the day
  * before, in UK time, and clean-up of old notifications.
  * - 10:00: shared, confirmed bookings starting tomorrow
- * - 09:00: open tasks due tomorrow, for talents
+ * - 09:00: open tasks due tomorrow, for talents and team members
  * The hour after is a catch-up (a run that failed or timed out); each
  * reminder has a dedupe key, so later runs only send what's missing.
  * Relative imports only.
@@ -11,7 +11,8 @@ import { sql } from '../db/client';
 import { deleteOldNotifications } from '../db/repositories/notifications';
 import { AGENCY_TIME_ZONE } from '../bookings/types';
 import { bookingReminder, taskDue } from './messages';
-import { notify, notifyTalent } from './notify';
+import { teamTaskDue } from './team-messages';
+import { notify, notifyTalent, teamTaskLink } from './notify';
 
 const BOOKING_HOURS = [10, 11];
 const TASK_HOURS = [9, 10];
@@ -64,12 +65,15 @@ export async function runReminders(now = new Date()): Promise<{ bookings: number
 
   if (TASK_HOURS.includes(hour)) {
     const rows = await sql`
-      SELECT a.id, a.subject, a.owner_user_id FROM activities a
-      JOIN users u ON u.id = a.owner_user_id AND u.role = 'artist' AND u.talent_id IS NOT NULL AND u.is_active
+      SELECT a.id, a.subject, a.owner_user_id, u.role FROM activities a
+      JOIN users u ON u.id = a.owner_user_id AND u.is_active
+        AND ((u.role = 'artist' AND u.talent_id IS NOT NULL) OR u.role IN ('admin', 'manager', 'road_manager'))
       WHERE a.type = 'task' AND a.completed_at IS NULL
         AND (a.due_at AT TIME ZONE ${AGENCY_TIME_ZONE})::date = ${tomorrow}::date
     `;
-    await inBatches(rows, (t: any) => notify([t.owner_user_id], taskDue(t, tomorrow)));
+    await inBatches(rows, (t: any) =>
+      notify([t.owner_user_id], t.role === 'artist' ? taskDue(t, tomorrow) : teamTaskDue(t, tomorrow, teamTaskLink(t.role)))
+    );
     tasks = rows.length;
   }
 
