@@ -1,16 +1,8 @@
-import { z } from 'zod';
 import { requireTalent } from '@/lib/auth/talent-auth';
 import { parseBody } from '@/lib/crm/route-helpers';
 import { deletePushDevice, savePushDevice } from '@/lib/db/repositories/notifications';
-import { isPushEndpoint } from '@/lib/notifications/push';
+import { pushDeleteSchema as deleteSchema, pushSaveSchema as saveSchema } from '@/lib/notifications/push-schemas';
 import { ApiErrors, successResponse } from '@/lib/utils/api-response';
-
-const endpoint = z.string().max(1000).refine(isPushEndpoint, 'This browser’s push service isn’t supported');
-const saveSchema = z.object({
-  endpoint,
-  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
-});
-const deleteSchema = z.object({ endpoint });
 
 /** POST /api/portal/push - switch on phone notifications for this device */
 export async function POST(request: Request) {

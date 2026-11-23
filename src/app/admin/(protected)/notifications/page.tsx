@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SimpleMainLayout } from "@/components/layout/SimpleMainLayout";
 import { AdminBackLink } from "@/components/admin/AdminBackLink";
 import { timeAgo } from "@/components/portal/NotificationBell";
+import { PushToggle } from "@/components/portal/PushToggle";
 import { api, errorMessage } from "@/components/crm/shared";
 import type { PortalNotification } from "@/lib/notifications/types";
 
@@ -61,6 +62,7 @@ export default function TeamNotificationsPage() {
 
       <div className="min-h-[50vh] bg-gray-50 py-8">
         <div className="container mx-auto max-w-3xl space-y-4 px-4">
+          <PushToggle area="team" />
           {error && <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">{unread > 0 ? `${unread} unread` : "All read"}</p>
