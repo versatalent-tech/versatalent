@@ -1,6 +1,13 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTeamSession } from '@/lib/middleware/auth';
 import { TeamNotificationBell } from '@/components/admin/TeamNotificationBell';
+
+// Lets team members add the admin to their Home Screen (needed for iPhone notifications)
+export const metadata: Metadata = {
+  manifest: '/admin.webmanifest',
+  appleWebApp: { capable: true, title: 'VersaTalent Team', statusBarStyle: 'black' },
+};
 
 /**
  * Server-side guard for every admin page except /admin/login: any team role

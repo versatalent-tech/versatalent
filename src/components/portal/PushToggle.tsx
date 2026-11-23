@@ -12,7 +12,25 @@ import { api, errorMessage } from "@/components/crm/shared";
  */
 type PushState = "loading" | "unavailable" | "home-screen" | "off" | "on" | "blocked";
 
-const SW_URL = "/portal-sw.js";
+/** Where each area's devices are saved, its service worker, and what the card says */
+const AREAS = {
+  portal: {
+    api: "/api/portal/push",
+    worker: "/portal-sw.js",
+    scope: "/portal",
+    what: "New bookings, changes, reminders, to-dos and payments.",
+    appName: "VersaTalent",
+  },
+  team: {
+    api: "/api/admin/push",
+    worker: "/admin-sw.js",
+    scope: "/admin",
+    what: "Tasks, bookings for your talents, and anything waiting for you.",
+    appName: "VersaTalent Team",
+  },
+} as const;
+
+export type PushArea = keyof typeof AREAS;
 
 function isAppleMobile() {
   const ua = navigator.userAgent;
@@ -28,33 +46,34 @@ function keyBytes(base64url: string): Uint8Array {
   return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 }
 
-async function saveDevice(subscription: PushSubscription) {
+async function saveDevice(apiPath: string, subscription: PushSubscription) {
   const json = subscription.toJSON();
-  await api("/api/portal/push", { method: "POST", json: { endpoint: json.endpoint, keys: json.keys } });
+  await api(apiPath, { method: "POST", json: { endpoint: json.endpoint, keys: json.keys } });
 }
 
-/** Portal home card: switch phone notifications on or off for this device */
-export function PushToggle() {
+/** Card to switch phone notifications on or off for this device: the portal home, or the team's notifications page */
+export function PushToggle({ area = "portal" }: { area?: PushArea } = {}) {
+  const config = AREAS[area];
   const [state, setState] = useState<PushState>("loading");
   const [key, setKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const check = useCallback(async () => {
-    const serverKey = await api<{ key: string }>("/api/portal/push/key").then((d) => d.key).catch(() => null);
+    const serverKey = await api<{ key: string }>(`${config.api}/key`).then((d) => d.key).catch(() => null);
     if (!serverKey) return setState("unavailable");
     setKey(serverKey);
     if (!pushSupported()) return setState(isAppleMobile() ? "home-screen" : "unavailable");
     if (Notification.permission === "denied") return setState("blocked");
-    const registration = await navigator.serviceWorker.getRegistration("/portal");
+    const registration = await navigator.serviceWorker.getRegistration(config.scope);
     const subscription = await registration?.pushManager.getSubscription();
     if (subscription) {
       // Make sure it's saved for whoever is signed in now (e.g. a shared phone)
-      await saveDevice(subscription).catch(() => undefined);
+      await saveDevice(config.api, subscription).catch(() => undefined);
       return setState("on");
     }
     setState("off");
-  }, []);
+  }, [config]);
 
   useEffect(() => {
     check().catch(() => setState("unavailable"));
@@ -67,12 +86,12 @@ export function PushToggle() {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") return setState(permission === "denied" ? "blocked" : "off");
-      const registration = await navigator.serviceWorker.register(SW_URL, { scope: "/portal" });
+      const registration = await navigator.serviceWorker.register(config.worker, { scope: config.scope });
       await navigator.serviceWorker.ready;
       const subscription =
         (await registration.pushManager.getSubscription()) ??
         (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) as BufferSource }));
-      await saveDevice(subscription);
+      await saveDevice(config.api, subscription);
       setState("on");
     } catch (err) {
       setError(errorMessage(err));
@@ -85,10 +104,10 @@ export function PushToggle() {
     setBusy(true);
     setError(null);
     try {
-      const registration = await navigator.serviceWorker.getRegistration("/portal");
+      const registration = await navigator.serviceWorker.getRegistration(config.scope);
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {
-        await api("/api/portal/push", { method: "DELETE", json: { endpoint: subscription.endpoint } }).catch(() => undefined);
+        await api(config.api, { method: "DELETE", json: { endpoint: subscription.endpoint } }).catch(() => undefined);
         await subscription.unsubscribe();
       }
       setState("off");
@@ -117,7 +136,7 @@ export function PushToggle() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-medium">Get notifications on this phone</p>
-            <p className="text-sm text-gray-500">New bookings, changes, reminders, to-dos and payments.</p>
+            <p className="text-sm text-gray-500">{config.what}</p>
           </div>
           <button
             type="button"
@@ -136,7 +155,7 @@ export function PushToggle() {
             <li>
               In Safari, tap Share <Share className="inline h-4 w-4 align-text-bottom" /> then <strong>Add to Home Screen</strong>.
             </li>
-            <li>Open VersaTalent from your Home Screen and sign in.</li>
+            <li>Open {config.appName} from your Home Screen and sign in.</li>
             <li>Come back here and tap <strong>Turn on</strong>.</li>
           </ol>
         </div>
